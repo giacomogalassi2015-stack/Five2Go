@@ -33,7 +33,7 @@ body {
 /* 4. HEADER FISSO (Barra in alto) */
 header, #app-header {
     background-color: var(--primary-col);
-    color: white;
+    color: #f8f9fa;
     height: 60px;
     padding: 0 20px;
     
@@ -151,23 +151,30 @@ main, #app-content {
 }
 .sub-nav-bar::-webkit-scrollbar { display: none; }
 
-.sub-nav-item {
-    padding: 8px 18px;
-    border-radius: 20px;  /* Forma a pillola */
-    border: 1px solid #eee;
-    background: var(--bg-light);
-    color: var(--text-main);
+/* --- AGGIUNTA PER FILTRI A PILLOLA (SERVIZI/RISTORANTI) --- */
+/* Questo stile rende i bottoni dei filtri belli e cliccabili */
+
+.filter-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background-color: #f1f3f4;     /* Grigio spento quando non attivo */
+    color: #555;
+    border: 1px solid transparent;
     font-size: 0.9rem;
-    white-space: nowrap;  /* Il testo non va a capo */
-    flex-shrink: 0;       /* Non si schiaccia */
+    font-weight: 500;
+    white-space: nowrap;           /* Il testo non va a capo */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;                /* Impedisce al bottone di schiacciarsi */
+    margin-right: 5px;             /* Spazietto tra una pillola e l'altra */
 }
 
-.sub-nav-item.active-sub {
-    background-color: var(--accent-col);
-    color: white;
-    border-color: var(--accent-col);
+/* Quando il filtro è attivo (es. hai cliccato Ristoranti) */
+.filter-chip.active {
+    background-color: var(--primary-col); /* Diventa Giallo/Verde */
+    color: white; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
-
 /* 3. PAGINAZIONE (La soluzione al tuo problema principale) */
 .pagination-container, #pagination-controls {
     display: flex;             /* Mette i numeri in orizzontale */
