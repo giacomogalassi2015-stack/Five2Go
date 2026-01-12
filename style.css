@@ -1,392 +1,349 @@
-/* --- 0. RESET & BASE --- */
-* {
-    box-sizing: border-box; /* Fondamentale per le misure */
+/* ============================================================
+   PARTE 1: FONDAMENTA, COLORI E STRUTTURA (Header)
+   ============================================================ */
+
+/* 1. VARIABILI GLOBALI (Il "Cervello" dei colori) */
+:root {
+    --primary-col: #fbc02d;  /* Verde scuro 5 Terre */
+    --accent-col:  #e67e22;  /* Arancione vivo per azioni/active */
+    --bg-light:    #f8f9fa;  /* Sfondo grigio chiarissimo */
+    --text-main:   #333333;  /* Testo scuro */
+    --nav-height:  70px;     /* Altezza riservata al menu in basso */
 }
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f8f9fa;
+/* 2. RESET (Pulizia) */
+* {
+    box-sizing: border-box; /* Misure precise bordi inclusi */
     margin: 0;
     padding: 0;
-    padding-bottom: 80px; /* Spazio per la nav bar in basso */
-    color: #333;
-    -webkit-tap-highlight-color: transparent; /* Toglie il flash blu su mobile */
+    -webkit-tap-highlight-color: transparent; /* No flash blu su mobile */
 }
 
-h1, h2, h3 { margin: 0; }
-
-/* --- 2. HEADER FISSO IN ALTO --- */
-#view-title {
-    position: sticky;
-    top: 0;
-    background: white;
-    padding: 15px;
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: 700;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    z-index: 100;
-    margin: 0;
-    color: #2c3e50;
-}
-
-/* --- 3. MENU DI NAVIGAZIONE IN BASSO (FIXED) --- */
-#nav-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;  /* AGGIUNTO: Ancora a sinistra */
-    right: 0; /* AGGIUNTO: Ancora a destra */
-    width: 100%;
-    background: white;
+/* 3. CORPO DELLA PAGINA */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    line-height: 1.5;
     
-    display: flex; /* Mette gli elementi in riga */
-    justify-content: space-around;
+    /* Riserviamo spazio in basso affinché il contenuto non finisca sotto il menu (che faremo nella Parte 2) */
+    padding-bottom: calc(var(--nav-height) + 20px);
+}
+
+/* 4. HEADER FISSO (Barra in alto) */
+header, #app-header {
+    background-color: var(--primary-col);
+    color: white;
+    height: 60px;
+    padding: 0 20px;
+    
+    /* Flexbox per allineare Titolo a SX e Menu a DX */
+    display: flex;
+    justify-content: space-between;
     align-items: center;
     
-    padding: 10px 0;
-    border-top: 1px solid #ddd;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.05); /* Ombra verso l'alto */
+    /* Blocca la barra in alto quando scorri */
+    position: sticky;
+    top: 0;
     z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
+#view-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+header .material-icons {
+    font-size: 28px;
+    cursor: pointer;
+}
+
+/* 5. CONTENITORE CENTRALE (Main) */
+main, #app-content {
+    max-width: 600px; /* Larghezza ottimale per lettura su tablet/desktop */
+    margin: 0 auto;   /* Centra il blocco nella pagina */
+    padding: 20px;
+}
+
+/* Animazione di caricamento (Base) */
+.loading-state {
+    text-align: center;
+    padding: 50px;
+    color: #888;
+}
+.spin {
+    display: inline-block;
+    animation: rotation 1s infinite linear;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+@keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }/* ============================================================
+   PARTE 2: NAVIGAZIONE, CONTROLLI E PAGINAZIONE
+   (Qui risolviamo il problema dei pulsanti verticali)
+   ============================================================ */
+
+/* 1. MENU DI NAVIGAZIONE IN BASSO (Fix Icone) */
+#bottom-nav, #nav-bar {
+    position: fixed;        /* Lo blocca in basso */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--nav-height);
+    background-color: white;
+    border-top: 1px solid #e0e0e0;
+    
+    /* LA MAGIA: Flexbox mette tutto in riga orizzontale */
+    display: flex;
+    flex-direction: row; 
+    justify-content: space-around; /* Distribuisce lo spazio equamente */
+    align-items: center;
+    
+    z-index: 1000; /* Sta sopra a tutto */
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+}
+
+/* Stile del singolo tasto del menu */
 .nav-item {
     background: none;
     border: none;
-    cursor: pointer;
-    text-decoration: none; /* Toglie sottolineatura se sono link */
-    
+    flex: 1;              /* Occupa tutto lo spazio disponibile */
     display: flex;
     flex-direction: column; /* Icona sopra, testo sotto */
     align-items: center;
     justify-content: center;
-    
-    flex: 1; /* AGGIUNTO: I bottoni si dividono lo spazio equamente */
-    gap: 4px;
-    
-    font-size: 0.75rem;
-    color: #888;
-    transition: color 0.2s;
+    height: 100%;
+    color: #999;          /* Colore spento quando non attivo */
+    cursor: pointer;
+    text-decoration: none;
 }
 
+/* Quando il tasto è attivo (es. sei sulla Home) */
 .nav-item.active {
-    color: #e67e22; /* Arancione stile 5Terre */
-    font-weight: bold;
+    color: var(--accent-col); /* Diventa Arancione */
+    font-weight: 600;
 }
 
-.nav-icon {
-    font-size: 1.5rem; /* Icona leggermente più grande */
-    display: block;
-    margin-bottom: 2px;
+.nav-item .material-icons {
+    font-size: 24px;
+    margin-bottom: 4px;
 }
 
-/* Assicura che l'icona prenda il colore del padre */
-.nav-item i, 
-.nav-item svg {
-    fill: currentColor; 
+.nav-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* --- 4. SOTTO-MENU (Bottoni in alto) --- */
+/* 2. BARRA DEI FILTRI (Sotto l'header) */
 .sub-nav-bar {
-    display: flex;
-    overflow-x: auto;
-    padding: 10px 15px;
-    gap: 10px;
+    display: flex;        /* Mette i bottoni in riga */
+    overflow-x: auto;     /* Permette di scorrere col dito se non ci stanno */
+    padding: 15px;
+    gap: 10px;            /* Spazio tra le pillole */
     background: white;
     border-bottom: 1px solid #eee;
-    white-space: nowrap;
     
-    /* Nasconde la scrollbar estetica ma permette lo scroll */
+    /* Nasconde la barra di scorrimento brutta */
     -ms-overflow-style: none;  
     scrollbar-width: none;  
 }
-.sub-nav-bar::-webkit-scrollbar {
-    display: none;
-}
+.sub-nav-bar::-webkit-scrollbar { display: none; }
 
 .sub-nav-item {
-    padding: 8px 16px;
-    border-radius: 20px;
+    padding: 8px 18px;
+    border-radius: 20px;  /* Forma a pillola */
     border: 1px solid #eee;
-    background: #f8f9fa;
-    color: #555;
-    font-weight: 500;
+    background: var(--bg-light);
+    color: var(--text-main);
     font-size: 0.9rem;
-    cursor: pointer;
-    flex-shrink: 0; /* Evita che i bottoni si schiaccino */
+    white-space: nowrap;  /* Il testo non va a capo */
+    flex-shrink: 0;       /* Non si schiaccia */
 }
 
 .sub-nav-item.active-sub {
-    background: #e67e22;
+    background-color: var(--accent-col);
     color: white;
-    border-color: #e67e22;
+    border-color: var(--accent-col);
 }
 
-/* --- 5. CONTENITORI GENERALI --- */
-#app-content {
-    max-width: 600px;
-    margin: 0 auto;
+/* 3. PAGINAZIONE (La soluzione al tuo problema principale) */
+.pagination-container, #pagination-controls {
+    display: flex;             /* Mette i numeri in orizzontale */
+    justify-content: center;   /* Li centra nella pagina */
+    align-items: center;
+    gap: 12px;                 /* Spazio comodo tra i pulsanti */
+    margin: 30px 0;            /* Spazio sopra e sotto */
+    padding: 10px;
 }
 
-#sub-content {
-    padding: 15px;
+/* Il design del pulsante pagina */
+.page-btn {
+    width: 46px;              /* Larghezza fissa GRANDE */
+    height: 46px;             /* Altezza fissa GRANDE */
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;      /* Angoli smussati */
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--text-main);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.1s;
 }
 
-.loader {
-    text-align: center;
-    padding: 20px;
-    color: #888;
-    font-style: italic;
-}
+.page-btn:active { transform: scale(0.95); } /* Effetto pressione */
 
-/* --- 6. HOME PAGE (GRIGLIA BORGHI) --- */
+.page-btn.active {
+    background-color: var(--primary-col); /* Verde se selezionato */
+    color: white;
+    border-color: var(--primary-col);
+}/* ============================================================
+   PARTE 3: CARD, GRIGLIE E CONTENUTI
+   (Qui rendiamo belle le immagini e le liste)
+   ============================================================ */
+
+/* 1. GRIGLIA BORGHI (Home Page) */
 .grid-container {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    padding: 15px;
+    /* Due colonne di larghezza uguale */
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px;             /* Spazio tra le card */
+    padding: 10px 0;
 }
 
 .village-card {
-    position: relative;
+    position: relative;    /* Necessario per posizionare il titolo sopra */
     height: 140px;
-    border-radius: 12px;
+    border-radius: 12px;   /* Angoli arrotondati moderni */
     background-size: cover;
     background-position: center;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     cursor: pointer;
+    transition: transform 0.2s;
 }
+
+.village-card:active { transform: scale(0.98); }
 
 .card-title-overlay {
     position: absolute;
     bottom: 0;
     width: 100%;
+    /* Sfumatura nera per rendere leggibile il testo bianco */
     background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
     color: white;
     padding: 10px;
-    font-weight: bold;
-    font-size: 1rem;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
-/* --- 7. STILE PRODOTTI --- */
-.card-product {
-    display: flex;
+/* 2. LISTE PRODOTTI / RISTORANTI */
+.card-product, .list-item {
+    display: flex;         /* Mette immagine e testo affiancati */
     justify-content: space-between;
     align-items: center;
     background: white;
     border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
     border: 1px solid #eee;
 }
 
 .prod-info {
-    flex: 1;
+    flex: 1;               /* Prende tutto lo spazio disponibile */
     padding-right: 15px;
 }
 
 .prod-title {
     font-weight: 600;
-    font-size: 1rem;
-    margin-bottom: 4px;
-    color: #2c3e50;
+    font-size: 1.05rem;
+    margin-bottom: 5px;
+    color: var(--text-main);
 }
 
-.prod-arrow {
-    color: #ccc;
-    font-size: 0.8rem;
+.prod-desc {
+    font-size: 0.85rem;
+    color: #666;
 }
 
+/* Immagine piccola quadrata a destra (thumbnail) */
 .prod-thumb {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     border-radius: 8px;
     object-fit: cover;
-    flex-shrink: 0;
+    flex-shrink: 0;        /* Impedisce all'immagine di schiacciarsi */
     background-color: #eee;
 }
 
-/* --- 8. OUTDOOR & SENTIERI --- */
-.macro-label {
-    margin-top: 25px;
-    margin-bottom: 10px;
-    padding: 8px 0;
-    border-bottom: 2px solid #f39c12;
-    color: #444;
-    font-size: 1.1rem;
-    text-transform: uppercase;
-    font-weight: 700;
-}
-
+/* 3. CARD SENTIERI E OUTDOOR */
 .card-sentiero {
     background: white;
     border-radius: 10px;
     padding: 15px;
     margin-bottom: 15px;
+    border-left: 5px solid var(--accent-col); /* Striscia colorata a sinistra */
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    border: 1px solid #f1f1f1;
 }
 
 .sentiero-header {
     display: flex;
     justify-content: space-between;
-    color: #e67e22;
-    font-size: 0.9rem;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-.sentiero-body h4 {
-    margin: 0 0 5px 0;
-    font-size: 1.1rem;
-    color: #2c3e50;
-}
-
-.difficolta {
-    color: #7f8c8d;
-    font-size: 0.9rem;
-    margin: 0;
-}
-
-.sentiero-footer {
-    margin-top: 15px;
-    padding-top: 12px;
-    border-top: 1px dashed #eee;
-    display: flex;
-    gap: 20px;
-}
-
-.btn-yellow {
-    color: #f39c12;
-    text-decoration: none;
-    font-weight: 700;
+    color: var(--accent-col);
     font-size: 0.85rem;
-    letter-spacing: 0.5px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-transform: uppercase;
 }
 
-/* --- 9. LISTE GENERICHE --- */
-.card-generic {
-    background: white;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    border-left: 4px solid #eee;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.card-title {
-    font-weight: 600;
-    font-size: 1.05rem;
-    color: #333;
-}
-
-.card-tag {
-    background: #f0f0f0;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    color: #666;
-}
-
-.card-subtitle {
-    margin-top: 5px;
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.btn-call {
-    display: inline-block;
-    margin-top: 10px;
-    color: #27ae60;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.9rem;
-    background: #eafaf1;
-    padding: 5px 10px;
-    border-radius: 4px;
-}
-
-/* --- 10. TRASPORTI --- */
-.card-service-transport {
-    position: relative;
-    border-radius: 12px;
-    overflow: hidden;
-    height: 100px;
-    margin-bottom: 15px;
-}
-
-.img-service {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.title-service {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0,0,0,0.6);
-    color: white;
-    padding: 8px 15px;
-    font-weight: bold;
-}
-
-.card-number-item {
-    display: flex;
-    align-items: center;
-    background: white;
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-}
-
-/* --- 11. MODALI --- */
+/* 4. MODALI (Finestre Popup) */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
-    z-index: 2000;
-    display: flex;
+    background: rgba(0,0,0,0.8); /* Sfondo nero semitrasparente */
+    z-index: 2000;         /* Sopra a tutto, anche all'header */
+    
+    display: flex;         /* Centra il contenuto */
     justify-content: center;
     align-items: center;
     padding: 20px;
-    box-sizing: border-box;
+    
+    /* Animazione comparsa */
+    opacity: 0;
+    animation: fadeIn 0.3s forwards;
 }
 
 .modal-content {
     background: white;
-    padding: 20px;
+    padding: 25px;
     border-radius: 16px;
     width: 100%;
-    max-width: 400px;
-    max-height: 85vh;
-    overflow-y: auto;
+    max-width: 450px;
+    max-height: 85vh;      /* Non più alto dell'85% dello schermo */
+    overflow-y: auto;      /* Scorre se il contenuto è lungo */
     position: relative;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
+/* Tasto chiudi modale (X in alto a destra) */
 .close-modal {
     position: absolute;
-    top: 10px;
+    top: 15px;
     right: 15px;
-    font-size: 2rem;
-    color: #aaa;
+    font-size: 1.5rem;
+    color: #999;
     cursor: pointer;
-    line-height: 20px;
+    background: none;
+    border: none;
 }
 
-.animate-fade {
-    animation: fadeIn 0.3s ease-in;
-}
+@keyframes fadeIn { to { opacity: 1; } }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+/* FINE DEL FILE STYLE.CSS */
