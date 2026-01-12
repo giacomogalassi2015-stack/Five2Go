@@ -6,29 +6,17 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const content = document.getElementById('app-content');
 const viewTitle = document.getElementById('view-title');
 
-// ✅ HELPER PER COLONNE
-function getColumnValue(row, possibleNames) {
-    for (let name of possibleNames) {
-        if (row[name] !== undefined && row[name] !== null) return row[name];
-    }
-    return '';
-}
-
-// 2. NAVIGAZIONE E SOTTO-MENU
-function createSubMenu(options) {
-    let html = '<div class="sub-nav-bar">';
-    options.forEach(opt => {
-        html += `<button class="sub-nav-item" onclick="renderTable('${opt.table}', this)">${opt.label}</button>`;
-    });
-    html += '</div>';
-    return html;
-}
-
+// 2. GESTIONE VISTE E NAVIGAZIONE
 async function switchView(view, el) {
     if (!content) return;
+    
+    // Aggiorna stile bottoni menu in basso
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     if (el) el.classList.add('active');
     
+    // Pulisce e mostra loader
+    content.innerHTML = '<div class="loader">Caricamento...</div>';
+
     try {
         if (view === 'home') {
             viewTitle.innerText = "5 Terre";
@@ -36,162 +24,110 @@ async function switchView(view, el) {
         } 
         else if (view === 'cibo') {
             viewTitle.innerText = "Cibo & Sapori";
-            const menu = [
-                { label: "🍇 Prodotti tipici", table: "Prodotti" },
-                { label: "🍝 Ristoranti", table: "Ristoranti" },
-                { label: "🍷 Vini", table: "Vini" }
-            ];
-            content.innerHTML = createSubMenu(menu) + '<div id="sub-content"></div>';
-            renderTable('Prodotti', document.querySelector('.sub-nav-item'));
+            // Vini rimosso come richiesto
+            renderSubMenu([
+                { label: "🍇 Prodotti", table: "Prodotti" },
+                { label: "🍝 Ristoranti", table: "Ristoranti" }
+            ], 'Prodotti');
         }
         else if (view === 'outdoor') {
             viewTitle.innerText = "Outdoor";
-            const menu = [
+            renderSubMenu([
                 { label: "🥾 Sentieri", table: "Sentieri" },
                 { label: "🏖️ Spiagge", table: "Spiagge" }
-            ];
-            content.innerHTML = createSubMenu(menu) + '<div id="sub-content"></div>';
-            renderTable('Sentieri', document.querySelector('.sub-nav-item'));
+            ], 'Sentieri');
         }
         else if (view === 'servizi') {
             viewTitle.innerText = "Servizi & Utilità";
-            const menu = [
+            renderSubMenu([
                 { label: "🚂 Trasporti", table: "Trasporti" },
-                { label: "📞 Numeri utili", table: "Numeri_utili" },
+                { label: "📞 Numeri", table: "Numeri_utili" },
                 { label: "💊 Farmacie", table: "Farmacie" }
-            ];
-            content.innerHTML = createSubMenu(menu) + '<div id="sub-content"></div>';
-            renderTable('Trasporti', document.querySelector('.sub-nav-item'));
+            ], 'Trasporti');
         }
     } catch (err) {
-        content.innerHTML = `<div style="color:red; padding:20px;">Errore: ${err.message}</div>`;
+        console.error(err);
+        content.innerHTML = `<div class="error-msg">Errore: ${err.message}</div>`;
     }
 }
 
-// 3. RENDER HOME (BORGHI)
+// 3. RENDER MENU SECONDARIO (Sotto il titolo)
+function renderSubMenu(options, defaultTable) {
+    let menuHtml = '<div class="sub-nav-bar">';
+    options.forEach(opt => {
+        // Al click ricarica la tabella specifica
+        menuHtml += `<button class="sub-nav-item" onclick="loadTableData('${opt.table}', this)">${opt.label}</button>`;
+    });
+    menuHtml += '</div><div id="sub-content"></div>';
+    content.innerHTML = menuHtml;
+
+    // Attiva il primo bottone di default
+    const firstBtn = content.querySelector('.sub-nav-item');
+    if (firstBtn) loadTableData(defaultTable, firstBtn);
+}
+
+// 4. RENDER HOME (BORGHI)
 async function renderHome() {
-    content.innerHTML = '<div style="padding:20px; text-align:center;">Caricamento...</div>';
     const { data, error } = await supabaseClient.from('Cinque_Terre').select('*');
     if (error) throw error;
     
     let html = '<div class="grid-container animate-fade">';
     data.forEach(v => {
-        const paese = getColumnValue(v, ['Paesi', 'paesi', 'nome']);
-        const immagine = getColumnValue(v, ['Immagine', 'immagine']);
+        // Escaping per evitare errori con gli apostrofi nel nome
+        const safeName = v.Paesi.replace(/'/g, "\\'");
         html += `
-            <div class="village-card" style="background-image: url('${immagine}')" onclick="openVillageModal('${paese.replace(/'/g, "\\'")}')">
-                <div class="card-title-overlay">${paese}</div>
+            <div class="village-card" style="background-image: url('${v.Immagine}')" onclick="openModal('village', '${safeName}')">
+                <div class="card-title-overlay">${v.Paesi}</div>
             </div>`;
     });
     content.innerHTML = html + '</div>';
 }
 
-// 4. MODALI (LOGICA DETTAGLI)
-function createModalShell() {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    document.body.appendChild(modal);
-    modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
-    return modal;
-}
+// 5. CARICAMENTO DATI TABELLE (MOTORE CENTRALE)
+async function loadTableData(tableName, btnEl) {
+    const subContent = document.getElementById('sub-content');
+    if (!subContent) return;
 
-async function openVillageModal(nomePaese) {
-    const modal = createModalShell();
-    const { data, error } = await supabaseClient.from('Cinque_Terre').select('*').eq('Paesi', nomePaese).single();
-    if (error || !data) return modal.remove();
-
-    modal.innerHTML = `
-        <div class="modal-content animate-fade">
-            <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
-            <img src="${data.Immagine}" style="width:100%; border-radius:12px; margin-bottom:15px; max-height:220px; object-fit:cover;">
-            <h2 style="margin-top:0;">${nomePaese}</h2>
-            <div style="line-height:1.6; color:#333;">${data.Descrizione}</div>
-        </div>`;
-}
-
-function openProductModal(prodData) {
-    const modal = createModalShell();
-    const titolo = getColumnValue(prodData, ['Prodotti', 'Nome']);
-    const desc = prodData.Descrizione || "Nessuna descrizione.";
-    const ideale = prodData["Ideale per"] || "N/A";
-    const img = getColumnValue(prodData, ['Immagine', 'immagine']);
-
-    modal.innerHTML = `
-        <div class="modal-content animate-fade">
-            <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
-            ${img ? `<img src="${img}" style="width:100%; border-radius:12px; margin-bottom:15px; max-height:220px; object-fit:cover;">` : ''}
-            <h2 style="margin-top:0; color:#1a73e8;">${titolo}</h2>
-            <p style="line-height:1.6; color:#333;">${desc}</p>
-            <div style="margin-top:15px; padding-top:10px; border-top:1px solid #eee; font-weight:bold; color:#555;">
-                Ideale per: <span style="font-weight:normal;">${ideale}</span>
-            </div>
-        </div>`;
-}
-
-function openTransportModal(t) {
-    const modal = createModalShell();
-    const link1 = t["Link 1"] ? `<a href="${t["Link 1"]}" target="_blank" class="btn-link-modal">VAI AL SITO</a>` : '';
-    const link2 = t["Link 2"] ? `<a href="${t["Link 2"]}" target="_blank" class="btn-link-modal secondary">ORARI E TARIFFE</a>` : '';
-    
-    modal.innerHTML = `
-        <div class="modal-content animate-fade">
-            <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
-            <h2 style="margin-top:0;">${t.Località}</h2>
-            <p style="line-height:1.6; color:#333; margin-bottom:20px;">${t.Descrizione || 'Informazione non disponibile'}</p>
-            <div style="display:flex; flex-direction:column; gap:12px;">
-                ${link1}
-                ${link2}
-            </div>
-        </div>`;
-}
-
-// 6. RENDER TABELLE UNIVERSALE
-async function renderTable(tableName, btnEl) {
-    const subContainer = document.getElementById('sub-content');
-    if (!subContainer) return;
+    // Gestione classe active sottomenu
     document.querySelectorAll('.sub-nav-item').forEach(b => b.classList.remove('active-sub'));
     if (btnEl) btnEl.classList.add('active-sub');
 
-    subContainer.innerHTML = '<div style="text-align:center; padding:20px;">Caricamento...</div>';
+    subContent.innerHTML = '<div class="loader">Caricamento dati...</div>';
+    
     const { data, error } = await supabaseClient.from(tableName).select('*');
-    if (error) return subContainer.innerHTML = `<p>Errore: ${error.message}</p>`;
+    if (error) {
+        subContent.innerHTML = `<p class="error-msg">Errore: ${error.message}</p>`;
+        return;
+    }
 
     let html = '<div class="list-container animate-fade">';
 
-    if (tableName === 'Trasporti') {
-        data.forEach(t => {
-            html += `
-                <div class="card-service-transport" onclick='openTransportModal(${JSON.stringify(t).replace(/'/g, "&apos;")})'>
-                    <img src="${t.Immagine}" class="img-service">
-                    <div class="title-service">${t.Località}</div>
-                </div>`;
-        });
-    }
-    else if (tableName === 'Numeri_utili') {
-        data.forEach(n => {
-            html += `
-                <div class="card-number-item" onclick="confirmCall('${n.Numero}', '${n.Nome}')">
-                    <span style="font-size:24px; margin-right:15px;">📞</span>
-                    <div style="font-weight:bold; font-size:1.1rem;">${n.Nome}</div>
-                </div>`;
-        });
-    }
-    else if (tableName === 'Sentieri') {
+    // --- LOGICA SPECIFICA PER OGNI TABELLA ---
+
+    // A. SENTIERI (Raggruppati per Label)
+    if (tableName === 'Sentieri') {
         const categorie = {};
         data.forEach(s => {
             const cat = s.Label || "Altri";
             if (!categorie[cat]) categorie[cat] = [];
             categorie[cat].push(s);
         });
+
         for (const label in categorie) {
-            html += `<div class="macro-label">${label}</div>`;
+            html += `<h3 class="macro-label">${label}</h3>`;
             categorie[label].forEach(s => {
                 const pedaggioBtn = s.Pedaggio ? `<a href="${s.Pedaggio}" target="_blank" class="btn-yellow">PEDAGGIO</a>` : '';
+                const safeDesc = s.Descrizione ? s.Descrizione.replace(/'/g, "\\'") : '';
+                const safePaesi = s.Paesi ? s.Paesi.replace(/'/g, "\\'") : '';
+                
                 html += `
                     <div class="card-sentiero">
-                        <div class="sentiero-header"><span>${s.Distanza || ''}</span><span>${s.Durata || ''}</span></div>
-                        <div class="sentiero-body" onclick="alert('${s.Paesi}\\n\\n${s.Descrizione ? s.Descrizione.replace(/'/g, "\\'") : ''}')">
-                            <h3>${s.Paesi || ''}</h3>
+                        <div class="sentiero-header">
+                            <strong>${s.Distanza || '--'}</strong>
+                            <span>${s.Durata || '--'}</span>
+                        </div>
+                        <div class="sentiero-body" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
+                            <h4>${s.Paesi}</h4>
                             <p class="difficolta">${s.Difficoltà || ''}</p>
                         </div>
                         <div class="sentiero-footer">
@@ -202,36 +138,138 @@ async function renderTable(tableName, btnEl) {
             });
         }
     }
+
+    // B. RISTORANTI (Paesi, Nome, Indirizzo, Telefono, Tipo)
+    else if (tableName === 'Ristoranti') {
+        data.forEach(r => {
+            html += `
+                <div class="card-generic">
+                    <div class="card-top">
+                        <div class="card-title">${r.Nome}</div>
+                        <div class="card-tag">${r.Tipo || ''}</div>
+                    </div>
+                    <div class="card-subtitle">📍 ${r.Paesi} - ${r.Indirizzo || ''}</div>
+                    ${r.Telefono ? `<a href="tel:${r.Telefono}" class="btn-call">📞 Chiama ${r.Telefono}</a>` : ''}
+                </div>`;
+        });
+    }
+
+    // C. FARMACIE (Paesi, Numero, Nome, Indirizzo)
+    else if (tableName === 'Farmacie') {
+        data.forEach(f => {
+            html += `
+                <div class="card-generic">
+                    <div class="card-title">💊 ${f.Nome}</div>
+                    <div class="card-subtitle">📍 ${f.Paesi} - ${f.Indirizzo || ''}</div>
+                    ${f.Numero ? `<a href="tel:${f.Numero}" class="btn-call">📞 ${f.Numero}</a>` : ''}
+                </div>`;
+        });
+    }
+
+    // D. SPIAGGE (Paesi, Descrizione, Nome)
+    else if (tableName === 'Spiagge') {
+        data.forEach(s => {
+            html += `
+                <div class="card-generic" onclick="simpleAlert('${s.Nome.replace(/'/g, "\\'")}', '${s.Descrizione.replace(/'/g, "\\'")}')">
+                    <div class="card-title">🏖️ ${s.Nome}</div>
+                    <div class="card-subtitle">📍 ${s.Paesi}</div>
+                    <div class="card-preview">Clicca per info</div>
+                </div>`;
+        });
+    }
+
+    // E. PRODOTTI (Standard con immagine)
     else if (tableName === 'Prodotti') {
-        data.forEach((row) => {
-            const titolo = getColumnValue(row, ['Prodotti', 'Nome']);
-            const immagine = getColumnValue(row, ['Immagine', 'immagine']);
-            const rowData = JSON.stringify(row).replace(/'/g, "&apos;");
+        data.forEach(p => {
+            // Nota: uso p.Prodotti come nome colonna principale come da storico, o p.Nome se cambiato
+            const titolo = p.Prodotti || p.Nome; 
+            const safeObj = JSON.stringify(p).replace(/'/g, "&apos;");
             html += `
-                <div class="card" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; margin-bottom:10px;" onclick='openProductModal(${rowData})'>
-                    <div style="font-weight:bold; font-size:1.1rem; color:#1a1a1a;">${titolo}</div>
-                    ${immagine ? `<img src="${immagine}" style="width:75px; height:75px; border-radius:8px; object-fit:cover; margin-left:15px;">` : ''}
+                <div class="card-product" onclick='openModal("product", ${safeObj})'>
+                    <div class="prod-info">
+                        <div class="prod-title">${titolo}</div>
+                        <div class="prod-arrow">➜</div>
+                    </div>
+                    ${p.Immagine ? `<img src="${p.Immagine}" class="prod-thumb">` : ''}
                 </div>`;
         });
     }
-    else {
-        data.forEach((row) => {
-            const titolo = getColumnValue(row, ['Nome', 'Località', 'Paese', 'Vino']);
-            const info = getColumnValue(row, ['Descrizione', 'Indirizzo']);
+
+    // F. TRASPORTI & NUMERI UTILI (Standard)
+    else if (tableName === 'Trasporti') {
+        data.forEach(t => {
+            const safeObj = JSON.stringify(t).replace(/'/g, "&apos;");
             html += `
-                <div class="card" style="margin-bottom:10px;">
-                    <div style="font-weight:bold; font-size:1.1rem;">${titolo}</div>
-                    ${info ? `<div style="font-size:0.9rem; color:#666; margin-top:5px;">${info}</div>` : ''}
+                <div class="card-service-transport" onclick='openModal("transport", ${safeObj})'>
+                    <img src="${t.Immagine}" class="img-service">
+                    <div class="title-service">${t.Località}</div>
                 </div>`;
         });
     }
-    subContainer.innerHTML = html + '</div>';
-}
-
-function confirmCall(numero, nome) {
-    if (confirm(`Vuoi chiamare ${nome}?`)) {
-        window.location.href = `tel:${numero}`;
+    else if (tableName === 'Numeri_utili') {
+        data.forEach(n => {
+            html += `
+                <div class="card-number-item" onclick="window.location.href='tel:${n.Numero}'">
+                    <span style="font-size:1.5rem; margin-right:15px;">📞</span>
+                    <div>
+                        <div style="font-weight:bold;">${n.Nome}</div>
+                        <div style="color:#666; font-size:0.9rem;">${n.Numero}</div>
+                    </div>
+                </div>`;
+        });
     }
+
+    subContent.innerHTML = html + '</div>';
 }
 
+// 6. GESTIONE MODALI (POPUP)
+function simpleAlert(titolo, testo) {
+    alert(`${titolo}\n\n${testo}`);
+}
+
+async function openModal(type, payload) {
+    // Crea sfondo scuro
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay animate-fade';
+    document.body.appendChild(modal);
+    modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+
+    let contentHtml = '';
+
+    if (type === 'village') {
+        const { data } = await supabaseClient.from('Cinque_Terre').select('*').eq('Paesi', payload).single();
+        if (data) {
+            contentHtml = `
+                <img src="${data.Immagine}" style="width:100%; border-radius:12px; height:200px; object-fit:cover;">
+                <h2>${data.Paesi}</h2>
+                <p>${data.Descrizione}</p>`;
+        }
+    } 
+    else if (type === 'product') {
+        // Payload qui è l'oggetto intero
+        contentHtml = `
+            ${payload.Immagine ? `<img src="${payload.Immagine}" style="width:100%; border-radius:12px; height:200px; object-fit:cover;">` : ''}
+            <h2>${payload.Prodotti || payload.Nome}</h2>
+            <p>${payload.Descrizione || ''}</p>
+            <hr>
+            <p><strong>Ideale per:</strong> ${payload["Ideale per"] || payload.IdealePer || ''}</p>`;
+    }
+    else if (type === 'transport') {
+        contentHtml = `
+            <h2>${payload.Località}</h2>
+            <p>${payload.Descrizione || ''}</p>
+            <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
+                ${payload["Link 1"] ? `<a href="${payload["Link 1"]}" target="_blank" class="btn-yellow" style="text-align:center;">VAI AL SITO</a>` : ''}
+                ${payload["Link 2"] ? `<a href="${payload["Link 2"]}" target="_blank" class="btn-yellow" style="text-align:center;">ORARI</a>` : ''}
+            </div>`;
+    }
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            ${contentHtml}
+        </div>`;
+}
+
+// Avvio app
 document.addEventListener('DOMContentLoaded', () => switchView('home'));

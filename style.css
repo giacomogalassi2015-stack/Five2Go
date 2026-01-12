@@ -1,203 +1,392 @@
-/* =========================================
-   1. VARIABILI E BASE
-   ========================================= */
-:root { 
-    --primary: #f1c40f;      /* Giallo Five2Go */
-    --primary-dark: #d4ac0d;
-    --dark: #2c3e50; 
-    --secondary: #e67e22;
-    --google-blue: #1a73e8;
-    --bg-light: #f4f4f4;
-    --white: #ffffff;
+/* --- 0. RESET & BASE --- */
+* {
+    box-sizing: border-box; /* Fondamentale per le misure */
 }
 
-* { box-sizing: border-box; }
-
-body { 
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-    margin: 0; 
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
     padding: 0;
-    padding-bottom: 80px; /* Spazio per nav fissa */
-    background: var(--bg-light); 
-    color: var(--dark);
+    padding-bottom: 80px; /* Spazio per la nav bar in basso */
+    color: #333;
+    -webkit-tap-highlight-color: transparent; /* Toglie il flash blu su mobile */
 }
 
-/* =========================================
-   2. HEADER & NAVIGAZIONE
-   ========================================= */
-header { 
-    background: var(--primary); 
-    padding: 15px 20px; 
-    position: sticky; 
-    top: 0; 
-    z-index: 1000; 
-    display: flex; 
-    justify-content: space-between; 
+h1, h2, h3 { margin: 0; }
+
+/* --- 2. HEADER FISSO IN ALTO --- */
+#view-title {
+    position: sticky;
+    top: 0;
+    background: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    z-index: 100;
+    margin: 0;
+    color: #2c3e50;
+}
+
+/* --- 3. MENU DI NAVIGAZIONE IN BASSO (FIXED) --- */
+#nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;  /* AGGIUNTO: Ancora a sinistra */
+    right: 0; /* AGGIUNTO: Ancora a destra */
+    width: 100%;
+    background: white;
+    
+    display: flex; /* Mette gli elementi in riga */
+    justify-content: space-around;
     align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    
+    padding: 10px 0;
+    border-top: 1px solid #ddd;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05); /* Ombra verso l'alto */
+    z-index: 1000;
 }
 
-#view-title { font-size: 1.3rem; font-weight: bold; color: var(--dark); }
+.nav-item {
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: none; /* Toglie sottolineatura se sono link */
+    
+    display: flex;
+    flex-direction: column; /* Icona sopra, testo sotto */
+    align-items: center;
+    justify-content: center;
+    
+    flex: 1; /* AGGIUNTO: I bottoni si dividono lo spazio equamente */
+    gap: 4px;
+    
+    font-size: 0.75rem;
+    color: #888;
+    transition: color 0.2s;
+}
 
-/* Barra Sotto-Menu (Stile Chrome/Google) */
+.nav-item.active {
+    color: #e67e22; /* Arancione stile 5Terre */
+    font-weight: bold;
+}
+
+.nav-icon {
+    font-size: 1.5rem; /* Icona leggermente più grande */
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* Assicura che l'icona prenda il colore del padre */
+.nav-item i, 
+.nav-item svg {
+    fill: currentColor; 
+}
+
+/* --- 4. SOTTO-MENU (Bottoni in alto) --- */
 .sub-nav-bar {
     display: flex;
-    gap: 12px;
-    background-color: var(--white);
-    padding: 12px 15px;
-    border-bottom: 1px solid #eee;
     overflow-x: auto;
+    padding: 10px 15px;
+    gap: 10px;
+    background: white;
+    border-bottom: 1px solid #eee;
     white-space: nowrap;
-    position: sticky;
-    top: 58px; /* Sotto l'header */
-    z-index: 100;
-    scrollbar-width: none;
+    
+    /* Nasconde la scrollbar estetica ma permette lo scroll */
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
 }
-.sub-nav-bar::-webkit-scrollbar { display: none; }
+.sub-nav-bar::-webkit-scrollbar {
+    display: none;
+}
 
 .sub-nav-item {
-    background-color: #f1f3f4;
-    border: 1px solid transparent;
+    padding: 8px 16px;
     border-radius: 20px;
-    padding: 8px 20px;
-    font-size: 14px;
+    border: 1px solid #eee;
+    background: #f8f9fa;
+    color: #555;
     font-weight: 500;
-    color: #5f6368;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    flex-shrink: 0; /* Evita che i bottoni si schiaccino */
 }
 
 .sub-nav-item.active-sub {
-    background-color: var(--google-blue);
-    color: var(--white);
-    box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
+    background: #e67e22;
+    color: white;
+    border-color: #e67e22;
 }
 
-/* Navigazione Fissa Bottom */
-#bottom-nav { 
-    position: fixed; bottom: 0; left: 0; right: 0; 
-    height: 70px; background: var(--white); 
-    display: flex; justify-content: space-around; align-items: center; 
-    border-top: 1px solid #ddd; z-index: 2000;
-    box-shadow: 0 -3px 15px rgba(0,0,0,0.1);
+/* --- 5. CONTENITORI GENERALI --- */
+#app-content {
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-.nav-item { 
-    display: flex; flex-direction: column; align-items: center;
-    color: #95a5a6; font-size: 0.7rem; cursor: pointer; flex: 1;
+#sub-content {
+    padding: 15px;
 }
 
-.nav-item.active { color: var(--dark); }
-.nav-item.active .material-icons { color: var(--primary-dark); }
-
-/* =========================================
-   3. CARDS & GRID (HOME, PRODOTTI, ECC.)
-   ========================================= */
-.grid-container { 
-    display: grid; grid-template-columns: 1fr 1fr; 
-    gap: 12px; padding: 12px; 
+.loader {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-style: italic;
 }
 
-.village-card { 
-    height: 180px; border-radius: 12px; 
-    background-size: cover; background-position: center; 
-    display: flex; align-items: flex-end; overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+/* --- 6. HOME PAGE (GRIGLIA BORGHI) --- */
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 15px;
 }
 
-.card-title-overlay { 
-    background: rgba(0,0,0,0.7); color: var(--white); 
-    width: 100%; padding: 10px; text-align: center; font-weight: bold;
+.village-card {
+    position: relative;
+    height: 140px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    cursor: pointer;
 }
 
-/* Card Standard (Prodotti, Liste) */
-.card { 
-    background: var(--white); margin: 10px; padding: 15px; 
-    border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+.card-title-overlay {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 1rem;
 }
 
-/* =========================================
-   4. SEZIONE OUTDOOR (SENTIERI)
-   ========================================= */
+/* --- 7. STILE PRODOTTI --- */
+.card-product {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    border: 1px solid #eee;
+}
+
+.prod-info {
+    flex: 1;
+    padding-right: 15px;
+}
+
+.prod-title {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 4px;
+    color: #2c3e50;
+}
+
+.prod-arrow {
+    color: #ccc;
+    font-size: 0.8rem;
+}
+
+.prod-thumb {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background-color: #eee;
+}
+
+/* --- 8. OUTDOOR & SENTIERI --- */
 .macro-label {
-    font-size: 1rem; color: #555; background: #eef1f4;
-    padding: 8px 15px; margin: 20px 0 10px 0;
-    border-left: 4px solid var(--primary);
-    text-transform: uppercase; font-weight: bold;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    padding: 8px 0;
+    border-bottom: 2px solid #f39c12;
+    color: #444;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    font-weight: 700;
 }
 
 .card-sentiero {
-    background: var(--white); border-radius: 12px;
-    margin: 10px; padding: 15px; border: 1px solid #eee;
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #f1f1f1;
 }
 
-.sentiero-header { 
-    display: flex; justify-content: space-between; 
-    font-weight: bold; font-size: 0.85rem; color: #777;
+.sentiero-header {
+    display: flex;
+    justify-content: space-between;
+    color: #e67e22;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    font-weight: 600;
 }
 
-.sentiero-body h3 { margin: 10px 0 5px 0; color: var(--dark); }
-
-.sentiero-footer { 
-    display: flex; gap: 20px; border-top: 1px solid #eee; 
-    padding-top: 12px; margin-top: 10px;
+.sentiero-body h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    color: #2c3e50;
 }
 
-.btn-yellow { 
-    color: var(--secondary); text-decoration: none; 
-    font-weight: bold; font-size: 0.85rem; 
+.difficolta {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    margin: 0;
 }
 
-/* =========================================
-   5. SEZIONE SERVIZI (TRASPORTI & NUMERI)
-   ========================================= */
-/* Trasporti - Card Fotografica */
+.sentiero-footer {
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px dashed #eee;
+    display: flex;
+    gap: 20px;
+}
+
+.btn-yellow {
+    color: #f39c12;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+/* --- 9. LISTE GENERICHE --- */
+.card-generic {
+    background: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border-left: 4px solid #eee;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #333;
+}
+
+.card-tag {
+    background: #f0f0f0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.card-subtitle {
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.btn-call {
+    display: inline-block;
+    margin-top: 10px;
+    color: #27ae60;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    background: #eafaf1;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+/* --- 10. TRASPORTI --- */
 .card-service-transport {
-    position: relative; border-radius: 12px; overflow: hidden;
-    margin: 10px; height: 150px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    height: 100px;
+    margin-bottom: 15px;
 }
 
-.img-service { width: 100%; height: 100%; object-fit: cover; }
+.img-service {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
 .title-service {
-    position: absolute; bottom: 0; width: 100%;
-    background: linear-gradient(transparent, rgba(0,0,0,0.8));
-    color: var(--white); padding: 15px; font-weight: bold; font-size: 1.1rem;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 8px 15px;
+    font-weight: bold;
 }
 
-/* Numeri Utili - Lista */
 .card-number-item {
-    background: var(--white); padding: 18px; border-radius: 12px;
-    margin: 10px; border: 1px solid #eee; display: flex; align-items: center;
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
 }
 
-/* =========================================
-   6. MODALI & UTILITY
-   ========================================= */
+/* --- 11. MODALI --- */
 .modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7); display: flex; justify-content: center;
-    align-items: center; z-index: 3000; padding: 20px;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 .modal-content {
-    background: var(--white); padding: 25px; border-radius: 20px;
-    width: 100%; max-width: 500px; position: relative;
-    max-height: 85vh; overflow-y: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
 .close-modal {
-    position: absolute; top: 15px; right: 20px;
-    font-size: 30px; color: #bbb; cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 2rem;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 20px;
 }
 
-/* Bottoni Link Modali */
-.btn-link-modal {
-    display: block; text-align: center; padding: 14px;
-    background: var(--google-blue); color: var(--white);
-    border-radius: 8px; text-decoration: none; font-weight: bold;
+.animate-fade {
+    animation: fadeIn 0.3s ease-in;
 }
-.btn-link-modal.secondary { background: #f1f3f4; color: #3c4043; }
 
-.animate-fade { animation: fadeIn 0.3s ease-in; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
