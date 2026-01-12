@@ -157,15 +157,25 @@ async function loadTableData(tableName, btnEl) {
     // C. FARMACIE (Paesi, Numero, Nome, Indirizzo)
     else if (tableName === 'Farmacie') {
         data.forEach(f => {
+            // Se c'è un numero, crea il bottone verde, altrimenti niente
+            const callBtn = f.Numero 
+                ? `<a href="tel:${f.Numero}" class="btn-pharmacy-call"><span class="material-icons" style="font-size:16px;">call</span> CHIAMA</a>` 
+                : '';
+
             html += `
-                <div class="card-generic">
-                    <div class="card-title">💊 ${f.Nome}</div>
-                    <div class="card-subtitle">📍 ${f.Paesi} - ${f.Indirizzo || ''}</div>
-                    ${f.Numero ? `<a href="tel:${f.Numero}" class="btn-call">📞 ${f.Numero}</a>` : ''}
+                <div class="card-pharmacy">
+                    <div class="pharmacy-icon">✚</div>
+                    <div class="pharmacy-info">
+                        <div class="pharmacy-name">${f.Nome}</div>
+                        <div class="pharmacy-address">
+                            📍 ${f.Paesi} <br> 
+                            <span style="font-size:0.8em; color:#999;">${f.Indirizzo || ''}</span>
+                        </div>
+                    </div>
+                    ${callBtn}
                 </div>`;
         });
     }
-
     // D. SPIAGGE (Paesi, Descrizione, Nome)
     else if (tableName === 'Spiagge') {
         data.forEach(s => {
@@ -196,7 +206,6 @@ async function loadTableData(tableName, btnEl) {
     }
 
     // F. TRASPORTI & NUMERI UTILI (Standard)
-  // F. TRASPORTI (Modificato con stile Prodotti)
     else if (tableName === 'Trasporti') {
         data.forEach(t => {
             const safeObj = JSON.stringify(t).replace(/'/g, "&apos;");
@@ -207,8 +216,7 @@ async function loadTableData(tableName, btnEl) {
                 <div class="card-product" onclick='openModal("transport", ${safeObj})'>
                     <div class="prod-info">
                         <div class="prod-title">${t.Località || t.Mezzo || 'Trasporto'}</div>
-                        <div class="prod-desc">${t.Descrizione || 'Clicca per orari e info'}</div>
-                    </div>
+                                          </div>
                     ${t.Immagine ? `<img src="${t.Immagine}" class="prod-thumb">` : ''}
                 </div>`;
         });
