@@ -242,8 +242,122 @@ main, #app-content {
     font-weight: 700;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
+CSS
+/* ============================================================
+   2. CARD COMPACT (Stile Prodotti & Ristoranti)
+   Layout: Testo a Sinistra + Immagine Quadrata a Destra
+   ============================================================ */
 
-/* 2. LISTE PRODOTTI / RISTORANTI */
+/* 1. CONTENITORE PRINCIPALE - RISTORANTI (Sfondo Bianco e Layout) */
+.card-list-item {
+    background-color: white !important; /* !important forza il bianco */
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    
+    /* Bordo e Ombra per staccarlo dallo sfondo grigio */
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    
+    /* Layout Flessibile: Contenuto a SX | Immagine/Freccia a DX */
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Centra verticalmente */
+    gap: 15px;           /* Spazio tra testo e immagine */
+    
+    cursor: pointer;
+    transition: transform 0.2s;
+    }
+
+.card-list-item:active { transform: scale(0.98); }
+
+/* 1.2: AREA TESTO (Sinistra) */
+.item-info {
+    flex: 1; /* Prende tutto lo spazio disponibile */
+    min-width: 0; /* Evita che il testo rompa il layout */
+}
+
+/* Riga Intestazione: Titolo + Badge sulla stessa linea */
+.item-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.item-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+/* Badge (Tipo Ristorante) */
+.item-tag {
+    font-size: 0.7rem;
+    background-color: #e67e22;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.item-subtitle {
+    font-size: 0.9rem;
+    color: #666;
+}
+/* ============================================================
+   BOTTONI AZIONE DENTRO LA CARD (Chiama / Mappa)
+   ============================================================ */
+
+/* Contenitore dei bottoni (sotto l'indirizzo) */
+.card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+/* Stile base del bottone azione */
+.action-btn {
+    flex: 1; /* Si dividono lo spazio in parti uguali */
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px; /* Spazio tra icona e testo */
+    transition: transform 0.1s, opacity 0.2s;
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+/* Bottone Chiama (Verde Chiaro) */
+.btn-phone {
+    background-color: #e8f5e9;
+    color: #2e7d32; /* Verde scuro */
+    border: 1px solid #c8e6c9;
+}
+
+/* Bottone Mappa (Azzurro Chiaro) */
+.btn-map {
+    background-color: #e3f2fd;
+    color: #1565c0; /* Blu scuro */
+    border: 1px solid #bbdefb;
+}
+
+/* Icone dentro i bottoni (opzionale, se usi testo semplice va bene uguale) */
+.btn-icon { font-size: 1rem; }
+/* 2. CONTENITORE PRINCIPALE - PRODOTTI */
 .card-product, .list-item {
     display: flex;         /* Mette immagine e testo affiancati */
     justify-content: space-between;

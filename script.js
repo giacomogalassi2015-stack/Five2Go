@@ -103,7 +103,7 @@ async function loadTableData(tableName, btnEl) {
     let html = '<div class="list-container animate-fade">';
 
     // --- LOGICA SPECIFICA PER OGNI TABELLA ---
-// A. SENTIERI (Filtra per Label)
+    // A. SENTIERI (Filtra per Label)
     if (tableName === 'Sentieri') {
         renderGenericFilterableView(data, 'Label', subContent, sentieroRenderer);
         return; // IMPORTANTE: Esce qui perché il render lo fa la funzione sopra
@@ -115,19 +115,10 @@ async function loadTableData(tableName, btnEl) {
         return; 
     }
 
-    // B. RISTORANTI (Paesi, Nome, Indirizzo, Telefono, Tipo)
+    // C. RISTORANTI (Paesi, Nome, Indirizzo, Telefono, Tipo)
     else if (tableName === 'Ristoranti') {
-        data.forEach(r => {
-            html += `
-                <div class="card-generic">
-                    <div class="card-top">
-                        <div class="card-title">${r.Nome}</div>
-                        <div class="card-tag">${r.Tipo || ''}</div>
-                    </div>
-                    <div class="card-subtitle">📍 ${r.Paesi} - ${r.Indirizzo || ''}</div>
-                    ${r.Telefono ? `<a href="tel:${r.Telefono}" class="btn-call">📞 Chiama ${r.Telefono}</a>` : ''}
-                </div>`;
-        });
+        renderGenericFilterableView(data, 'Paesi', subContent, ristoranteRenderer);
+        return;
     }
 
     // C. FARMACIE (Paesi, Numero, Nome, Indirizzo)
@@ -234,11 +225,13 @@ async function openModal(type, payload) {
             ${contentHtml}
         </div>`;
 }
+
+
 /* 7. LOGICA DI RENDERING CON FILTRO */
-/**
- * 1. MOTORE GENERICO
- * Prende i dati e crea la UI con i filtri in alto e la lista sotto.
- */
+/* ============================================================
+   7.1: MOTORE GENERICO - OGNI VIEW FILTRABILE
+    Prende i dati e crea la UI con i filtri in alto e la lista sotto.
+   ============================================================ */
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
     // Pulisce e prepara lo scheletro
     container.innerHTML = `
@@ -248,12 +241,41 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
 
     const filterBar = container.querySelector('#dynamic-filters');
     const listContainer = container.querySelector('#dynamic-list');
+    /* ============================================================
+        7.2: ESTRAZIONE FILTRI E ORDINAMENTO PERSONALIZZATO (PAESI)
+    ============================================================ */
+    // 1. Estrai i tag unici (senza ordinare subito)
+    // Nota: Aggiungiamo un check per evitare valori nulli/undefined
+    let tagsRaw = [...new Set(allData.map(item => item[filterKey]))].filter(x => x);
+    
+    // 2. Definisci l'ordine personalizzato (Geografico + Tutti)
+    const customOrder = ["Tutti", "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso"];
 
-    // Estrae le categorie uniche (es. Paesi o Label)
-    const uniqueTags = ['Tutti', ...new Set(allData.map(item => item[filterKey]))].sort();
+    // 3. Aggiungi "Tutti" se non c'è, poi ordina
+    if (!tagsRaw.includes('Tutti')) tagsRaw.unshift('Tutti');
 
-    // Crea i bottoni
-    uniqueTags.forEach(tag => {
+    const uniqueTags = tagsRaw.sort((a, b) => {
+        const indexA = customOrder.indexOf(a);
+        const indexB = customOrder.indexOf(b);
+
+        // CASO A: Entrambi sono nella lista personalizzata (es. Manarola vs Vernazza)
+        if (indexA !== -1 && indexB !== -1) {
+            return indexA - indexB; // Ordina in base alla posizione nella lista custom
+        }
+
+        // CASO B: Uno è nella lista (es. Tutti) e l'altro no (es. Sentiero Azzurro)
+        // Chi è nella lista vince (viene prima)
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+
+        // CASO C: Nessuno dei due è nella lista (es. categorie Sentieri come "Meno battuti")
+        // Ordina alfabeticamente come fallback
+        return a.localeCompare(b);
+    });
+    /* ============================================================
+        7.3: CREA BOTTONI SUI FILTRI PER TRIGGERARE IL FILTRO
+    ============================================================ */
+        uniqueTags.forEach(tag => {
         const btn = document.createElement('button');
         btn.className = 'filter-chip';
         btn.innerText = tag;
@@ -288,9 +310,11 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
     updateList(allData);
 }
 
-/**
- * 2. TEMPLATE PER I SENTIERI
- */
+/* ============================================================
+   8: TEMPLATE SPECIFICI DI RENDERING IN BASE AI FILTRI
+   ============================================================ */
+
+// RENDER SENTIERI 
 const sentieroRenderer = (s) => {
     // 1. "Paracadute": Cerca la proprietà sia maiuscola che minuscola
     // Usa || (OR) per prendere quella che esiste
@@ -325,9 +349,7 @@ const sentieroRenderer = (s) => {
     </div>`;
 };
 
-/**
- * 3. TEMPLATE PER LE SPIAGGE (Nuovo!)
- */
+// RENDER SPIAGGE
 const spiaggiaRenderer = (s) => {
     const safeNome = s.Nome.replace(/'/g, "\\'");
     const safeDesc = s.Descrizione ? s.Descrizione.replace(/'/g, "\\'") : 'Nessuna descrizione disponibile.';
@@ -344,6 +366,54 @@ const spiaggiaRenderer = (s) => {
         </div>
     </div>`;
 };
+
+// RENDER RISTORANTI 
+const ristoranteRenderer = (r) => {
+    // 1. Normalizzazione Dati
+    const nome = r.Nome || r.nome;
+    const tipo = r.Tipo || r.tipo || 'Ristorante';
+    const paesi = r.Paesi || r.paesi;
+    const telefono = r.Telefono || r.telefono;
+    const indirizzo = r.Indirizzo || r.indirizzo;
+    
+    // 2. Link Mappa
+    // Ora il link è corretto per Google Maps
+    const fullAddress = `${indirizzo}, ${paesi}`;
+    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+    
+    // 3. Safe Object
+    // Usa &apos; e &quot; per non rompere l'HTML dell'onclick
+    const safeObj = JSON.stringify(r).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+
+    return `
+    <div class="card-list-item" onclick='openModal("restaurant", ${safeObj})'>
+        <div class="item-info">
+            <div class="item-header-row">
+                <div class="item-title">${nome}</div>
+                <div class="item-tag">${tipo}</div>
+            </div>
+            
+            <div class="item-subtitle">📍 ${paesi}</div>
+
+            <div class="card-actions">
+                ${telefono ? `
+                    <a href="tel:${telefono}" class="action-btn btn-phone" onclick="event.stopPropagation()">
+                        <span>📞</span> Chiama
+                    </a>
+                ` : ''}
+                
+                ${indirizzo ? `
+                    <a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()">
+                        <span>🗺️</span> Mappa
+                    </a>
+                ` : ''}
+            </div>
+        </div>
+        
+        <div class="item-arrow" style="align-self: flex-start; margin-top: 5px;">➜</div>
+    </div>`;
+};
+
 
 // Avvio app
 document.addEventListener('DOMContentLoaded', () => switchView('home'));
