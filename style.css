@@ -750,3 +750,7 @@ CSS
 
 @keyframes fadeIn { to { opacity: 1; } }
 
+/* Nasconde la freccia nei Prodotti e nei Ristoranti */
+.prod-arrow, .item-arrow {
+    display: none !important;
+}
