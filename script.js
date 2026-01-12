@@ -103,40 +103,16 @@ async function loadTableData(tableName, btnEl) {
     let html = '<div class="list-container animate-fade">';
 
     // --- LOGICA SPECIFICA PER OGNI TABELLA ---
-
-    // A. SENTIERI (Raggruppati per Label)
+// A. SENTIERI (Filtra per Label)
     if (tableName === 'Sentieri') {
-        const categorie = {};
-        data.forEach(s => {
-            const cat = s.Label || "Altri";
-            if (!categorie[cat]) categorie[cat] = [];
-            categorie[cat].push(s);
-        });
+        renderGenericFilterableView(data, 'Label', subContent, sentieroRenderer);
+        return; // IMPORTANTE: Esce qui perché il render lo fa la funzione sopra
+    }
 
-        for (const label in categorie) {
-            html += `<h3 class="macro-label">${label}</h3>`;
-            categorie[label].forEach(s => {
-                const pedaggioBtn = s.Pedaggio ? `<a href="${s.Pedaggio}" target="_blank" class="btn-yellow">PEDAGGIO</a>` : '';
-                const safeDesc = s.Descrizione ? s.Descrizione.replace(/'/g, "\\'") : '';
-                const safePaesi = s.Paesi ? s.Paesi.replace(/'/g, "\\'") : '';
-                
-                html += `
-                    <div class="card-sentiero">
-                        <div class="sentiero-header">
-                            <strong>${s.Distanza || '--'}</strong>
-                            <span>${s.Durata || '--'}</span>
-                        </div>
-                        <div class="sentiero-body" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
-                            <h4>${s.Paesi}</h4>
-                            <p class="difficolta">${s.Difficoltà || ''}</p>
-                        </div>
-                        <div class="sentiero-footer">
-                            <a href="${s.Mappa}" target="_blank" class="btn-yellow">MAPPA</a>
-                            ${pedaggioBtn}
-                        </div>
-                    </div>`;
-            });
-        }
+    // B. SPIAGGE (Filtra per Paesi)
+    else if (tableName === 'Spiagge') {
+        renderGenericFilterableView(data, 'Paesi', subContent, spiaggiaRenderer);
+        return; 
     }
 
     // B. RISTORANTI (Paesi, Nome, Indirizzo, Telefono, Tipo)
@@ -162,18 +138,6 @@ async function loadTableData(tableName, btnEl) {
                     <div class="card-title">💊 ${f.Nome}</div>
                     <div class="card-subtitle">📍 ${f.Paesi} - ${f.Indirizzo || ''}</div>
                     ${f.Numero ? `<a href="tel:${f.Numero}" class="btn-call">📞 ${f.Numero}</a>` : ''}
-                </div>`;
-        });
-    }
-
-    // D. SPIAGGE (Paesi, Descrizione, Nome)
-    else if (tableName === 'Spiagge') {
-        data.forEach(s => {
-            html += `
-                <div class="card-generic" onclick="simpleAlert('${s.Nome.replace(/'/g, "\\'")}', '${s.Descrizione.replace(/'/g, "\\'")}')">
-                    <div class="card-title">🏖️ ${s.Nome}</div>
-                    <div class="card-subtitle">📍 ${s.Paesi}</div>
-                    <div class="card-preview">Clicca per info</div>
                 </div>`;
         });
     }
@@ -270,6 +234,116 @@ async function openModal(type, payload) {
             ${contentHtml}
         </div>`;
 }
+/* 7. LOGICA DI RENDERING CON FILTRO */
+/**
+ * 1. MOTORE GENERICO
+ * Prende i dati e crea la UI con i filtri in alto e la lista sotto.
+ */
+function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
+    // Pulisce e prepara lo scheletro
+    container.innerHTML = `
+        <div class="filter-bar" id="dynamic-filters"></div>
+        <div class="list-container animate-fade" id="dynamic-list"></div>
+    `;
+
+    const filterBar = container.querySelector('#dynamic-filters');
+    const listContainer = container.querySelector('#dynamic-list');
+
+    // Estrae le categorie uniche (es. Paesi o Label)
+    const uniqueTags = ['Tutti', ...new Set(allData.map(item => item[filterKey]))].sort();
+
+    // Crea i bottoni
+    uniqueTags.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-chip';
+        btn.innerText = tag;
+        if (tag === 'Tutti') btn.classList.add('active-filter');
+
+        btn.onclick = () => {
+            // Gestione visiva bottone attivo
+            filterBar.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active-filter'));
+            btn.classList.add('active-filter');
+            
+            // Logica di filtro
+            const filtered = tag === 'Tutti' 
+                ? allData 
+                : allData.filter(item => item[filterKey] === tag);
+            
+            updateList(filtered);
+        };
+        filterBar.appendChild(btn);
+    });
+
+    // Funzione interna per disegnare le card
+    function updateList(items) {
+        if (!items || items.length === 0) {
+            listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#999;">Nessun risultato.</p>';
+            return;
+        }
+        // Usa il "Renderer" specifico per trasformare l'oggetto JSON in HTML
+        listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
+    }
+
+    // Primo avvio: mostra tutto
+    updateList(allData);
+}
+
+/**
+ * 2. TEMPLATE PER I SENTIERI
+ */
+const sentieroRenderer = (s) => {
+    // 1. "Paracadute": Cerca la proprietà sia maiuscola che minuscola
+    // Usa || (OR) per prendere quella che esiste
+    const paesi = s.Paesi || s.paesi || 'Nome mancante';
+    const label = s.Label || s.label || 'Nessuna cat.';  // <--- ECCO IL COLPEVOLE
+    const desc = s.Descrizione || s.descrizione || '';
+    const dist = s.Distanza || s.distanza || '--';
+    const dur = s.Durata || s.durata || '--';
+    const diff = s.Difficoltà || s.difficoltà || '';
+    const mappa = s.Mappa || s.mappa || '#';
+    const pedaggio = s.Pedaggio || s.pedaggio;
+
+    // 2. Protezione apostrofi
+    const safePaesi = paesi.replace(/'/g, "\\'");
+    const safeDesc = desc.replace(/'/g, "\\'");
+
+    return `
+    <div class="card-sentiero">
+        <div class="sentiero-header">
+            <strong>${dist}</strong>
+            <span>${dur}</span>
+        </div>
+        <div class="sentiero-body" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
+            <div style="font-size:0.75rem; color:#e67e22; text-transform:uppercase;">${label}</div>
+            <h4>${paesi}</h4>
+            <p class="difficolta">${diff}</p>
+        </div>
+        <div class="sentiero-footer">
+            <a href="${mappa}" target="_blank" class="btn-yellow">MAPPA</a>
+            ${pedaggio ? `<a href="${pedaggio}" target="_blank" class="btn-yellow">PEDAGGIO</a>` : ''}
+        </div>
+    </div>`;
+};
+
+/**
+ * 3. TEMPLATE PER LE SPIAGGE (Nuovo!)
+ */
+const spiaggiaRenderer = (s) => {
+    const safeNome = s.Nome.replace(/'/g, "\\'");
+    const safeDesc = s.Descrizione ? s.Descrizione.replace(/'/g, "\\'") : 'Nessuna descrizione disponibile.';
+
+    return `
+    <div class="card-generic" style="border-left: 4px solid #00bcd4;">
+        <div class="card-top">
+            <div class="card-title">${s.Nome}</div>
+            <div class="card-tag" style="font-size:0.8rem; color:#666;">📍 ${s.Paesi}</div>
+        </div>
+        <div style="margin-top:10px; display:flex; gap:10px;">
+             <button class="btn-yellow" onclick="simpleAlert('${safeNome}', '${safeDesc}')">INFO</button>
+             ${s.Maps ? `<a href="${s.Maps}" target="_blank" class="btn-yellow">VAI</a>` : ''}
+        </div>
+    </div>`;
+};
 
 // Avvio app
 document.addEventListener('DOMContentLoaded', () => switchView('home'));

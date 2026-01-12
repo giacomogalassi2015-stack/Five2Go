@@ -343,6 +343,47 @@ main, #app-content {
     background: none;
     border: none;
 }
+/* 5. CHIPS DI FILTRAGGIO */
+/* ============================================================
+   NUOVA SEZIONE: FILTRI DINAMICI (Chips)
+   ============================================================ */
+
+/* Il contenitore che tiene i bottoni in riga */
+.filter-bar {
+    display: flex;
+    gap: 8px;
+    padding: 10px 5px; /* Un po' di padding laterale */
+    margin-bottom: 15px;
+    overflow-x: auto; /* Permette di scorrere col dito se i filtri sono tanti */
+    
+    /* Nascondi barra scorrimento brutta */
+    -ms-overflow-style: none;  
+    scrollbar-width: none; 
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+
+/* Il singolo bottone filtro (Chip) */
+.filter-chip {
+    padding: 8px 16px;
+    border-radius: 20px;       /* Molto rotondo */
+    border: 1px solid #e0e0e0;
+    background: white;
+    color: var(--text-main);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;       /* Il testo non va mai a capo */
+    transition: all 0.2s ease;
+    flex-shrink: 0;            /* Impedisce al bottone di schiacciarsi */
+}
+
+/* Quando il filtro è selezionato */
+.filter-chip.active-filter {
+    background-color: var(--text-main); /* Diventa scuro (o usa --primary-col se preferisci) */
+    color: white;
+    border-color: var(--text-main);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
 
 @keyframes fadeIn { to { opacity: 1; } }
 
