@@ -216,8 +216,8 @@ async function openModal(type, payload) {
             <h2>${payload.Località}</h2>
             <p>${payload.Descrizione || ''}</p>
             <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-                ${payload["Link 1"] ? `<a href="${payload["Link 1"]}" target="_blank" class="btn-yellow" style="text-align:center;">VAI AL SITO</a>` : ''}
-                ${payload["Link 2"] ? `<a href="${payload["Link 2"]}" target="_blank" class="btn-yellow" style="text-align:center;">ORARI</a>` : ''}
+                ${payload["Link"] ? `<a href="${payload["Link"]}" target="_blank" class="btn-yellow" style="text-align:center;">VAI AL SITO</a>` : ''}
+                ${payload["Link_2"] ? `<a href="${payload["Link_2"]}" target="_blank" class="btn-yellow" style="text-align:center;">ORARI</a>` : ''}
             </div>`;
     }
 
