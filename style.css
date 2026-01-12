@@ -415,6 +415,69 @@ CSS
     font-weight: 700;
     margin-bottom: 8px;
     text-transform: uppercase;
+} /* 4. CARD SPIAGGE (Stile Sentieri - Variante Azzurra) */
+.card-spiaggia {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    /* Bordo sinistro AZZURRO MARE per distinguerlo dai sentieri */
+    border-left: 5px solid #00bcd4; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.card-spiaggia:active {
+    transform: scale(0.98);
+}
+
+.spiaggia-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 5px;
+}
+
+.spiaggia-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #333;
+    line-height: 1.2;
+}
+
+.spiaggia-location {
+    font-size: 0.85rem;
+    color: #666; /* Grigio scuro */
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.spiaggia-footer {
+    display: flex;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f5f5f5; /* Separatore leggerissimo */
+}
+
+/* Bottone specifico Azzurro (simile a btn-yellow ma tema mare) */
+.btn-azure {
+    background-color: #e0f7fa; /* Azzurro chiarissimo */
+    color: #00838f;            /* Testo Petrolio */
+    border: 1px solid #b2ebf2;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-azure:active {
+    background-color: #b2ebf2;
 }
 /* --- STILE SPECIFICO TRASPORTI (Foto piccola a sinistra) --- */
 .card-transport {

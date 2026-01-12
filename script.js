@@ -109,12 +109,11 @@ async function loadTableData(tableName, btnEl) {
         return; // IMPORTANTE: Esce qui perché il render lo fa la funzione sopra
     }
 
-    // B. SPIAGGE (Filtra per Paesi)
+   // Cerca questo blocco dentro la funzione loadTableData
     else if (tableName === 'Spiagge') {
         renderGenericFilterableView(data, 'Paesi', subContent, spiaggiaRenderer);
         return; 
     }
-
     // C. RISTORANTI (Paesi, Nome, Indirizzo, Telefono, Tipo)
     else if (tableName === 'Ristoranti') {
         renderGenericFilterableView(data, 'Paesi', subContent, ristoranteRenderer);
@@ -368,14 +367,15 @@ const spiaggiaRenderer = (s) => {
     const safeDesc = s.Descrizione ? s.Descrizione.replace(/'/g, "\\'") : 'Nessuna descrizione disponibile.';
 
     return `
-    <div class="card-generic" style="border-left: 4px solid #00bcd4;">
-        <div class="card-top">
-            <div class="card-title">${s.Nome}</div>
-            <div class="card-tag" style="font-size:0.8rem; color:#666;">📍 ${s.Paesi}</div>
+    <div class="card-spiaggia">
+        <div class="spiaggia-header">
+            <div class="spiaggia-title">${s.Nome}</div>
+            <span style="font-size:1.2rem;">🏖️</span>
         </div>
-        <div style="margin-top:10px; display:flex; gap:10px;">
-             <button class="btn-yellow" onclick="simpleAlert('${safeNome}', '${safeDesc}')">INFO</button>
-             ${s.Maps ? `<a href="${s.Maps}" target="_blank" class="btn-yellow">VAI</a>` : ''}
+        <div class="spiaggia-location">📍 ${s.Paesi}</div>
+        <div class="spiaggia-footer">
+             <button class="btn-azure" onclick="simpleAlert('${safeNome}', '${safeDesc}')">INFO</button>
+             ${s.Maps ? `<a href="${s.Maps}" target="_blank" class="btn-azure">MAPPA</a>` : ''}
         </div>
     </div>`;
 };
