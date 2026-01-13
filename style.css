@@ -48,7 +48,29 @@ header, #app-header {
     z-index: 1000;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
+/* Grafica per il bottone Condividi */
+.icon-btn {
+    background: transparent;  /* Rimuove lo sfondo grigio di default dei bottoni */
+    border: none;             /* Rimuove il bordo brutto */
+    color: white;             /* Colore dell'icona (deve risaltare sull'header) */
+    cursor: pointer;
+    padding: 8px;             /* Spazio intorno all'icona per cliccare meglio */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s ease; /* Effetto al tocco */
+}
 
+/* Effetto quando lo premi col dito */
+.icon-btn:active {
+    transform: scale(0.9);    /* Si rimpicciolisce leggermente */
+    opacity: 0.7;             /* Diventa un po' trasparente */
+}
+
+/* Dimensioni dell'icona dentro al bottone */
+.icon-btn .material-icons {
+    font-size: 24px;          /* Grandezza standard icone mobile */
+}
 #view-title {
     font-size: 1.3rem;
     font-weight: 700;

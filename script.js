@@ -507,4 +507,21 @@ const numeriUtiliRenderer = (n) => {
     </div>`;
 };
 // Avvio app
-document.addEventListener('DOMContentLoaded', () => switchView('home'));
+document.addEventListener('DOMContentLoaded', () => switchView('home'));/* --- FUNZIONE CONDIVISIONE --- */
+async function shareApp() {
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: '5 Terre App',
+                text: 'Guarda questa guida per le 5 Terre!',
+                url: window.location.href // Prende il link attuale del sito
+            });
+        } else {
+            // Se il browser è vecchio, copia il link negli appunti
+            navigator.clipboard.writeText(window.location.href);
+            alert("Link copiato! Ora puoi incollarlo dove vuoi.");
+        }
+    } catch (err) {
+        console.log("Errore:", err);
+    }
+}
