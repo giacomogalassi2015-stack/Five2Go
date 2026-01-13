@@ -417,7 +417,7 @@ CSS
     border-radius: 10px;
     padding: 15px;
     margin-bottom: 15px;
-    border-left: 5px solid var(--accent-col); /* Striscia colorata a sinistra */
+    border-left: 5px solid var(--accent-col);
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
@@ -429,6 +429,36 @@ CSS
     font-weight: 700;
     margin-bottom: 8px;
     text-transform: uppercase;
+} /* <--- QUESTA MANCAVA NEL TUO CODICE */
+
+/* Contenitore Footer del Sentiero */
+.sentiero-footer {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    padding-top: 12px;
+    margin-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* Pulsante piccolo e compatto */
+.btn-sentiero-small {
+    display: inline-block;
+    padding: 5px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    border-radius: 6px;
+    color: #e67e22;
+    background-color: #fef5ed; 
+    border: 1px solid #fad7b9;
+    transition: all 0.2s ease;
+}
+
+.btn-sentiero-small:active {
+    background-color: #e67e22;
+    color: white;
 } /* 4. CARD SPIAGGE (Stile Sentieri - Variante Azzurra) */
 .card-spiaggia {
     background: white;

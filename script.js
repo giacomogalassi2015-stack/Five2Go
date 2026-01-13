@@ -351,6 +351,8 @@ const sentieroRenderer = (s) => {
     const safePaesi = paesi.replace(/'/g, "\\'");
     const safeDesc = desc.replace(/'/g, "\\'");
 
+  // ... parte iniziale del tuo renderer (variabili e safePaesi) ...
+
     return `
     <div class="card-sentiero">
         <div class="sentiero-header">
@@ -362,9 +364,11 @@ const sentieroRenderer = (s) => {
             <h4>${paesi}</h4>
             <p class="difficolta">${diff}</p>
         </div>
+        
         <div class="sentiero-footer">
-            <a href="${mappa}" target="_blank" class="btn-yellow">MAPPA</a>
-            ${pedaggio ? `<a href="${pedaggio}" target="_blank" class="btn-yellow">PEDAGGIO</a>` : ''}
+            <a href="${mappa}" target="_blank" class="btn-sentiero-small">MAPPA</a>
+            
+            ${pedaggio ? `<a href="${pedaggio}" target="_blank" class="btn-sentiero-small">PEDAGGIO</a>` : '<span></span>'}
         </div>
     </div>`;
 };
