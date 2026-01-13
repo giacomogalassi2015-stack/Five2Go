@@ -525,31 +525,25 @@ async function shareApp() {
         console.log("Errore:", err);
     }
 }/* ==========================================
-   BLOCCO TOTALE DELLO ZOOM (Pinch-to-Zoom)
+   CODICE ZOOM (DEVE STARE QUI SOTTO, ISOLATO)
    ========================================== */
 
-// 1. Blocca il gesto del "pizzico" su Safari/iOS
-document.addEventListener('gesturestart', function(e) {
-    e.preventDefault();
-});
-
-document.addEventListener('gesturechange', function(e) {
-    e.preventDefault();
-});
-
-document.addEventListener('gestureend', function(e) {
-    e.preventDefault();
-});
-
-// 2. Blocca lo zoom con due dita su altri browser
-// (Nota: { passive: false } è obbligatorio per far funzionare preventDefault qui)
-document.addEventListener('touchmove', function(e) {
-    if (e.scale !== 1) { 
-        e.preventDefault(); 
-    }
+document.addEventListener('touchmove', function(event) {
+    if (event.scale !== 1) { event.preventDefault(); }
 }, { passive: false });
 
-// 3. Blocca il doppio tocco veloce (zoom)
+document.addEventListener('gesturestart', function(event) {
+    event.preventDefault();
+}, { passive: false });
+
+document.addEventListener('gesturechange', function(event) {
+    event.preventDefault();
+}, { passive: false });
+
+document.addEventListener('gestureend', function(event) {
+    event.preventDefault();
+}, { passive: false });
+
 let lastTouchEnd = 0;
 document.addEventListener('touchend', function(event) {
     const now = (new Date()).getTime();

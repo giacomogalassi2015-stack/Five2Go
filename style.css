@@ -25,7 +25,15 @@ body {
     background-color: var(--bg-light);
     color: var(--text-main);
     line-height: 1.5;
-     touch-action: manipulation;
+     /* Permette lo scroll in verticale e orizzontale, ma VIETA lo zoom */
+    touch-action: pan-x pan-y; 
+    
+    /* Impedisce lo scroll elastico orizzontale che a volte confonde */
+    overflow-x: hidden; 
+    
+    /* Assicura che l'altezza sia stabile */
+    height: 100%;
+    width: 100%;
     /* Riserviamo spazio in basso affinché il contenuto non finisca sotto il menu (che faremo nella Parte 2) */
     padding-bottom: calc(var(--nav-height) + 20px);
 }
