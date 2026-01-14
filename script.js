@@ -46,7 +46,6 @@ async function switchView(view, el) {
         } 
         else if (view === 'cibo') {
             viewTitle.innerText = "Cibo & Sapori";
-            // Vini rimosso come richiesto
             renderSubMenu([
                 { label: "🍇 Prodotti", table: "Prodotti" },
                 { label: "🍝 Ristoranti", table: "Ristoranti" }
@@ -66,12 +65,6 @@ async function switchView(view, el) {
                 { label: "📞 Numeri", table: "Numeri_utili" },
                 { label: "💊 Farmacie", table: "Farmacie" }
             ], 'Trasporti');
-        }else if (view === 'mappe_monumenti') {
-                viewTitle.innerText = "Mappe & Cultura";
-                renderSubMenu([
-                    { label: "🗺️ Mappa", table: "Mappe" },
-                    { label: "🏛️ Monumenti", table: "Attrazioni" } // <--- CAMBIATO QUI: Punta alla tabella reale
-                    ], 'Mappe');
         }
     } catch (err) {
         console.error(err);
@@ -83,7 +76,6 @@ async function switchView(view, el) {
 function renderSubMenu(options, defaultTable) {
     let menuHtml = '<div class="sub-nav-bar">';
     options.forEach(opt => {
-        // Al click ricarica la tabella specifica
         menuHtml += `<button class="sub-nav-item" onclick="loadTableData('${opt.table}', this)">${opt.label}</button>`;
     });
     menuHtml += '</div><div id="sub-content"></div>';
@@ -117,6 +109,7 @@ async function renderHome() {
         <div class="village-card" style="background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')" onclick="switchView('mappe_monumenti', null)">
             <div class="card-title-overlay">Mappe & Monumenti</div>
         </div>`;
+        
     content.innerHTML = html + '</div>';
 }
 
@@ -125,12 +118,27 @@ async function loadTableData(tableName, btnEl) {
     const subContent = document.getElementById('sub-content');
     if (!subContent) return;
 
-    // Gestione classe active sottomenu
     document.querySelectorAll('.sub-nav-item').forEach(b => b.classList.remove('active-sub'));
     if (btnEl) btnEl.classList.add('active-sub');
 
     subContent.innerHTML = '<div class="loader">Caricamento dati...</div>';
     
+    // Gestione speciale per Mappe che non carica da DB ma mostra iframe statico
+    if (tableName === 'Mappe') {
+        subContent.innerHTML = `
+            <div class="map-container animate-fade">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d46077.56843657856!2d9.699762635905068!3d44.12658102375549!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12d4fa24b95f2231%3A0xe539c89495687708!2sParco%20Nazionale%20delle%20Cinque%20Terre!5e0!3m2!1sit!2sit!4v1709220000000!5m2!1sit!2sit" 
+                width="640" 
+                height="480"
+                style="border:0; width:100%; height:400px; border-radius:12px;" 
+                allowfullscreen="" 
+                loading="lazy">
+                </iframe>
+                <div class="map-note" style="text-align:center; padding:10px; color:#666;">Mappa Interattiva Google</div>
+            </div>`;
+        return; 
+    }
+
     const { data, error } = await supabaseClient.from(tableName).select('*');
     if (error) {
         subContent.innerHTML = `<p class="error-msg">Errore: ${error.message}</p>`;
@@ -139,31 +147,28 @@ async function loadTableData(tableName, btnEl) {
 
     let html = '<div class="list-container animate-fade">';
 
-    // --- LOGICA SPECIFICA PER OGNI TABELLA ---
-    // A. SENTIERI (Filtra per Label)
+    // --- SWITCH RENDERER ---
     if (tableName === 'Sentieri') {
         renderGenericFilterableView(data, 'Label', subContent, sentieroRenderer);
-        return; // IMPORTANTE: Esce qui perché il render lo fa la funzione sopra
+        return;
     }
-
-   // Cerca questo blocco dentro la funzione loadTableData
     else if (tableName === 'Spiagge') {
         renderGenericFilterableView(data, 'Paesi', subContent, spiaggiaRenderer);
         return; 
     }
-    // C. RISTORANTI (Paesi, Nome, Indirizzo, Telefono, Tipo)
     else if (tableName === 'Ristoranti') {
         renderGenericFilterableView(data, 'Paesi', subContent, ristoranteRenderer);
         return;
     }
-
-    // D. FARMACIE (Paesi, Numero, Nome, Indirizzo)
     else if (tableName === 'Farmacie') {
        renderGenericFilterableView(data, 'Paesi', subContent, farmaciaRenderer);
-        return;
+       return;
     }
-
- // E. PRODOTTI (Con Lazy Loading per evitare il Lag)
+    else if (tableName === 'Attrazioni') {
+       // CORREZIONE: Qui ora chiama la funzione attrazioniRenderer che ho aggiunto in fondo
+       renderGenericFilterableView(data, 'Paese', subContent, attrazioniRenderer);
+       return;
+    }
     else if (tableName === 'Prodotti') {
         data.forEach(p => {
                         const titolo = p.Prodotti || p.Nome; 
@@ -188,8 +193,6 @@ async function loadTableData(tableName, btnEl) {
                     </div>`;
         });
     }
-
-    // F. TRASPORTI & NUMERI UTILI (Standard)
     else if (tableName === 'Trasporti') {
         data.forEach(t => {// 1. Determina il nome (chiave per Cloudinary e Titolo visualizzato)
             // Se nel DB hai colonne diverse (es. 'Mezzo'), il codice cerca la prima piena.
@@ -237,19 +240,15 @@ async function loadTableData(tableName, btnEl) {
     }
     else if (tableName === 'Numeri_utili') {
         data.sort((a, b) => {
-            // Controlliamo se il nome contiene "112" o "Emergenza"
-            // Usiamo toLowerCase() per sicurezza
             const isEmergenzaA = a.Nome.includes('112') || a.Nome.toLowerCase().includes('emergenza');
             const isEmergenzaB = b.Nome.includes('112') || b.Nome.toLowerCase().includes('emergenza');
-
-            // Logica del "Vince chi è Emergenza"
-            if (isEmergenzaA && !isEmergenzaB) return -1; // A va su (Primo)
-            if (!isEmergenzaA && isEmergenzaB) return 1;  // B va su
-            return 0; // Se nessuno dei due è emergenza, lascia l'ordine com'è
+            if (isEmergenzaA && !isEmergenzaB) return -1;
+            if (!isEmergenzaA && isEmergenzaB) return 1;
+            return 0;
         }); 
         renderGenericFilterableView(data, 'Comune', subContent, numeriUtiliRenderer);
         return;
-        };
+    };
     
     subContent.innerHTML = html + '</div>';
 }
@@ -260,7 +259,6 @@ function simpleAlert(titolo, testo) {
 }
 
 async function openModal(type, payload) {
-    // Crea sfondo scuro
     const modal = document.createElement('div');
     modal.className = 'modal-overlay animate-fade';
     document.body.appendChild(modal);
@@ -282,43 +280,31 @@ else if (type === 'product') {
     else if (type === 'attrazione') {
         contentHtml = `
             <h2>${payload.Attrazioni}</h2>
-            <div style="color:#666; margin-bottom:15px; font-weight:600;">
-                📍 ${payload.Paese}
-            </div>
+            <div style="color:#666; margin-bottom:15px; font-weight:600;">📍 ${payload.Paese}</div>
             
             <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <span class="meta-badge" style="background:#eee;">⏱ ${payload["Tempo Visita (min)"] || '--'} min</span>
-                <span class="meta-badge" style="background:#eee;">${payload["Difficoltà Accesso"] || 'Accessibile'}</span>
+                <span class="meta-badge" style="background:#eee; padding:5px; border-radius:8px;">⏱ ${payload["Tempo Visita (min)"] || '--'} min</span>
+                <span class="meta-badge" style="background:#eee; padding:5px; border-radius:8px;">${payload["Difficoltà Accesso"] || 'Accessibile'}</span>
             </div>
 
-            <p><strong>Descrizione:</strong><br>${payload.Descrizione || 'Nessuna descrizione disponibile.'}</p>
+            <p>${payload.Descrizione || 'Nessuna descrizione.'}</p>
+            ${payload.Curiosità ? `<div class="curiosity-box" style="margin-top:10px; padding:10px; background:#f9f9f9; border-left:4px solid orange;">💡 ${payload.Curiosità}</div>` : ''}
             
-            ${payload.Curiosità ? `
-                <div class="curiosity-box">
-                    <strong>💡 Curiosità</strong>
-                    <p>${payload.Curiosità}</p>
-                </div>
-            ` : ''}
-
-            <hr>
-            <div style="margin-top:15px;">
-                ${payload["Icona MyMaps"] ? `
-                    <a href="${payload["Icona MyMaps"]}" target="_blank" class="btn-azure" style="width:100%; text-align:center; display:block;">
-                        📍 VEDI POSIZIONE ESATTA
-                    </a>` : ''}
+            <div style="margin-top:20px;">
+             ${payload["Icona MyMaps"] ? `<a href="${payload["Icona MyMaps"]}" target="_blank" class="btn-yellow" style="display:block; text-align:center;">VAI ALLA POSIZIONE</a>` : ''}
             </div>
         `;
     }
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close-modal" onclick="this.parentElement.parentElement.remove()">×</span>
+            ${contentHtml}
+        </div>`;
 }
 
-
-/* 7. LOGICA DI RENDERING CON FILTRO */
-/* ============================================================
-   7.1: MOTORE GENERICO - OGNI VIEW FILTRABILE
-    Prende i dati e crea la UI con i filtri in alto e la lista sotto.
-   ============================================================ */
+// 7. MOTORE DI FILTRO
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
-    // Pulisce e prepara lo scheletro
     container.innerHTML = `
         <div class="filter-bar" id="dynamic-filters"></div>
         <div class="list-container animate-fade" id="dynamic-list"></div>
@@ -326,130 +312,82 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
 
     const filterBar = container.querySelector('#dynamic-filters');
     const listContainer = container.querySelector('#dynamic-list');
-    /* ============================================================
-        7.2: ESTRAZIONE FILTRI E ORDINAMENTO PERSONALIZZATO (PAESI)
-    ============================================================ */
-    // 1. Estrai i tag unici (senza ordinare subito)
-    // Nota: Aggiungiamo un check per evitare valori nulli/undefined
-    let tagsRaw = [...new Set(allData.map(item => item[filterKey]))].filter(x => x);
     
-    // 2. Definisci l'ordine personalizzato (Geografico + Tutti)
+    let tagsRaw = [...new Set(allData.map(item => item[filterKey]))].filter(x => x);
     const customOrder = ["Tutti", "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso"];
-
-    // 3. Aggiungi "Tutti" se non c'è, poi ordina
     if (!tagsRaw.includes('Tutti')) tagsRaw.unshift('Tutti');
 
     const uniqueTags = tagsRaw.sort((a, b) => {
         const indexA = customOrder.indexOf(a);
         const indexB = customOrder.indexOf(b);
-
-        // CASO A: Entrambi sono nella lista personalizzata (es. Manarola vs Vernazza)
-        if (indexA !== -1 && indexB !== -1) {
-            return indexA - indexB; // Ordina in base alla posizione nella lista custom
-        }
-
-        // CASO B: Uno è nella lista (es. Tutti) e l'altro no (es. Sentiero Azzurro)
-        // Chi è nella lista vince (viene prima)
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
         if (indexA !== -1) return -1;
         if (indexB !== -1) return 1;
-
-        // CASO C: Nessuno dei due è nella lista (es. categorie Sentieri come "Meno battuti")
-        // Ordina alfabeticamente come fallback
         return a.localeCompare(b);
     });
-    /* ============================================================
-        7.3: CREA BOTTONI SUI FILTRI PER TRIGGERARE IL FILTRO
-    ============================================================ */
-        uniqueTags.forEach(tag => {
+
+    uniqueTags.forEach(tag => {
         const btn = document.createElement('button');
         btn.className = 'filter-chip';
         btn.innerText = tag;
         if (tag === 'Tutti') btn.classList.add('active-filter');
 
         btn.onclick = () => {
-            // Gestione visiva bottone attivo
             filterBar.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active-filter'));
             btn.classList.add('active-filter');
             
-            // Logica di filtro
-            // LOGICA FILTRO AVANZATA (Sticky Items)
             const filtered = tag === 'Tutti' 
                 ? allData 
                 : allData.filter(item => {
-                    // Criterio 1: Corrisponde al tag cliccato (es. "Riomaggiore")
                     const matchTag = item[filterKey] === tag;
-                    
-                    // Criterio 2 (Trascendenza): È un numero di emergenza?
-                    // Controlla se il nome contiene 112 (adatta la stringa se necessario)
                     const isUniversal = item.Nome && (item.Nome.includes('112') || item.Nome.toLowerCase().includes('emergenza'));
-                    
-                    // Mostra se corrisponde al filtro OPPURE è universale
                     return matchTag || isUniversal;
                 });
-            
             updateList(filtered);
         };
         filterBar.appendChild(btn);
     });
 
-    // Funzione interna per disegnare le card
     function updateList(items) {
         if (!items || items.length === 0) {
             listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#999;">Nessun risultato.</p>';
             return;
         }
-        // Usa il "Renderer" specifico per trasformare l'oggetto JSON in HTML
         listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
     }
-
-    // Primo avvio: mostra tutto
     updateList(allData);
 }
 
-/* ============================================================
-   8: TEMPLATE SPECIFICI DI RENDERING IN BASE AI FILTRI
-   ============================================================ */
+// ================= RENDERERS ================= //
 
-// RENDER SENTIERI 
 const sentieroRenderer = (s) => {
-    // 1. "Paracadute": Cerca la proprietà sia maiuscola che minuscola
-    // Usa || (OR) per prendere quella che esiste
     const paesi = s.Paesi || s.paesi || 'Nome mancante';
-    const label = s.Label || s.label || 'Nessuna cat.';  // <--- ECCO IL COLPEVOLE
+    const label = s.Label || s.label || 'Nessuna cat.';
     const desc = s.Descrizione || s.descrizione || '';
-    const dist = s.Distanza || s.distanza || '--';
-    const dur = s.Durata || s.durata || '--';
-    const diff = s.Difficoltà || s.difficoltà || '';
-    const mappa = s.Mappa || s.mappa || '#';
-    const pedaggio = s.Pedaggio || s.pedaggio;
-
-    // 2. Protezione apostrofi
     const safePaesi = paesi.replace(/'/g, "\\'");
     const safeDesc = desc.replace(/'/g, "\\'");
 
     return `
     <div class="card-sentiero">
         <div class="sentiero-header">
-            <strong>${dist}</strong>
-            <span>${dur}</span>
+            <strong>${s.Distanza || '--'}</strong>
+            <span>${s.Durata || '--'}</span>
         </div>
         <div class="sentiero-body" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
             <div style="font-size:0.75rem; color:#e67e22; text-transform:uppercase;">${label}</div>
             <h4>${paesi}</h4>
-            <p class="difficolta">${diff}</p>
+            <p class="difficolta">${s.Difficoltà || ''}</p>
         </div>
         <div class="sentiero-footer">
-            <a href="${mappa}" target="_blank" class="btn-yellow">MAPPA</a>
-            ${pedaggio ? `<a href="${pedaggio}" target="_blank" class="btn-yellow">PEDAGGIO</a>` : ''}
+            <a href="${s.Mappa || '#'}" target="_blank" class="btn-sentiero-small">MAPPA</a>
+            ${s.Pedaggio ? `<a href="${s.Pedaggio}" target="_blank" class="btn-sentiero-small">PEDAGGIO</a>` : '<span></span>'}
         </div>
     </div>`;
 };
 
-// RENDER SPIAGGE
 const spiaggiaRenderer = (s) => {
     const safeNome = s.Nome.replace(/'/g, "\\'");
-    const safeDesc = s.Descrizione ? s.Descrizione.replace(/'/g, "\\'") : 'Nessuna descrizione disponibile.';
-
+    const safeDesc = s.Descrizione ? s.Descrizione.replace(/'/g, "\\'") : 'Nessuna descrizione.';
     return `
     <div class="card-spiaggia">
         <div class="spiaggia-header">
@@ -464,179 +402,129 @@ const spiaggiaRenderer = (s) => {
     </div>`;
 };
 
-// RENDER RISTORANTI 
 const ristoranteRenderer = (r) => {
-    // 1. Normalizzazione Dati
     const nome = r.Nome || r.nome;
-    const tipo = r.Tipo || r.tipo || 'Ristorante';
-    const paesi = r.Paesi || r.paesi;
-    const telefono = r.Telefono || r.telefono;
-    const indirizzo = r.Indirizzo || r.indirizzo;
-    
-    // 2. Link Mappa
-    // Ora il link è corretto per Google Maps
-    const fullAddress = `${indirizzo}, ${paesi}`;
+    const fullAddress = `${r.Indirizzo}, ${r.Paesi}`;
     const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
-    
-    // 3. Safe Object
-    // Usa &apos; e &quot; per non rompere l'HTML dell'onclick
-    const safeObj = JSON.stringify(r).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+    const safeObj = JSON.stringify(r).replace(/'/g, "'").replace(/"/g, "&quot;");
 
     return `
     <div class="card-list-item" onclick='openModal("restaurant", ${safeObj})'>
         <div class="item-info">
             <div class="item-header-row">
                 <div class="item-title">${nome}</div>
-                <div class="item-tag">${tipo}</div>
+                <div class="item-tag">${r.Tipo || 'Ristorante'}</div>
             </div>
-            
-            <div class="item-subtitle">📍 ${paesi}</div>
-
+            <div class="item-subtitle">📍 ${r.Paesi}</div>
             <div class="card-actions">
-                ${telefono ? `
-                    <a href="tel:${telefono}" class="action-btn btn-phone" onclick="event.stopPropagation()">
-                        <span>📞</span> Chiama
-                    </a>
-                ` : ''}
-                
-                ${indirizzo ? `
-                    <a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()">
-                        <span>🗺️</span> Mappa
-                    </a>
-                ` : ''}
+                ${r.Telefono ? `<a href="tel:${r.Telefono}" class="action-btn btn-phone" onclick="event.stopPropagation()"><span>📞</span> Chiama</a>` : ''}
+                ${r.Indirizzo ? `<a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()"><span>🗺️</span> Mappa</a>` : ''}
             </div>
         </div>
-        
         <div class="item-arrow" style="align-self: flex-start; margin-top: 5px;">➜</div>
     </div>`;
 };
-const farmaciaRenderer = (f) => {
-    // 1. Normalizzazione
-    const nome = f.Nome || f.nome;
-    const paesi = f.Paesi || f.paesi;
-    const indirizzo = f.Indirizzo || f.indirizzo || '';
-    const numero = f.Numero || f.numero; // Supabase potrebbe chiamarlo 'Numero' o 'numero'
 
-    // 2. Link Mappa & Safe Obj
-    const fullAddress = `${indirizzo}, ${paesi}`;
+const farmaciaRenderer = (f) => {
+    const safeObj = JSON.stringify(f).replace(/'/g, "'").replace(/"/g, "&quot;");
+    const fullAddress = `${f.Indirizzo}, ${f.Paesi}`;
     const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
-    const safeObj = JSON.stringify(f).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
 
     return `
     <div class="card-list-item" onclick='openModal("farmacia", ${safeObj})'>
         <div class="item-info">
             <div class="item-header-row">
-                <div class="item-title">${nome}</div>
+                <div class="item-title">${f.Nome}</div>
                 <div class="item-tag" style="background-color:#4CAF50;">FARMACIA</div>
             </div>
-            
-            <div class="item-subtitle">📍 ${paesi} - ${indirizzo}</div>
-
+            <div class="item-subtitle">📍 ${f.Paesi}</div>
             <div class="card-actions">
-                ${numero ? `
-                    <a href="tel:${numero}" class="action-btn btn-phone" onclick="event.stopPropagation()">
-                        <span>📞</span> Chiama
-                    </a>
-                ` : ''}
-                
-                ${indirizzo ? `
-                    <a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()">
-                        <span>🗺️</span> Mappa
-                    </a>
-                ` : ''}
+                ${f.Numero ? `<a href="tel:${f.Numero}" class="action-btn btn-phone" onclick="event.stopPropagation()"><span>📞</span> Chiama</a>` : ''}
+                ${f.Indirizzo ? `<a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()"><span>🗺️</span> Mappa</a>` : ''}
             </div>
         </div>
-        
         <div class="item-arrow" style="align-self: flex-start; margin-top: 5px;">➜</div>
     </div>`;
 };
-const numeriUtiliRenderer = (n) => {
-    // 1. Normalizzazione (Gestione Maiuscole/Minuscole)
-    const nome = n.Nome || n.nome;
-    const numero = n.Numero || n.numero;
-    const comune = n.Comune || n.comune; 
-    const paesi = n.Paesi || n.paesi; // Es: "Riomaggiore, Manarola, Volastra"
 
+const numeriUtiliRenderer = (n) => {
     return `
     <div class="card-list-item" style="cursor:default;">
         <div class="item-info">
             <div class="item-header-row">
-                <div class="item-title">${nome}</div>
-                <div class="item-tag" style="background-color:#607d8b;">${comune}</div>
+                <div class="item-title">${n.Nome}</div>
+                <div class="item-tag" style="background-color:#607d8b;">${n.Comune}</div>
             </div>
-            
-            <div class="item-subtitle" style="margin-top:6px; color:#555;">
-                <strong>Copertura:</strong> ${paesi}
-            </div>
-
+            <div class="item-subtitle" style="margin-top:6px; color:#555;"><strong>Copertura:</strong> ${n.Paesi}</div>
             <div class="card-actions">
-                <a href="tel:${numero}" class="action-btn btn-phone" onclick="event.stopPropagation()">
-                    <span style="font-size:1.2rem; margin-right:5px;">📞</span> 
-                    Chiama ${numero}
+                <a href="tel:${n.Numero}" class="action-btn btn-phone" onclick="event.stopPropagation()">
+                    <span style="font-size:1.2rem; margin-right:5px;">📞</span> Chiama ${n.Numero}
                 </a>
             </div>
         </div>
     </div>`;
 };
-const monumentiRenderer = (m) => {
-    // Normalizzazione
-    const titolo = m.Attrazioni || 'Monumento';
-    const paese = m.Paese || 'N.D.';
-    const diff = m["Difficoltà Accesso"] || 'Facile'; 
-    const tempo = m["Tempo Visita (min)"] ? `${m["Tempo Visita (min)"]} min` : '--';
-    const safeObj = JSON.stringify(m).replace(/'/g, "'").replace(/"/g, "\"");
 
-    // Classi CSS condizionali
-    const diffClass = (diff && diff.toLowerCase().includes('alta')) ? 'badge-hard' : 'badge-easy';
-
-    return `
-    <div class="card-list-item monument-mode" onclick='openModal("monument", ${safeObj})'>
-        <div class="item-info">
-            <div class="item-header-row">
-                <div class="item-title">${titolo}</div>
-            </div>
-            <div class="item-subtitle" style="margin-bottom: 8px;">📍 ${paese}</div>
-            <div class="monument-meta">
-                <span class="meta-badge ${diffClass}">${diff}</span>
-                <span class="meta-badge badge-time">⏱ ${tempo}</span>
-            </div>
-        </div>
-        <div class="item-arrow" style="margin-top: auto; margin-bottom: auto;">➜</div>
-    </div>`;
-};
+// CORREZIONE: Aggiunto il renderer mancante per le Attrazioni
 const attrazioniRenderer = (item) => {
-    // 1. Mappatura Campi Esatti dal DB
     const titolo = item.Attrazioni || 'Attrazione';
-    const paese = item.Paese || 'N.D.';
-    const diff = item["Difficoltà Accesso"] || 'Facile';
-    const tempo = item["Tempo Visita (min)"] ? `${item["Tempo Visita (min)"]} min` : '--';
-    
-    // 2. Safe Object per Modal
-    // Rimuove doppi apici che rompono l'HTML e gestisce apostrofi
     const safeObj = JSON.stringify(item).replace(/'/g, "'").replace(/"/g, "&quot;");
-
-    // 3. Logica Colori Badge (HCI)
-    // Se "Alta" o "Impegnativo" diventa rosso, altrimenti verde
-    const diffLower = diff.toLowerCase();
-    const diffClass = (diffLower.includes('alta') || diffLower.includes('difficile')) ? 'badge-hard' : 'badge-easy';
+    const diff = item["Difficoltà Accesso"] || 'Facile';
+    const diffStyle = (diff.toLowerCase().includes('alta')) ? 'background:#ffebee; color:#c62828;' : 'background:#e8f5e9; color:#2e7d32;';
 
     return `
     <div class="card-list-item monument-mode" onclick='openModal("attrazione", ${safeObj})'>
         <div class="item-info">
-            <div class="item-header-row">
-                <div class="item-title">${titolo}</div>
-            </div>
-            
-            <div class="item-subtitle" style="margin-bottom: 8px;">📍 ${paese}</div>
-
-            <div class="monument-meta">
-                <span class="meta-badge ${diffClass}">${diff}</span>
-                <span class="meta-badge badge-time">⏱ ${tempo}</span>
+            <div class="item-header-row"><div class="item-title">${titolo}</div></div>
+            <div class="item-subtitle" style="margin-bottom: 8px;">📍 ${item.Paese}</div>
+            <div class="monument-meta" style="display:flex; gap:8px;">
+                <span class="meta-badge" style="${diffStyle} padding:2px 8px; border-radius:4px; font-size:0.75rem;">${diff}</span>
+                <span class="meta-badge badge-time" style="background:#f5f5f5; padding:2px 8px; border-radius:4px; font-size:0.75rem;">⏱ ${item["Tempo Visita (min)"] || '--'} min</span>
             </div>
         </div>
-        
         <div class="item-arrow" style="margin-top: auto; margin-bottom: auto;">➜</div>
     </div>`;
 };
+
 // Avvio app
 document.addEventListener('DOMContentLoaded', () => switchView('home'));
+
+async function shareApp() {
+    try {
+        if (navigator.share) {
+            await navigator.share({ title: '5 Terre App', text: 'Guarda questa guida!', url: window.location.href });
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Link copiato!");
+        }
+    } catch (err) { console.log("Errore:", err); }
+}
+
+// ZOOM BLOCK
+// ==========================================
+// BLOCCO ZOOM IOS (Versione Aggiornata)
+// ==========================================
+
+// 1. Impedisce il pinch-to-zoom (due dita)
+document.addEventListener('touchmove', function(event) {
+    if (event.scale !== 1) {
+        event.preventDefault();
+    }
+}, { passive: false });
+
+// 2. Impedisce il doppio tocco veloce (Double Tap Zoom)
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function(event) {
+    const now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+    }
+    lastTouchEnd = now;
+}, false);
+
+// 3. Impedisce il "tap" con due dita (spesso causa zoom su iOS)
+document.addEventListener('touchstart', function(event) {
+    if (event.touches.length > 1) {
+        event.preventDefault();
+    }
+}, { passive: false });
