@@ -44,6 +44,12 @@ async function switchView(view, el) {
                 { label: "📞 Numeri", table: "Numeri_utili" },
                 { label: "💊 Farmacie", table: "Farmacie" }
             ], 'Trasporti');
+        }else if (view === 'mappe_monumenti') {
+                viewTitle.innerText = "Mappe & Cultura";
+                renderSubMenu([
+                    { label: "🗺️ Mappa", table: "Mappe" },
+                    { label: "🏛️ Monumenti", table: "Attrazioni" } // <--- CAMBIATO QUI: Punta alla tabella reale
+                    ], 'Mappe');
         }
     } catch (err) {
         console.error(err);
@@ -79,7 +85,12 @@ async function renderHome() {
             <div class="village-card" style="background-image: url('${v.Immagine}')" onclick="openModal('village', '${safeName}')">
                 <div class="card-title-overlay">${v.Paesi}</div>
             </div>`;
-    });
+    });// --- NUOVA 6° CARD (CHIUSURA GRIGLIA) ---
+    // Uso un'immagine placeholder da Unsplash a tema mappa/esplorazione, cambiala pure con una tua.
+    html += `
+        <div class="village-card" style="background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')" onclick="switchView('mappe_monumenti', null)">
+            <div class="card-title-overlay">Mappe & Monumenti</div>
+        </div>`;
     content.innerHTML = html + '</div>';
 }
 
@@ -165,7 +176,26 @@ async function loadTableData(tableName, btnEl) {
                                           </div>
                     ${t.Immagine ? `<img src="${t.Immagine}" class="prod-thumb">` : ''}
                 </div>`;
-        });
+        })}else if (tableName === 'Mappe') {
+            subContent.innerHTML = `
+            <div class="map-container animate-fade">
+                <iframe 
+                    src="https://www.google.com/maps/d/edit?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&usp=sharing" 
+                    width="100%" 
+                    height="100%" 
+                    style="border:0;" 
+                    allowfullscreen="" 
+                    loading="lazy">
+                </iframe>
+                <div class="map-note">Mappa caricata da Supabase</div>
+            </div>`;
+        return; // Esce qui
+    }
+
+    // --- B. ATTRAZIONI (MONUMENTI) ---
+    else if (tableName === 'Attrazioni') {
+        renderGenericFilterableView(data, 'Paese', subContent, attrazioniRenderer);
+        return;
     }
     else if (tableName === 'Numeri_utili') {
         data.sort((a, b) => {
@@ -218,21 +248,37 @@ async function openModal(type, payload) {
             <hr>
             <p><strong>Ideale per:</strong> ${payload["Ideale per"] || payload.IdealePer || ''}</p>`;
     }
-    else if (type === 'transport') {
+    // NUOVO BLOCCO PER ATTRAZIONI
+    else if (type === 'attrazione') {
         contentHtml = `
-            <h2>${payload.Località}</h2>
-            <p>${payload.Descrizione || ''}</p>
-            <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-                ${payload["Link"] ? `<a href="${payload["Link"]}" target="_blank" class="btn-yellow" style="text-align:center;">VAI AL SITO</a>` : ''}
-                ${payload["Link_2"] ? `<a href="${payload["Link_2"]}" target="_blank" class="btn-yellow" style="text-align:center;">ORARI</a>` : ''}
-            </div>`;
-    }
+            <h2>${payload.Attrazioni}</h2>
+            <div style="color:#666; margin-bottom:15px; font-weight:600;">
+                📍 ${payload.Paese}
+            </div>
+            
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <span class="meta-badge" style="background:#eee;">⏱ ${payload["Tempo Visita (min)"] || '--'} min</span>
+                <span class="meta-badge" style="background:#eee;">${payload["Difficoltà Accesso"] || 'Accessibile'}</span>
+            </div>
 
-    modal.innerHTML = `
-        <div class="modal-content">
-            <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
-            ${contentHtml}
-        </div>`;
+            <p><strong>Descrizione:</strong><br>${payload.Descrizione || 'Nessuna descrizione disponibile.'}</p>
+            
+            ${payload.Curiosità ? `
+                <div class="curiosity-box">
+                    <strong>💡 Curiosità</strong>
+                    <p>${payload.Curiosità}</p>
+                </div>
+            ` : ''}
+
+            <hr>
+            <div style="margin-top:15px;">
+                ${payload["Icona MyMaps"] ? `
+                    <a href="${payload["Icona MyMaps"]}" target="_blank" class="btn-azure" style="width:100%; text-align:center; display:block;">
+                        📍 VEDI POSIZIONE ESATTA
+                    </a>` : ''}
+            </div>
+        `;
+    }
 }
 
 
@@ -351,8 +397,6 @@ const sentieroRenderer = (s) => {
     const safePaesi = paesi.replace(/'/g, "\\'");
     const safeDesc = desc.replace(/'/g, "\\'");
 
-  // ... parte iniziale del tuo renderer (variabili e safePaesi) ...
-
     return `
     <div class="card-sentiero">
         <div class="sentiero-header">
@@ -364,11 +408,9 @@ const sentieroRenderer = (s) => {
             <h4>${paesi}</h4>
             <p class="difficolta">${diff}</p>
         </div>
-        
         <div class="sentiero-footer">
-            <a href="${mappa}" target="_blank" class="btn-sentiero-small">MAPPA</a>
-            
-            ${pedaggio ? `<a href="${pedaggio}" target="_blank" class="btn-sentiero-small">PEDAGGIO</a>` : '<span></span>'}
+            <a href="${mappa}" target="_blank" class="btn-yellow">MAPPA</a>
+            ${pedaggio ? `<a href="${pedaggio}" target="_blank" class="btn-yellow">PEDAGGIO</a>` : ''}
         </div>
     </div>`;
 };
@@ -506,49 +548,65 @@ const numeriUtiliRenderer = (n) => {
         </div>
     </div>`;
 };
+const monumentiRenderer = (m) => {
+    // Normalizzazione
+    const titolo = m.Attrazioni || 'Monumento';
+    const paese = m.Paese || 'N.D.';
+    const diff = m["Difficoltà Accesso"] || 'Facile'; 
+    const tempo = m["Tempo Visita (min)"] ? `${m["Tempo Visita (min)"]} min` : '--';
+    const safeObj = JSON.stringify(m).replace(/'/g, "'").replace(/"/g, "\"");
+
+    // Classi CSS condizionali
+    const diffClass = (diff && diff.toLowerCase().includes('alta')) ? 'badge-hard' : 'badge-easy';
+
+    return `
+    <div class="card-list-item monument-mode" onclick='openModal("monument", ${safeObj})'>
+        <div class="item-info">
+            <div class="item-header-row">
+                <div class="item-title">${titolo}</div>
+            </div>
+            <div class="item-subtitle" style="margin-bottom: 8px;">📍 ${paese}</div>
+            <div class="monument-meta">
+                <span class="meta-badge ${diffClass}">${diff}</span>
+                <span class="meta-badge badge-time">⏱ ${tempo}</span>
+            </div>
+        </div>
+        <div class="item-arrow" style="margin-top: auto; margin-bottom: auto;">➜</div>
+    </div>`;
+};
+const attrazioniRenderer = (item) => {
+    // 1. Mappatura Campi Esatti dal DB
+    const titolo = item.Attrazioni || 'Attrazione';
+    const paese = item.Paese || 'N.D.';
+    const diff = item["Difficoltà Accesso"] || 'Facile';
+    const tempo = item["Tempo Visita (min)"] ? `${item["Tempo Visita (min)"]} min` : '--';
+    
+    // 2. Safe Object per Modal
+    // Rimuove doppi apici che rompono l'HTML e gestisce apostrofi
+    const safeObj = JSON.stringify(item).replace(/'/g, "'").replace(/"/g, "&quot;");
+
+    // 3. Logica Colori Badge (HCI)
+    // Se "Alta" o "Impegnativo" diventa rosso, altrimenti verde
+    const diffLower = diff.toLowerCase();
+    const diffClass = (diffLower.includes('alta') || diffLower.includes('difficile')) ? 'badge-hard' : 'badge-easy';
+
+    return `
+    <div class="card-list-item monument-mode" onclick='openModal("attrazione", ${safeObj})'>
+        <div class="item-info">
+            <div class="item-header-row">
+                <div class="item-title">${titolo}</div>
+            </div>
+            
+            <div class="item-subtitle" style="margin-bottom: 8px;">📍 ${paese}</div>
+
+            <div class="monument-meta">
+                <span class="meta-badge ${diffClass}">${diff}</span>
+                <span class="meta-badge badge-time">⏱ ${tempo}</span>
+            </div>
+        </div>
+        
+        <div class="item-arrow" style="margin-top: auto; margin-bottom: auto;">➜</div>
+    </div>`;
+};
 // Avvio app
-document.addEventListener('DOMContentLoaded', () => switchView('home'));/* --- FUNZIONE CONDIVISIONE --- */
-async function shareApp() {
-    try {
-        if (navigator.share) {
-            await navigator.share({
-                title: '5 Terre App',
-                text: 'Guarda questa guida per le 5 Terre!',
-                url: window.location.href // Prende il link attuale del sito
-            });
-        } else {
-            // Se il browser è vecchio, copia il link negli appunti
-            navigator.clipboard.writeText(window.location.href);
-            alert("Link copiato! Ora puoi incollarlo dove vuoi.");
-        }
-    } catch (err) {
-        console.log("Errore:", err);
-    }
-}/* ==========================================
-   CODICE ZOOM (DEVE STARE QUI SOTTO, ISOLATO)
-   ========================================== */
-
-document.addEventListener('touchmove', function(event) {
-    if (event.scale !== 1) { event.preventDefault(); }
-}, { passive: false });
-
-document.addEventListener('gesturestart', function(event) {
-    event.preventDefault();
-}, { passive: false });
-
-document.addEventListener('gesturechange', function(event) {
-    event.preventDefault();
-}, { passive: false });
-
-document.addEventListener('gestureend', function(event) {
-    event.preventDefault();
-}, { passive: false });
-
-let lastTouchEnd = 0;
-document.addEventListener('touchend', function(event) {
-    const now = (new Date()).getTime();
-    if (now - lastTouchEnd <= 300) {
-        event.preventDefault();
-    }
-    lastTouchEnd = now;
-}, false);
+document.addEventListener('DOMContentLoaded', () => switchView('home'));

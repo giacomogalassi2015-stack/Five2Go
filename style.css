@@ -65,7 +65,55 @@ main, #app-content { max-width: 600px; margin: 0 auto; padding: 20px; }
 .loading-state { text-align: center; padding: 50px; color: #888; }
 .spin { display: inline-block; animation: rotation 1s infinite linear; font-size: 2.5rem; margin-bottom: 10px; }
 @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
+/* ============================================================
+   7. SEZIONE MAPPE E MONUMENTI (NUOVO)
+   ============================================================ */
 
+/* Contenitore Mappa Responsive (HCI: Massimizza lo spazio) */
+.map-container {
+    width: 100%;
+    height: calc(100vh - 180px); /* Altezza viewport meno header e nav */
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #eee;
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+}
+
+.map-note {
+    position: absolute;
+    bottom: 10px; left: 50%; transform: translateX(-50%);
+    background: rgba(255,255,255,0.9);
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 0.75rem; color: #666; pointer-events: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Badge Monumenti (Feedback Visivo) */
+.monument-meta {
+    display: flex; gap: 8px; margin-top: 6px;
+}
+
+.meta-badge {
+    font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; font-weight: 600;
+}
+
+.badge-easy { background-color: #e8f5e9; color: #2e7d32; } /* Verde */
+.badge-hard { background-color: #ffebee; color: #c62828; } /* Rosso */
+.badge-time { background-color: #f3e5f5; color: #7b1fa2; } /* Viola */
+
+/* Stile specifico card monumento */
+.card-list-item.monument-mode {
+    border-left: 5px solid #9c27b0; /* Colore distintivo viola per cultura */
+}
+
+/* Curiosità nel Modal */
+.curiosity-box {
+    background-color: #fff8e1; /* Giallo chiaro */
+    border-left: 4px solid #ffc107;
+    padding: 10px; margin-top: 15px; border-radius: 4px;
+    font-size: 0.9rem; color: #555;
+}
 /* ============================================================
    3. CLASSI CONDIVISE (IL CUORE DELL'OTTIMIZZAZIONE)
    Qui raggruppiamo stili comuni per Card e Bottoni
