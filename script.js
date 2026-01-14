@@ -267,33 +267,51 @@ async function openModal(type, payload) {
     let contentHtml = '';
 
     if (type === 'village') {
-    // Nota: qui devi richiamare l'url basandoti sul payload (che è il nome del paese)
-    const bigImg = getSmartUrl(payload, 'borghi', 1000);
-    contentHtml = `<img src="${bigImg}" ... > ...`;
-        } 
-else if (type === 'product') {
-    const nome = payload.Prodotti || payload.Nome;
-    const bigImg = getSmartUrl(nome, 'prodotti', 800);
-    contentHtml = `<img src="${bigImg}" ... > ...`;
-        }
-    // NUOVO BLOCCO PER ATTRAZIONI
+        const bigImg = getSmartUrl(payload, '', 1000);
+        // Recupera descrizione
+        const { data } = await supabaseClient.from('Cinque_Terre').select('*').eq('Paesi', payload).single();
+        const desc = data ? data.Descrizione : 'Caricamento...';
+        
+        contentHtml = `
+            <img src="${bigImg}" style="width:100%; border-radius:12px; height:220px; object-fit:cover;">
+            <h2>${payload}</h2>
+            <p>${desc}</p>`;
+    } 
+    else if (type === 'product') {
+        const nome = payload.Prodotti || payload.Nome;
+        const bigImg = getSmartUrl(nome, 'prodotti', 800);
+        contentHtml = `
+            <img src="${bigImg}" style="width:100%; border-radius:12px; height:200px; object-fit:cover;" onerror="this.style.display='none'">
+            <h2>${nome}</h2>
+            <p>${payload.Descrizione || ''}</p>
+            <hr>
+            <p><strong>Ideale per:</strong> ${payload["Ideale per"] || payload.IdealePer || ''}</p>`;
+    }
+    else if (type === 'transport') {
+        contentHtml = `
+            <h2>${payload.Località || 'Trasporto'}</h2>
+            <p>${payload.Descrizione || ''}</p>
+            <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
+                ${payload["Link"] ? `<a href="${payload["Link"]}" target="_blank" class="btn-yellow" style="text-align:center;">VAI AL SITO</a>` : ''}
+                ${payload["Link_2"] ? `<a href="${payload["Link_2"]}" target="_blank" class="btn-yellow" style="text-align:center;">ORARI</a>` : ''}
+            </div>`;
+    }
     else if (type === 'attrazione') {
         contentHtml = `
             <h2>${payload.Attrazioni}</h2>
             <div style="color:#666; margin-bottom:15px; font-weight:600;">📍 ${payload.Paese}</div>
-            
             <div style="display:flex; gap:10px; margin-bottom:15px;">
                 <span class="meta-badge" style="background:#eee; padding:5px; border-radius:8px;">⏱ ${payload["Tempo Visita (min)"] || '--'} min</span>
                 <span class="meta-badge" style="background:#eee; padding:5px; border-radius:8px;">${payload["Difficoltà Accesso"] || 'Accessibile'}</span>
             </div>
-
-            <p>${payload.Descrizione || 'Nessuna descrizione.'}</p>
+            <p>${payload.Descrizione || ''}</p>
             ${payload.Curiosità ? `<div class="curiosity-box" style="margin-top:10px; padding:10px; background:#f9f9f9; border-left:4px solid orange;">💡 ${payload.Curiosità}</div>` : ''}
-            
             <div style="margin-top:20px;">
-             ${payload["Icona MyMaps"] ? `<a href="${payload["Icona MyMaps"]}" target="_blank" class="btn-yellow" style="display:block; text-align:center;">VAI ALLA POSIZIONE</a>` : ''}
-            </div>
-        `;
+                ${payload["Icona MyMaps"] ? `<a href="${payload["Icona MyMaps"]}" target="_blank" class="btn-yellow" style="display:block; text-align:center;">VAI ALLA POSIZIONE</a>` : ''}
+            </div>`;
+    }
+    else if (type === 'restaurant' || type === 'farmacia') {
+         contentHtml = `<h2>${payload.Nome}</h2><p>${payload.Indirizzo}</p>`;
     }
 
     modal.innerHTML = `
@@ -358,14 +376,29 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
     updateList(allData);
 }
 
-// ================= RENDERERS ================= //
-
 const sentieroRenderer = (s) => {
     const paesi = s.Paesi || s.paesi || 'Nome mancante';
     const label = s.Label || s.label || 'Nessuna cat.';
     const desc = s.Descrizione || s.descrizione || '';
     const safePaesi = paesi.replace(/'/g, "\\'");
     const safeDesc = desc.replace(/'/g, "\\'");
+
+    // Cerca il link GPX
+    const linkGpx = s.Gpxlink || s.gpxlink;
+    // Cerca il link Google (fallback)
+    const linkMappa = s.Mappa || s.mappa;
+
+    let buttonHtml = '';
+
+    if (linkGpx) {
+        // CASO 1: C'è il GPX -> Apre mappa interna (tua richiesta)
+        buttonHtml = `<button onclick="openGpxMap('${linkGpx}', '${safePaesi}')" class="btn-sentiero-small" style="cursor:pointer; background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb;">VEDI MAPPA 🗺️</button>`;
+    } else if (linkMappa) {
+        // CASO 2: Solo link Google -> Apre nuova scheda
+        buttonHtml = `<a href="${linkMappa}" target="_blank" class="btn-sentiero-small">GOOGLE MAPS</a>`;
+    } else {
+        buttonHtml = `<span class="btn-sentiero-small" style="opacity:0.5">NO MAPPA</span>`;
+    }
 
     return `
     <div class="card-sentiero">
@@ -379,7 +412,7 @@ const sentieroRenderer = (s) => {
             <p class="difficolta">${s.Difficoltà || ''}</p>
         </div>
         <div class="sentiero-footer">
-            <a href="${s.Mappa || '#'}" target="_blank" class="btn-sentiero-small">MAPPA</a>
+            ${buttonHtml}
             ${s.Pedaggio ? `<a href="${s.Pedaggio}" target="_blank" class="btn-sentiero-small">PEDAGGIO</a>` : '<span></span>'}
         </div>
     </div>`;
@@ -528,3 +561,57 @@ document.addEventListener('touchstart', function(event) {
         event.preventDefault();
     }
 }, { passive: false });
+
+// Variabile globale per evitare conflitti mappa
+let activeMap = null;
+
+function openGpxMap(gpxUrl, titolo) {
+    // 1. Controllo sicurezza link
+    if (!gpxUrl) return;
+
+    // 2. Crea il modale
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay animate-fade';
+    // Layout della finestra mappa
+    modal.innerHTML = `
+        <div class="modal-content" style="height:80vh; padding:0; display:flex; flex-direction:column; overflow:hidden;">
+            <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:white; z-index:10;">
+                <h3 style="margin:0; font-size:1.1rem;">${titolo}</h3>
+                <span class="close-modal" style="font-size:2rem; cursor:pointer; line-height:1;">&times;</span>
+            </div>
+            <div id="gpx-map-container" style="flex:1; width:100%; background:#f0f0f0;"></div>
+        </div>`;
+    
+    document.body.appendChild(modal);
+
+    // Funzione chiusura
+    const closeModal = () => {
+        if (activeMap) { activeMap.remove(); activeMap = null; } // Pulisce memoria
+        modal.remove();
+    };
+    modal.querySelector('.close-modal').onclick = closeModal;
+    modal.onclick = (e) => { if(e.target === modal) closeModal(); };
+
+    // 3. Avvia la Mappa (con piccolo ritardo per permettere al modale di aprirsi)
+    setTimeout(() => {
+        if (!document.getElementById('gpx-map-container')) return;
+        
+        // Inizializza mappa base
+        activeMap = L.map('gpx-map-container');
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(activeMap);
+
+        // Carica e disegna il file GPX
+        new L.GPX(gpxUrl, {
+            async: true,
+            marker_options: {
+                startIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-start.png',
+                endIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-end.png',
+                shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-shadow.png'
+            }
+        }).on('loaded', function(e) {
+            activeMap.fitBounds(e.target.getBounds()); // Centra la vista sul sentiero
+        }).addTo(activeMap);
+    }, 200);
+}
