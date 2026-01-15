@@ -1,9 +1,8 @@
 /* ============================================================
    1. SETUP, VARIABILI & FONTS (Tema: "Summer Coast")
    ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700&family=Playfair+Display:wght@600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Prata&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Prata&family=Lato:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800&family=Ultra&family=Inter:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800&family=Kranky&family=Inter:wght@400;700&display=swap');
 
 :root {
 
@@ -44,8 +43,22 @@ body {
 
 /* Titoli in Font Montserrat per carattere */
  .card-title-overlay {
-    font-family: 'Prata', sans-serif;
+    font-family: 'Kranky', cursive; 
+    font-weight: 400; 
     
+    /* Colore: Kranky sta benissimo con il tuo Blu Notte o anche con il Corallo */
+    color: var(--primary-dark);
+    
+    font-size: 1.6rem; /* Deve essere grande! */
+    line-height: 1.1;
+    
+    /* Kranky è bello sia maiuscolo che minuscolo. 
+       Maiuscolo è più "URBAN", minuscolo è più "FRIENDLY". */
+    /* text-transform: uppercase; */ 
+    
+    margin-bottom: 5px;
+    letter-spacing: 1px; /* Un po' di aria aiuta l'effetto pennarello */
+
 }
 
 /* ============================================================
@@ -116,46 +129,6 @@ header, #app-header {
 }
 .header-share-btn:active { transform: scale(0.9); }
 
-/* Bottone Lingua */
-.current-lang-btn {
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    border-radius: 20px;
-    padding: 5px 12px;
-    display: flex; align-items: center; gap: 6px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700; font-size: 0.85rem;
-    color: var(--primary-dark);
-    cursor: pointer;
-}
-
-/* Dropdown Menu */
-.lang-selector { position: relative; }
-
-.lang-dropdown {
-    position: absolute; top: 45px; right: 0;
-    background-color: var(--surface);
-    min-width: 160px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    border-radius: 16px; padding: 8px;
-    z-index: 2000;
-    opacity: 0; visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    border: 1px solid rgba(0,0,0,0.05);
-}
-.lang-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
-
-.lang-opt {
-    display: flex; align-items: center; gap: 10px;
-    width: 100%; padding: 10px 12px;
-    border: none; background: none; text-align: left;
-    font-family: 'Prata', sans-serif; font-weight: 600;
-    color: var(--text-main); border-radius: 10px; cursor: pointer;
-}
-.lang-opt:hover { background-color: #F8F9FA; }
-.lang-opt.active { background-color: #E0F2F1; color: var(--primary-col); font-weight: 800; }
-.lang-flag { font-size: 1.2rem; }
 
 /* Main Content */
 main, #app-content { 
@@ -241,7 +214,7 @@ main, #app-content {
 
 /* --- C. TIPOGRAFIA TITOLI CARD (Montserrat) --- */
 .item-title, .prod-title, .spiaggia-title, .transport-title, .pharmacy-name {
-    font-family: 'Prata', sans-serif; /* Coerenza con Header */
+    font-family: 'Kranky', sans-serif; /* Coerenza con Header */
     font-weight: 700;
     color: var(--primary-dark); /* Blu notte elegante */
     font-size: 1.15rem;
@@ -251,7 +224,7 @@ main, #app-content {
 
 /* --- D. TIPOGRAFIA SOTTOTITOLI/INFO (Nunito) --- */
 .item-subtitle, .spiaggia-location, .transport-desc, .pharmacy-address {
-    font-family: 'Prata', sans-serif;
+    font-family: 'Kranky', sans-serif;
     font-size: 0.9rem;
     color: var(--text-light);
     font-weight: 600; /* Leggermente più marcato per leggibilità al sole */
@@ -261,7 +234,7 @@ main, #app-content {
 /* --- E. BASE DEI BOTTONI (Action & Chips) - Stile Pillola --- */
 .action-btn, .btn-sentiero-small, .btn-azure, .btn-pharmacy-call, .filter-chip {
     display: inline-flex; align-items: center; justify-content: center;
-    font-family: 'Prata', sans-serif;
+    font-family: 'Kranky', sans-serif;
     font-weight: 600; 
     text-decoration: none; 
     border-radius: 50px; /* Forme completamente arrotondate (Pillola) */
@@ -480,7 +453,7 @@ main, #app-content {
 .sentiero-header { 
     display: flex; justify-content: space-between; align-items: center;
     color: var(--accent-col); /* Corallo */
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Kranky', sans-serif;
     font-size: 0.85rem; font-weight: 800; 
     text-transform: uppercase; letter-spacing: 1px;
     margin-bottom: 12px;
@@ -615,7 +588,7 @@ main, #app-content {
     border-radius: 50px; /* Pillola completa */
     border: none; 
     font-weight: 700;
-    font-family: 'Prata', sans-serif;
+    font-family: 'Kranky', sans-serif;
     
     /* Transizioni fluide */
     transition: transform 0.2s ease, filter 0.2s;
@@ -669,7 +642,7 @@ main, #app-content {
 /* Testi dentro il modale */
 .modal-content h2 { 
     padding: 25px 25px 5px 25px; 
-    font-family: 'Prata', sans-serif; 
+    font-family: 'Kranky', sans-serif; 
     color: var(--primary-dark);
     font-size: 1.5rem;
 }
@@ -774,7 +747,7 @@ main, #app-content {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-family: 'Prata', sans-serif;
+    font-family: 'Kranky', sans-serif;
     font-weight: 700;
     font-size: 0.85rem;
     color: var(--primary-dark);
