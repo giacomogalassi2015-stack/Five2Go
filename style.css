@@ -131,67 +131,6 @@ main, #app-content {
 }
 
 /* ============================================================
-   7. SEZIONE MAPPE E MONUMENTI (Refined)
-   ============================================================ */
-
-/* Mappa con bordo "Cartolina" */
-.map-container {
-    width: 100%;
-    height: calc(100vh - 200px);
-    border-radius: var(--card-radius);
-    overflow: hidden;
-    background-color: #E0F2F1; /* Sfondo verdino chiaro mentre carica */
-    position: relative;
-    box-shadow: var(--shadow-soft);
-    border: 4px solid var(--surface); /* Bordo bianco spesso */
-}
-
-/* Badge fluttuante sulla mappa */
-.map-note {
-    position: absolute;
-    bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(4px);
-    padding: 8px 20px; border-radius: 50px;
-    font-size: 0.8rem; font-weight: 700; 
-    color: var(--primary-dark);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    pointer-events: none;
-    letter-spacing: 0.5px;
-}
-
-/* Stili Badge Monumenti */
-.monument-meta {
-    display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
-}
-
-.meta-badge {
-    font-size: 0.7rem; padding: 6px 12px; border-radius: 12px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.5px;
-}
-
-/* Colori badge ispirati alla natura */
-.badge-easy { background-color: #E8F5E9; color: #2E7D32; } /* Verde vegetazione */
-.badge-hard { background-color: #FFEBEE; color: #C62828; } /* Rosso sentiero */
-.badge-time { background-color: #E3F2FD; color: #1565C0; } /* Azzurro cielo */
-
-/* Card Monumento Specifica */
-.card-list-item.monument-mode {
-    border-left: none; /* Rimuovo il vecchio stile */
-    border-bottom: 3px solid #9C27B0; /* Accento colorato sotto */
-}
-
-/* Box Curiosità */
-.curiosity-box {
-    background-color: #FFF8E1; /* Luce calda */
-    border: none;
-    border-left: 4px solid var(--accent-soft);
-    padding: 15px; margin-top: 20px; border-radius: 8px;
-    font-size: 0.95rem; color: #5D4037;
-    font-style: italic;
-}
-
-/* ============================================================
    3. CLASSI CONDIVISE (Stile "Summer Coast")
    Coerenza con Fase 1: Ombre colorate, Font Montserrat, Niente bordi.
    ============================================================ */
@@ -252,331 +191,369 @@ main, #app-content {
     border: none; /* Rimosso border default */
 }
 
+
 /* ============================================================
-   4. COMPONENTI SPECIFICI (LAYOUT INTERNI & COLORI)
+   4. COMPONENTI SPECIFICI (Restyling Premium)
+   Miglioramenti: Scroll sfumato, Paginazione circolare, Glass effect
    ============================================================ */
 
-/* --- HEADER BOTTONI --- */
+/* --- HEADER BOTTONI (Piccoli cerchi di vetro) --- */
 .icon-btn {
-    background: transparent; border: none; color: white; padding: 8px;
+    background: rgba(255,255,255,0.2); /* Trasparenza */
+    backdrop-filter: blur(4px); /* Sfocatura sfondo (Glass) */
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.3); /* Bordo sottile di luce */
+    
+    color: white; 
+    width: 40px; height: 40px; /* Dimensione fissa per cerchio perfetto */
+    border-radius: 50%; 
+    
     display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s ease, background 0.3s;
+}
+.icon-btn:active { 
+    transform: scale(0.9); 
+    background: rgba(255,255,255,0.4); 
 }
 
 /* --- FILTRI (SUB-NAV & CHIPS) --- */
 .sub-nav-bar, .filter-bar {
-    display: flex; overflow-x: auto; padding: 15px; gap: 10px;
-    background: white; -ms-overflow-style: none; scrollbar-width: none;
+    display: flex; overflow-x: auto; 
+    padding: 10px 20px 20px 20px; /* Spazio extra sotto per l'ombra */
+    gap: 12px;
+    background: transparent; 
+    -ms-overflow-style: none; scrollbar-width: none;
+    
+    /* MAGIA: Maschera che sfuma il contenuto ai lati (Fade Out) */
+    mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
 }
 .sub-nav-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar { display: none; }
-.sub-nav-bar { border-bottom: 1px solid #eee; }
+.sub-nav-bar { border-bottom: none; }
 
-/* Pillole Filtri */
+/* Pillole Filtri "Galleggianti" */
 .sub-nav-item, .filter-chip {
-    padding: 8px 18px; border-radius: 20px; white-space: nowrap; flex-shrink: 0;
-    border: 1px solid #eee; background: var(--bg-light); color: var(--text-main); font-size: 0.9rem;
+    padding: 10px 22px; /* Più larghi = più facili da cliccare */
+    border-radius: 50px; 
+    white-space: nowrap; flex-shrink: 0;
+    
+    /* Stato Inattivo: Pulito */
+    border: none; 
+    background: white; 
+    color: var(--text-light); 
+    
+    font-size: 0.9rem; font-weight: 700; letter-spacing: 0.3px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* Ombra leggera */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
+
+/* Stato Attivo: Esplosione Turchese */
 .sub-nav-item.active-sub, .filter-chip.active-filter {
-    background-color: var(--accent-col); color: white; border-color: var(--accent-col);
+    background-color: var(--primary-col); 
+    color: white; 
+    /* L'ombra diventa colorata (Glow) */
+    box-shadow: 0 8px 20px -5px rgba(42, 157, 143, 0.5); 
+    transform: translateY(-2px) scale(1.02); /* Si solleva leggermente */
 }
-.filter-chip.active-filter { background-color: var(--text-main); border-color: var(--text-main); }
 
-/* --- PAGINAZIONE --- */
-.pagination-container { display: flex; justify-content: center; gap: 12px; margin: 30px 0; padding: 10px; }
+/* --- PAGINAZIONE (Cerchi Perfetti) --- */
+.pagination-container { 
+    display: flex; justify-content: center; gap: 15px; 
+    margin: 30px 0; padding: 10px; 
+}
+
 .page-btn {
-    width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
-    background: white; border: 1px solid #ccc; border-radius: 10px;
-    font-size: 1rem; font-weight: bold; color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    width: 48px; height: 48px; /* Quadrato perfetto per fare il cerchio */
+    display: flex; align-items: center; justify-content: center;
+    
+    background: white; 
+    border: none; 
+    border-radius: 50%; /* Cerchio */
+    
+    font-size: 1rem; font-weight: 800; color: var(--primary-dark); 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Ombra morbida */
+    transition: transform 0.2s ease;
 }
-.page-btn.active { background-color: var(--primary-col); color: white; border-color: var(--primary-col); }
 
-/* --- CARD: BORGHI (HOME) --- */
+.page-btn.active { 
+    background-color: var(--primary-col); color: white; 
+    transform: scale(1.15); /* Il numero attivo è più grande */
+    box-shadow: 0 8px 20px rgba(42, 157, 143, 0.4); /* Glow Turchese */
+}
+
+.page-btn:active { transform: scale(0.9); }
+
+/* ============================================================
+   4. COMPONENTI SPECIFICI (Card & Liste Premium)
+   Miglioramenti: Design immersivo, Curve 24px, Micro-interazioni
+   ============================================================ */
+
+/* --- A. CARD BORGHI (HOME) - Stile "Cartolina" --- */
 .grid-container { 
     display: grid; 
     grid-template-columns: 1fr 1fr; 
-    gap: 8px; /* Spazio stretto tra le card */
+    gap: 12px; /* Spazio bilanciato */
     padding: 10px 0; 
 }
 
 .village-card {
-    height: 160px; 
+    height: 190px; /* Più slanciata per dare spazio alla foto */
     position: relative; 
     overflow: hidden;
     background-size: cover; 
     background-position: center; 
-    border: none;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
     
-    /* FONDAMENTALE: Questo cancella lo spazio extra ereditato */
-    margin-bottom: 0 !important; 
-}
-
-.card-title-overlay {
-    position: absolute; bottom: 0; width: 100%;
-    background: linear-gradient(to top, rgba(38, 70, 83, 0.85), transparent);
-    color: white; padding: 15px; 
-    font-size: 1rem; font-weight: 700; letter-spacing: 0.5px;
-}
-/* --- CARD: RISTORANTI & LISTE GENERICHE --- */
-.card-list-item {
-    display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 16px;
-    /* Specifico per Numeri Utili: Bordo laterale */
-    border-left: 5px solid #607d8b; 
-}
-/* Override per Ristoranti che non vogliono il bordo laterale grigio ma semplice */
-.card-list-item.restaurant-mode { border-left: 1px solid #eee; }
-
-.item-info { flex: 1; min-width: 0; }
-.item-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 4px; }
-
-/* Tags (Ristorante/Comune) */
-.item-tag {
-    font-size: 0.7rem; background-color: #e67e22; color: white;
-    padding: 4px 8px; border-radius: 6px; font-weight: 600; text-transform: uppercase; white-space: nowrap;
-}
-
-/* --- CARD: PRODOTTI (Food Blog Style) --- */
-.card-product {
-    display: flex; flex-direction: column; overflow: hidden; border: none; border-radius: 16px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* Ombra più forte */
-}
-.prod-thumb { width: 100%; height: 200px; object-fit: cover; background-color: #eee; }
-.prod-info { padding: 15px; }
-.prod-desc-preview { font-size: 0.9rem; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* --- CARD: SENTIERI & SPIAGGE --- */
-/* Layout interni specifici */
-.card-sentiero { padding: 15px; border-left: 5px solid var(--accent-col); }
-.card-spiaggia { padding: 15px; border-left: 5px solid #00bcd4; }
-
-.sentiero-header { display: flex; justify-content: space-between; color: var(--accent-col); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
-.spiaggia-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
-
-/* Footer specifici */
-.sentiero-footer, .spiaggia-footer {
-    display: flex; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0;
-}
-.sentiero-footer { justify-content: space-between; align-items: center; }
-.spiaggia-footer { gap: 10px; }
-
-/* Bottoni specifici Sentieri/Spiagge */
-.btn-sentiero-small { padding: 5px 12px; font-size: 0.75rem; text-transform: uppercase; color: #e67e22; background-color: #fef5ed; border: 1px solid #fad7b9; }
-.btn-sentiero-small:active { background-color: #e67e22; color: white; }
-
-.btn-azure { background-color: #e0f7fa; color: #00838f; border: 1px solid #b2ebf2; padding: 6px 14px; font-size: 0.8rem; text-transform: uppercase; }
-.btn-azure:active { background-color: #b2ebf2; }
-
-/* --- CARD: TRASPORTI & FARMACIE (Layout orizzontale compatto) --- */
-.card-transport, .card-pharmacy { display: flex; align-items: center; padding: 12px; }
-
-/* Trasporti */
-.transport-thumb { width: 80px; height: 80px; flex-shrink: 0; border-radius: 8px; background-color: #ddd; background-size: cover; background-position: center; margin-right: 15px; }
-.transport-info, .pharmacy-info { flex: 1; }
-
-/* Farmacie */
-.card-pharmacy { padding: 15px; border-left: 6px solid #2ecc71; }
-.pharmacy-icon { font-size: 1.5rem; margin-right: 15px; color: #2ecc71; }
-.btn-pharmacy-call {
-    background-color: #f0fdf4; color: #2ecc71; border: 1px solid #2ecc71; border-radius: 50px;
-    padding: 8px 12px; font-size: 0.85rem; gap: 5px;
-}
-.btn-pharmacy-call:active { background-color: #2ecc71; color: white; }
-/* ============================================================
-   4. COMPONENTI SPECIFICI (Stile "Summer Coast")
-   Colori: Turchese (Mare), Corallo (Attività), Sabbia (Cibo)
-   ============================================================ */
-
-/* --- HEADER BOTTONI --- */
-.icon-btn {
-    background: rgba(255,255,255,0.2); /* Sottile trasparenza */
-    border: none; color: var(--primary-dark); padding: 8px;
-    border-radius: 50%; /* Tondi perfetti */
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.3s;
-}
-
-/* --- FILTRI (SUB-NAV & CHIPS) --- */
-.sub-nav-bar, .filter-bar {
-    display: flex; overflow-x: auto; padding: 15px 5px; gap: 10px;
-    background: transparent; 
-    -ms-overflow-style: none; scrollbar-width: none;
-    /* Maschera per sfumare i lati se si scorre (optional avanzato, teniamo semplice) */
-}
-.sub-nav-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar { display: none; }
-.sub-nav-bar { border-bottom: none; /* Rimosso bordo rigido */ }
-
-/* Pillole Filtri "Galleggianti" */
-.sub-nav-item, .filter-chip {
-    padding: 10px 20px; 
-    border-radius: 50px; /* Pillola */
-    white-space: nowrap; flex-shrink: 0;
-    border: 1px solid transparent; 
-    background: var(--surface); 
-    color: var(--text-light); 
-    font-size: 0.85rem; font-weight: 600;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* Leggera ombra */
-}
-
-/* Stato Attivo (Turchese) */
-.sub-nav-item.active-sub, .filter-chip.active-filter {
-    background-color: var(--primary-col); 
-    color: white; 
-    box-shadow: 0 4px 12px rgba(42, 157, 143, 0.4); /* Glow colorato */
-    transform: translateY(-1px);
-}
-
-/* --- PAGINAZIONE --- */
-.pagination-container { display: flex; justify-content: center; gap: 12px; margin: 30px 0; padding: 10px; }
-.page-btn {
-    width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-    background: white; border: none; border-radius: 14px;
-    font-size: 1rem; font-weight: 700; color: var(--primary-dark); 
-    box-shadow: var(--shadow-soft);
-}
-.page-btn.active { 
-    background-color: var(--primary-col); color: white; 
-    box-shadow: 0 4px 10px rgba(42, 157, 143, 0.4);
-}
-
-/* --- CARD: BORGHI (HOME) --- */
-.grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 10px 0; }
-
-.village-card {
-    height: 160px; position: relative; overflow: hidden;
-    background-size: cover; background-position: center; 
     border: none;
-    /* Ombra interna leggera per staccare dal fondo bianco */
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+    border-radius: 24px; /* Curve moderne stile iOS */
+    
+    /* Ombra profonda per staccare dallo sfondo */
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); 
+    
+    /* Reset margini per la griglia */
+    margin-bottom: 0 !important; 
+    
+    /* Animazione elastica al tocco */
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Effetto pressione */
+.village-card:active { transform: scale(0.96); }
+
+/* Overlay Titolo: Gradiente migliorato per leggibilità */
 .card-title-overlay {
-    position: absolute; bottom: 0; width: 100%;
-    /* Gradiente Blu Notte elegante invece del nero */
-    background: linear-gradient(to top, rgba(38, 70, 83, 0.85), transparent);
-    color: white; padding: 15px; 
-    font-size: 1rem; font-weight: 700; letter-spacing: 0.5px;
+    position: absolute; bottom: 0; width: 100%; height: 60%;
+    /* Sfumatura dal nero trasparente al trasparente totale */
+    background: linear-gradient(to top, rgba(38, 70, 83, 0.9) 0%, transparent 100%);
+    
+    display: flex; align-items: flex-end; /* Testo in basso */
+    padding: 15px;
+    
+    color: white; 
+    font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
-/* --- CARD: RISTORANTI & GENERICHE --- */
+/* --- B. CARD RISTORANTI & GENERICHE (Clean Design) --- */
 .card-list-item {
-    display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 20px;
-    border-left: none; /* Rimosso bordo laterale vecchio */
+    display: flex; justify-content: space-between; align-items: center; 
+    gap: 15px; 
+    padding: 22px; /* Più spazio interno = più eleganza */
+    border-left: none !important; /* Pulizia totale */
 }
-
-/* Specifico Numeri Utili: Icona o bordo soft */
-.card-list-item.restaurant-mode { border-left: none; }
 
 .item-info { flex: 1; min-width: 0; }
-.item-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+.item-header-row { 
+    display: flex; justify-content: space-between; align-items: flex-start; 
+    gap: 10px; margin-bottom: 6px; 
+}
 
-/* Tags (Ristorante/Comune) - Colore Sabbia/Oro */
+/* Tags (Ristorante/Comune) - Stile "Etichetta Premium" */
 .item-tag {
     font-size: 0.65rem; 
-    background-color: var(--accent-soft); /* Sabbia */
+    font-weight: 700; 
+    text-transform: uppercase; letter-spacing: 0.5px;
+    
+    background-color: var(--accent-soft); /* Color Sabbia Dorata */
     color: white;
-    padding: 5px 10px; border-radius: 8px; font-weight: 700; 
-    text-transform: uppercase; white-space: nowrap;
+    
+    padding: 6px 12px; 
+    border-radius: 12px; /* Curve morbide */
+    /* Ombra dorata sotto l'etichetta */
+    box-shadow: 0 4px 10px -2px rgba(244, 162, 97, 0.5); 
 }
 
-/* --- CARD: PRODOTTI (Food) --- */
+/* --- C. CARD PRODOTTI (Food Blog Style) --- */
 .card-product {
-    display: flex; flex-direction: column; overflow: hidden; border: none;
-    box-shadow: var(--shadow-soft);
+    display: flex; flex-direction: column; overflow: hidden; 
+    border: none;
+    border-radius: 24px; /* Coerenza con i Borghi */
+    
+    /* Ombra "Galleggiante" più alta */
+    box-shadow: 0 15px 35px -10px rgba(0,0,0,0.15); 
+    transform: translateZ(0); /* Ottimizzazione rendering */
 }
-.prod-thumb { width: 100%; height: 200px; object-fit: cover; background-color: #eee; }
-.prod-info { padding: 20px; }
 
-/* --- CARD: SENTIERI (Outdoor) & SPIAGGE (Mare) --- */
-/* Layout interni - Rimosso border-left, usiamo i colori dei testi/bottoni */
-.card-sentiero, .card-spiaggia { padding: 20px; border-left: none; }
+.prod-thumb { 
+    width: 100%; 
+    height: 230px; /* Foto molto grande e impattante */
+    object-fit: cover; 
+    background-color: #eee; 
+    transition: transform 0.5s ease; /* Transizione lenta per lo zoom */
+}
 
+/* Effetto Zoom sulla foto quando premi la card */
+.card-product:active .prod-thumb { transform: scale(1.05); }
+
+.prod-info { 
+    padding: 22px; 
+    background: white;
+    position: relative;
+}/* --- CARD: SENTIERI (Outdoor) & SPIAGGE (Mare) --- */
+/* Layout interni: Pulizia assoluta */
+.card-sentiero, .card-spiaggia { 
+    padding: 22px 25px; /* Spaziatura interna generosa */
+    border-left: none; /* Rimosso vecchio stile */
+    position: relative;
+}
+
+/* --- HEADER SENTIERI (Stile Tecnico/Outdoor) --- */
 .sentiero-header { 
-    display: flex; justify-content: space-between; 
-    color: var(--accent-col); /* Corallo per attività fisiche */
-    font-size: 0.8rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px;
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--accent-col); /* Corallo */
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.85rem; font-weight: 800; 
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 12px;
 }
-.spiaggia-header { 
-    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; 
-}
-/* Icona spiaggia grande */
-.spiaggia-header span { font-size: 1.4rem; } 
 
-/* Footer specifici */
+/* --- HEADER SPIAGGE (Stile Relax) --- */
+.spiaggia-header { 
+    display: flex; justify-content: space-between; align-items: flex-start; 
+    margin-bottom: 8px; 
+}
+/* Emoji grande per impatto visivo immediato */
+.spiaggia-header span { font-size: 1.6rem; margin-left: 10px; }
+
+/* Location: Badge grigio chiaro elegante */
+.spiaggia-location {
+    display: inline-flex; align-items: center;
+    background-color: #F8F9FA; 
+    padding: 4px 10px; border-radius: 8px;
+    font-size: 0.85rem; color: var(--text-light); font-weight: 700;
+}
+
+/* --- FOOTER (Separatore "Ticket") --- */
 .sentiero-footer, .spiaggia-footer {
-    display: flex; margin-top: 15px; padding-top: 15px; 
-    border-top: 1px dashed rgba(0,0,0,0.05); /* Linea tratteggiata leggera */
+    display: flex; 
+    margin-top: 18px; padding-top: 15px; 
+    /* Linea tratteggiata più elegante e sottile */
+    border-top: 2px dashed rgba(0,0,0,0.06); 
 }
 .sentiero-footer { justify-content: space-between; align-items: center; }
-.spiaggia-footer { gap: 10px; }
+.spiaggia-footer { gap: 12px; }
 
-/* Bottoni specifici */
-/* Sentieri: Corallo (Terra) */
+/* --- BOTTONI SPECIFICI (Pillole Soft) --- */
+
+/* Sentieri: Sfondo Arancio/Corallo Chiaro */
 .btn-sentiero-small { 
-    padding: 8px 16px; font-size: 0.75rem; text-transform: uppercase; 
-    color: var(--accent-col); background-color: #FFF3E0; /* Corallo chiaro */
+    padding: 10px 18px; /* Più spazio per il dito */
+    font-size: 0.75rem; font-weight: 800; text-transform: uppercase; 
+    color: var(--accent-col); 
+    background-color: #FFF3E0; /* Corallo pastello */
+    border-radius: 50px; /* Pillola */
+    border: none;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s;
 }
-.btn-sentiero-small:active { background-color: var(--accent-col); color: white; }
+.btn-sentiero-small:active { 
+    background-color: var(--accent-col); color: white; 
+    transform: scale(0.95);
+}
 
-/* Spiagge: Turchese (Mare) */
+/* Spiagge: Sfondo Turchese Chiaro */
 .btn-azure { 
-    padding: 8px 16px; font-size: 0.75rem; text-transform: uppercase;
-    background-color: #E0F2F1; color: var(--primary-col); 
+    padding: 10px 18px; 
+    font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+    background-color: #E0F2F1; 
+    color: #00897B; /* Turchese scuro per leggibilità */
+    border-radius: 50px; /* Pillola */
+    border: none;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s;
 }
-.btn-azure:active { background-color: var(--primary-col); color: white; }
+.btn-azure:active { 
+    background-color: #00897B; color: white; 
+    transform: scale(0.95); 
+}/* --- CARD: TRASPORTI & FARMACIE (Design "Service App") --- */
+.card-transport, .card-pharmacy { 
+    display: flex; align-items: center; 
+    padding: 18px; /* Spaziatura comoda */
+    border: none;
+    position: relative;
+    /* Per le farmacie, aggiungiamo un tocco di colore distintivo */
+    overflow: hidden; 
+}
 
-/* --- CARD: TRASPORTI & FARMACIE --- */
-.card-transport, .card-pharmacy { display: flex; align-items: center; padding: 15px; }
-
-/* Trasporti */
+/* --- TRASPORTI: Stile "Icona iOS" --- */
 .transport-thumb { 
-    width: 70px; height: 70px; flex-shrink: 0; 
-    border-radius: 16px; /* Quadrato arrotondato */
+    width: 72px; height: 72px; flex-shrink: 0; 
+    border-radius: 18px; /* Squircle (tra cerchio e quadrato) */
     background-color: #ECEFF1; 
-    background-size: cover; background-position: center; margin-right: 20px; 
+    background-size: cover; background-position: center; 
+    margin-right: 20px; 
+    /* Ombra morbida sotto l'icona per staccarla */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08); 
 }
-.transport-info, .pharmacy-info { flex: 1; }
 
-/* Farmacie - Verde medico (lasciamo verde per convenzione, ma morbido) */
-.card-pharmacy { border-left: none; } /* Rimosso bordo verde */
-.pharmacy-icon { font-size: 1.8rem; margin-right: 20px; color: #2ECC71; }
+.transport-info, .pharmacy-info { flex: 1; min-width: 0; }
+
+/* --- FARMACIE: Stile "Clean Medical" --- */
+.card-pharmacy { 
+    border-left: none; /* Via il bordo vecchio */
+    /* Sfumatura delicatissima verso il verde menta a destra */
+    background: linear-gradient(to right, white 60%, #F1F8E9 100%);
+}
+
+.pharmacy-icon { 
+    font-size: 2rem; margin-right: 20px; 
+    color: #2ECC71; /* Verde Salute */
+    
+    /* Cerchio bianco dietro l'icona per pulizia */
+    background: white; 
+    width: 52px; height: 52px; 
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
 
 .btn-pharmacy-call {
-    background-color: #E8F5E9; color: #27AE60; 
-    border-radius: 50px; padding: 8px 16px; font-size: 0.85rem; gap: 6px; border: none;
+    background-color: white; color: #27AE60; 
+    border: 1px solid #E8F5E9; /* Bordino sottile */
+    border-radius: 50px; 
+    padding: 8px 16px; font-size: 0.8rem; font-weight: 700; 
+    gap: 6px; display: inline-flex; align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
+
 /* ============================================================
    5. BOTTONI AZIONE GENERALI (Chiama, Mappa)
-   Stile: Pillole pastello senza bordi
+   Stile: Pillole "Chunky" (Facili da premere)
    ============================================================ */
 .card-actions { 
     display: flex; gap: 12px; 
     margin-top: 15px; padding-top: 15px; 
-    border-top: 2px dashed rgba(0,0,0,0.05); /* Separatore leggero tratteggiato */
+    /* Linea tratteggiata elegante */
+    border-top: 2px dashed rgba(0,0,0,0.06); 
     width: 100%; 
 }
 
 .action-btn { 
     flex: 1; 
-    padding: 10px 12px; 
+    padding: 12px 10px; /* Più alti per il tocco */
     font-size: 0.85rem; 
     gap: 8px; 
     border-radius: 50px; /* Pillola completa */
-    border: none; /* Via i bordi */
+    border: none; 
     font-weight: 700;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    font-family: 'Montserrat', sans-serif;
+    
+    /* Transizioni fluide */
+    transition: transform 0.2s ease, filter 0.2s;
 }
 
-/* Colori specifici (Pastello saturo) */
+/* Colori specifici */
 .btn-phone { 
-    background-color: #E0F2F1; /* Verde Acqua chiarissimo */
-    color: #00695C; /* Verde profondo */
+    background-color: #E0F2F1; /* Verde Acqua */
+    color: #00695C; 
 }
-.btn-phone:active { background-color: #B2DFDB; }
+/* Effetto "Scurisci" al tocco invece di cambiare colore netto */
+.btn-phone:active { filter: brightness(0.95); transform: scale(0.97); }
 
 .btn-map { 
-    background-color: #E3F2FD; /* Azzurro cielo */
-    color: #1565C0; /* Blu */
+    background-color: #E3F2FD; /* Azzurro Cielo */
+    color: #1565C0; 
 }
-.btn-map:active { background-color: #BBDEFB; }
+.btn-map:active { filter: brightness(0.95); transform: scale(0.97); }
 
 /* ============================================================
    6. MODALI (POPUP) - Effetto "Summer Glass"
@@ -637,6 +614,66 @@ main, #app-content {
 }
 
 @keyframes fadeIn { to { opacity: 1; } }
+/* ============================================================
+   7. SEZIONE MAPPE E MONUMENTI (Refined)
+   ============================================================ */
+
+/* Mappa con bordo "Cartolina" */
+.map-container {
+    width: 100%;
+    height: calc(100vh - 200px);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    background-color: #E0F2F1; /* Sfondo verdino chiaro mentre carica */
+    position: relative;
+    box-shadow: var(--shadow-soft);
+    border: 4px solid var(--surface); /* Bordo bianco spesso */
+}
+
+/* Badge fluttuante sulla mappa */
+.map-note {
+    position: absolute;
+    bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    padding: 8px 20px; border-radius: 50px;
+    font-size: 0.8rem; font-weight: 700; 
+    color: var(--primary-dark);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    pointer-events: none;
+    letter-spacing: 0.5px;
+}
+
+/* Stili Badge Monumenti */
+.monument-meta {
+    display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+}
+
+.meta-badge {
+    font-size: 0.7rem; padding: 6px 12px; border-radius: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* Colori badge ispirati alla natura */
+.badge-easy { background-color: #E8F5E9; color: #2E7D32; } /* Verde vegetazione */
+.badge-hard { background-color: #FFEBEE; color: #C62828; } /* Rosso sentiero */
+.badge-time { background-color: #E3F2FD; color: #1565C0; } /* Azzurro cielo */
+
+/* Card Monumento Specifica */
+.card-list-item.monument-mode {
+    border-left: none; /* Rimuovo il vecchio stile */
+    border-bottom: 3px solid #9C27B0; /* Accento colorato sotto */
+}
+
+/* Box Curiosità */
+.curiosity-box {
+    background-color: #FFF8E1; /* Luce calda */
+    border: none;
+    border-left: 4px solid var(--accent-soft);
+    padding: 15px; margin-top: 20px; border-radius: 8px;
+    font-size: 0.95rem; color: #5D4037;
+    font-style: italic;
+}
 
 /* Utility: Nascondi frecce liste (Pulizia visiva) */
 .prod-arrow, .item-arrow { display: none !important; }
