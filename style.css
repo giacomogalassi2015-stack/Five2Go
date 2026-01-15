@@ -1,9 +1,12 @@
 /* ============================================================
    1. SETUP, VARIABILI & FONTS (Tema: "Summer Coast")
    ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Nunito+Sans:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700&family=Playfair+Display:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Prata&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Prata&family=Lato:wght@400;700&display=swap');
 
 :root {
+
     /* Palette: Ispirata alla costa ligure/mediterranea */
     --primary-col: #2A9D8F; /* Turchese Profondo (Mare) */
     --primary-dark: #264653; /* Blu Notte (Testi/Contrasti) */
@@ -29,7 +32,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 body {
-    font-family: 'Nunito Sans', sans-serif; /* Leggibilità massima per il corpo */
+    font-family: 'LATO'; /* Leggibilità massima per il corpo */
     background-color: var(--bg-body);
     color: var(--text-main);
     line-height: 1.6;
@@ -40,8 +43,9 @@ body {
 }
 
 /* Titoli in Font Montserrat per carattere */
-h1, h2, h3, #view-title, .card-title-overlay {
-    font-family: 'Montserrat', sans-serif;
+ .card-title-overlay {
+    font-family: 'Prata', sans-serif;
+    
 }
 
 /* ============================================================
@@ -68,16 +72,33 @@ header, #app-header {
     width: 100%; /* Occupa tutto lo schermo */
 }
 
-/* Titolo a Sinistra */
+/* Titolo Centrato Assoluto */
 #view-title { 
-    font-size: 1.4rem; 
+    /* Trucco per centrare perfettamente un elemento in un contenitore relativo */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    font-family: 'Playfair Display';
+    font-size: 1.8rem; /* Leggermente ridotto per sicurezza */
     font-weight: 800; 
     color: var(--primary-dark);
-    text-transform: lowercase;
-    margin: 0; /* Rimuove margini extra */
+    text-transform: uppercase; /* Più elegante quando centrato */
+    letter-spacing: 1px;
+    margin: 0;
+    
+    white-space: nowrap; /* Evita che vada a capo */
+    text-align: center;
+    z-index: 1; /* Sta sotto i menu se si aprono */
 }
 #view-title::first-letter { text-transform: uppercase; }
-
+#view-title::first-letter {
+    font-size: 1.4em; /* Il 40% più grande del resto del testo */
+    font-weight: 800; /* Molto grassetto */
+    
+    /* Opzionale: se vuoi che la prima lettera abbia il colore "Corallo" */
+    /* color: var(--accent-col); */ 
+}
 /* Contenitore Destra (Lingua + Share) */
 .header-actions {
     display: flex;
@@ -129,7 +150,7 @@ header, #app-header {
     display: flex; align-items: center; gap: 10px;
     width: 100%; padding: 10px 12px;
     border: none; background: none; text-align: left;
-    font-family: 'Nunito Sans', sans-serif; font-weight: 600;
+    font-family: 'Prata', sans-serif; font-weight: 600;
     color: var(--text-main); border-radius: 10px; cursor: pointer;
 }
 .lang-opt:hover { background-color: #F8F9FA; }
@@ -220,7 +241,7 @@ main, #app-content {
 
 /* --- C. TIPOGRAFIA TITOLI CARD (Montserrat) --- */
 .item-title, .prod-title, .spiaggia-title, .transport-title, .pharmacy-name {
-    font-family: 'Montserrat', sans-serif; /* Coerenza con Header */
+    font-family: 'Prata', sans-serif; /* Coerenza con Header */
     font-weight: 700;
     color: var(--primary-dark); /* Blu notte elegante */
     font-size: 1.15rem;
@@ -230,7 +251,7 @@ main, #app-content {
 
 /* --- D. TIPOGRAFIA SOTTOTITOLI/INFO (Nunito) --- */
 .item-subtitle, .spiaggia-location, .transport-desc, .pharmacy-address {
-    font-family: 'Nunito Sans', sans-serif;
+    font-family: 'Prata', sans-serif;
     font-size: 0.9rem;
     color: var(--text-light);
     font-weight: 600; /* Leggermente più marcato per leggibilità al sole */
@@ -240,7 +261,7 @@ main, #app-content {
 /* --- E. BASE DEI BOTTONI (Action & Chips) - Stile Pillola --- */
 .action-btn, .btn-sentiero-small, .btn-azure, .btn-pharmacy-call, .filter-chip {
     display: inline-flex; align-items: center; justify-content: center;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Prata', sans-serif;
     font-weight: 600; 
     text-decoration: none; 
     border-radius: 50px; /* Forme completamente arrotondate (Pillola) */
@@ -594,7 +615,7 @@ main, #app-content {
     border-radius: 50px; /* Pillola completa */
     border: none; 
     font-weight: 700;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Prata', sans-serif;
     
     /* Transizioni fluide */
     transition: transform 0.2s ease, filter 0.2s;
@@ -648,7 +669,7 @@ main, #app-content {
 /* Testi dentro il modale */
 .modal-content h2 { 
     padding: 25px 25px 5px 25px; 
-    font-family: 'Montserrat', sans-serif; 
+    font-family: 'Prata', sans-serif; 
     color: var(--primary-dark);
     font-size: 1.5rem;
 }
@@ -753,7 +774,7 @@ main, #app-content {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Prata', sans-serif;
     font-weight: 700;
     font-size: 0.85rem;
     color: var(--primary-dark);
@@ -806,7 +827,7 @@ main, #app-content {
     border: none;
     background: none;
     text-align: left;
-    font-family: 'Nunito Sans', sans-serif;
+    font-family: 'Pratas', sans-serif;
     font-weight: 600;
     color: var(--text-main);
     border-radius: 10px;
