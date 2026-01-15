@@ -45,37 +45,96 @@ h1, h2, h3, #view-title, .card-title-overlay {
 }
 
 /* ============================================================
-   2. HEADER & NAVIGAZIONE (Stile "Resort Moderno")
+   HEADER & NAVIGAZIONE (Update: Layout a tutta larghezza)
    ============================================================ */
 
-/* Header: Pulito, semitrasparente */
 header, #app-header {
     background-color: var(--glass-bg);
-    backdrop-filter: var(--glass-blur); /* Effetto vetro smerigliato */
+    backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    color: var(--primary-dark);
     height: 65px;
-    padding: 0 25px;
-    display: flex; justify-content: space-between; align-items: center;
+    
+    /* MODIFICA FONDAMENTALE: Spinge gli elementi agli estremi */
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    
     position: sticky; top: 0; z-index: 1000;
     border-bottom: 1px solid rgba(0,0,0,0.05);
     transition: all 0.3s ease;
+    
+    /* Padding laterale per non toccare la cornice del telefono */
+    padding: 0 20px; 
+    width: 100%; /* Occupa tutto lo schermo */
 }
 
+/* Titolo a Sinistra */
 #view-title { 
     font-size: 1.4rem; 
     font-weight: 800; 
-    letter-spacing: -0.5px;
     color: var(--primary-dark);
-    text-transform: lowercase; /* Tocco stilistico moderno */
+    text-transform: lowercase;
+    margin: 0; /* Rimuove margini extra */
 }
 #view-title::first-letter { text-transform: uppercase; }
 
-header .material-icons { 
-    font-size: 28px; 
-    color: var(--accent-col); /* Icone color corallo */
-    cursor: pointer; 
+/* Contenitore Destra (Lingua + Share) */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Spazio tra bandierina e icona share */
 }
+
+/* Bottone Share (Ricreato) */
+.header-share-btn {
+    font-size: 26px !important; /* Dimensione icona */
+    color: var(--accent-col); /* Colore Corallo */
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s;
+}
+.header-share-btn:active { transform: scale(0.9); }
+
+/* Bottone Lingua */
+.current-lang-btn {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    padding: 5px 12px;
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700; font-size: 0.85rem;
+    color: var(--primary-dark);
+    cursor: pointer;
+}
+
+/* Dropdown Menu */
+.lang-selector { position: relative; }
+
+.lang-dropdown {
+    position: absolute; top: 45px; right: 0;
+    background-color: var(--surface);
+    min-width: 160px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border-radius: 16px; padding: 8px;
+    z-index: 2000;
+    opacity: 0; visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+.lang-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+
+.lang-opt {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 10px 12px;
+    border: none; background: none; text-align: left;
+    font-family: 'Nunito Sans', sans-serif; font-weight: 600;
+    color: var(--text-main); border-radius: 10px; cursor: pointer;
+}
+.lang-opt:hover { background-color: #F8F9FA; }
+.lang-opt.active { background-color: #E0F2F1; color: var(--primary-col); font-weight: 800; }
+.lang-flag { font-size: 1.2rem; }
 
 /* Main Content */
 main, #app-content { 
@@ -674,6 +733,89 @@ main, #app-content {
     font-size: 0.95rem; color: #5D4037;
     font-style: italic;
 }
+/* ============================================================
+   AGGIUNTA: STILE SELETTORE LINGUA & HEADER ACTIONS
+   ============================================================ */
 
+/* Contenitore destra header (Lingua + Share) */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Spazio tra bandiera e icona share */
+}
+
+/* Bottone corrente (Bandiera) */
+.current-lang-btn {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--primary-dark);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.current-lang-btn:active { transform: scale(0.95); background: white; }
+
+/* Contenitore Dropdown (Posizionamento relativo) */
+.lang-selector {
+    position: relative;
+    display: inline-block;
+}
+
+/* Menu a tendina (Glass Style) */
+.lang-dropdown {
+    position: absolute;
+    top: 45px; /* Sotto il bottone */
+    right: 0;
+    background-color: var(--surface); /* O var(--glass-bg) se preferisci trasparenza */
+    min-width: 160px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border-radius: 16px;
+    padding: 8px;
+    z-index: 2000;
+    
+    /* Animazione apertura */
+    opacity: 0; 
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Stato aperto */
+.lang-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Opzioni Lingua */
+.lang-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-family: 'Nunito Sans', sans-serif;
+    font-weight: 600;
+    color: var(--text-main);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.lang-opt:hover { background-color: #F8F9FA; }
+.lang-opt.active { background-color: #E0F2F1; color: var(--primary-col); font-weight: 800; }
+.lang-flag { font-size: 1.2rem; }
 /* Utility: Nascondi frecce liste (Pulizia visiva) */
 .prod-arrow, .item-arrow { display: none !important; }

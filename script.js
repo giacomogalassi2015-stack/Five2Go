@@ -5,74 +5,254 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const CLOUDINARY_CLOUD_NAME = 'dkg0jfady'; 
 const CLOUDINARY_BASE_URL = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/`;
-/**
- * Genera l'URL basandosi ESATTAMENTE sul nome che arriva dal Database.
- * * @param {string} name - Il nome grezzo dal DB (es. "Pesto Genovese", "Riomaggiore")
- * @param {string} folder - (Opzionale) La cartella su Cloudinary dove hai messo queste foto
- * @param {number} width - Larghezza per ottimizzazione
- */
-function getSmartUrl(name, folder = '', width = 600) {
-    if (!name) return 'https://via.placeholder.com/600x400?text=No+Image';
 
-    // 1. Pulisce il nome: Cloudinary gestisce gli spazi, ma è meglio codificarli (spazio -> %20)
-    // Se su Cloudinary i file si chiamano esattamente "Pesto Genovese", encodeURIComponent lo gestisce.
-    // Se invece li hai rinominati "pesto_genovese", dovremmo fare .toLowerCase().replace(/ /g, '_')
-    const safeName = encodeURIComponent(name); 
+// --- CONFIGURAZIONE LINGUA ---
+const AVAILABLE_LANGS = [
+    { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+    { code: 'en', label: 'English', flag: '🇬🇧' },
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+    { code: 'es', label: 'Español', flag: '🇪🇸' },
+    { code: 'zh', label: '中文', flag: '🇨🇳' }
+];
 
-    // 2. Gestione Cartella: Se passi una cartella, aggiunge lo slash
-    const folderPath = folder ? `${folder}/` : '';
+let currentLang = localStorage.getItem('app_lang') || 'it';
 
-    // 3. Costruisce l'URL
-    return `${CLOUDINARY_BASE_URL}/w_${width},q_auto,f_auto,c_fill/${folderPath}${safeName}`;
+// --- DIZIONARIO TESTI UI COMPLETO (Con Nav Bar) ---
+const UI_TEXT = {
+    it: {
+        loading: "Caricamento...", error: "Errore",
+        home_title: "5 Terre", food_title: "Cibo & Sapori", outdoor_title: "Outdoor", services_title: "Servizi", maps_title: "Mappe & Cultura",
+        // Nav Bar
+        nav_villages: "Borghi", nav_food: "Cibo", nav_outdoor: "Outdoor", nav_services: "Servizi",
+        // Menu Sotto-header
+        menu_prod: "Prodotti", menu_rest: "Ristoranti", menu_trail: "Sentieri", menu_beach: "Spiagge", menu_trans: "Trasporti", menu_num: "Numeri Utili", menu_pharm: "Farmacie", menu_map: "Mappe", menu_monu: "Attrazioni",
+        btn_call: "Chiama", btn_map: "Mappa", btn_info: "Info", btn_website: "Sito Web", btn_hours: "Orari", btn_toll: "Pedaggio", btn_position: "Posizione",
+        ideal_for: "Ideale per", no_results: "Nessun risultato.", visit_time: "min", curiosity: "Curiosità", coverage: "Copertura", pharmacy_tag: "FARMACIA",
+        map_loaded: "Mappa caricata"
+    },
+    en: {
+        loading: "Loading...", error: "Error",
+        home_title: "5 Lands", food_title: "Food & Flavors", outdoor_title: "Outdoor", services_title: "Services", maps_title: "Maps & Culture",
+        nav_villages: "Villages", nav_food: "Food", nav_outdoor: "Outdoor", nav_services: "Services",
+        menu_prod: "Products", menu_rest: "Restaurants", menu_trail: "Trails", menu_beach: "Beaches", menu_trans: "Transport", menu_num: "Useful Numbers", menu_pharm: "Pharmacies", menu_map: "Maps", menu_monu: "Attractions",
+        btn_call: "Call", btn_map: "Map", btn_info: "Info", btn_website: "Website", btn_hours: "Hours", btn_toll: "Toll", btn_position: "Location",
+        ideal_for: "Best for", no_results: "No results found.", visit_time: "min", curiosity: "Curiosity", coverage: "Coverage", pharmacy_tag: "PHARMACY",
+        map_loaded: "Map loaded"
+    },
+    es: {
+        loading: "Cargando...", error: "Error",
+        home_title: "5 Tierras", food_title: "Comida y Sabores", outdoor_title: "Aire Libre", services_title: "Servicios", maps_title: "Mapas y Cultura",
+        nav_villages: "Pueblos", nav_food: "Comida", nav_outdoor: "Aire Libre", nav_services: "Servicios",
+        menu_prod: "Productos", menu_rest: "Restaurantes", menu_trail: "Senderos", menu_beach: "Playas", menu_trans: "Transporte", menu_num: "Números", menu_pharm: "Farmacias", menu_map: "Mapas", menu_monu: "Atracciones",
+        btn_call: "Llamar", btn_map: "Mapa", btn_info: "Info", btn_website: "Sitio Web", btn_hours: "Horario", btn_toll: "Peaje", btn_position: "Posición",
+        ideal_for: "Ideal para", no_results: "Sin resultados.", visit_time: "min", curiosity: "Curiosidad", coverage: "Cobertura", pharmacy_tag: "FARMACIA",
+        map_loaded: "Mapa cargado"
+    },
+    fr: {
+        loading: "Chargement...", error: "Erreur",
+        home_title: "5 Terres", food_title: "Gastronomie", outdoor_title: "Plein Air", services_title: "Services", maps_title: "Cartes & Culture",
+        nav_villages: "Villages", nav_food: "Nourriture", nav_outdoor: "Plein Air", nav_services: "Services",
+        menu_prod: "Produits", menu_rest: "Restaurants", menu_trail: "Sentiers", menu_beach: "Plages", menu_trans: "Transport", menu_num: "Numéros", menu_pharm: "Pharmacies", menu_map: "Cartes", menu_monu: "Attractions",
+        btn_call: "Appeler", btn_map: "Carte", btn_info: "Info", btn_website: "Site Web", btn_hours: "Horaires", btn_toll: "Péage", btn_position: "Position",
+        ideal_for: "Idéal pour", no_results: "Aucun résultat.", visit_time: "min", curiosity: "Curiosité", coverage: "Couverture", pharmacy_tag: "PHARMACIE",
+        map_loaded: "Carte chargée"
+    },
+    de: {
+        loading: "Laden...", error: "Fehler",
+        home_title: "5 Länder", food_title: "Essen & Genuss", outdoor_title: "Outdoor", services_title: "Dienste", maps_title: "Karten & Kultur",
+        nav_villages: "Dörfer", nav_food: "Essen", nav_outdoor: "Outdoor", nav_services: "Dienste",
+        menu_prod: "Produkte", menu_rest: "Restaurants", menu_trail: "Wanderwege", menu_beach: "Strände", menu_trans: "Transport", menu_num: "Nummern", menu_pharm: "Apotheken", menu_map: "Karten", menu_monu: "Attraktionen",
+        btn_call: "Anrufen", btn_map: "Karte", btn_info: "Info", btn_website: "Webseite", btn_hours: "Öffnungszeiten", btn_toll: "Maut", btn_position: "Standort",
+        ideal_for: "Ideal für", no_results: "Keine Ergebnisse.", visit_time: "min", curiosity: "Kuriosität", coverage: "Abdeckung", pharmacy_tag: "APOTHEKE",
+        map_loaded: "Karte geladen"
+    },
+    zh: {
+        loading: "加载中...", error: "错误",
+        home_title: "五渔村", food_title: "美食与风味", outdoor_title: "户外", services_title: "服务", maps_title: "地图与文化",
+        nav_villages: "村庄", nav_food: "食物", nav_outdoor: "户外", nav_services: "服务",
+        menu_prod: "产品", menu_rest: "餐厅", menu_trail: "步道", menu_beach: "海滩", menu_trans: "交通", menu_num: "常用号码", menu_pharm: "药房", menu_map: "地图", menu_monu: "景点",
+        btn_call: "致电", btn_map: "地图", btn_info: "信息", btn_website: "网站", btn_hours: "时间", btn_toll: "通行费", btn_position: "位置",
+        ideal_for: "适合", no_results: "无结果", visit_time: "分", curiosity: "趣闻", coverage: "覆盖范围", pharmacy_tag: "药房",
+        map_loaded: "地图已加载"
+    }
+};
+
+// Funzione Traduzione UI
+function t(key) {
+    const langDict = UI_TEXT[currentLang] || UI_TEXT['it'];
+    return langDict[key] || key;
 }
-const content = document.getElementById('app-content');
-const viewTitle = document.getElementById('view-title');
 
-// 2. GESTIONE VISTE E NAVIGAZIONE
-async function switchView(view, el) {
-    if (!content) return;
-    
-    // Aggiorna stile bottoni menu in basso
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    if (el) el.classList.add('active');
-    
-    // Pulisce e mostra loader
-    content.innerHTML = '<div class="loader">Caricamento...</div>';
+function dbCol(item, field) {
+    if (!item) return '';
+    if (currentLang === 'it') return item[field]; 
+    const translatedField = `${field}_${currentLang}`; 
+    if (item[translatedField] && item[translatedField].trim() !== '') {
+        return item[translatedField];
+    }
+    return item[field];
+}
 
-    try {
-        if (view === 'home') {
-            viewTitle.innerText = "5 Terre";
-            await renderHome();
-        } 
-        else if (view === 'cibo') {
-            viewTitle.innerText = "Cibo & Sapori";
-            renderSubMenu([
-                { label: "🍇 Prodotti", table: "Prodotti" },
-                { label: "🍝 Ristoranti", table: "Ristoranti" }
-            ], 'Prodotti');
-        }
-        else if (view === 'outdoor') {
-            viewTitle.innerText = "Outdoor";
-            renderSubMenu([
-                { label: "🥾 Sentieri", table: "Sentieri" },
-                { label: "🏖️ Spiagge", table: "Spiagge" }
-            ], 'Sentieri');
-        }
-        else if (view === 'servizi') {
-            viewTitle.innerText = "Servizi & Utilità";
-            renderSubMenu([
-                { label: "🚂 Trasporti", table: "Trasporti" },
-                { label: "📞 Numeri", table: "Numeri_utili" },
-                { label: "💊 Farmacie", table: "Farmacie" }
-            ], 'Trasporti');
-        }
-    } catch (err) {
-        console.error(err);
-        content.innerHTML = `<div class="error-msg">Errore: ${err.message}</div>`;
+// --- SETUP HEADER (Versione Fix: Estremi + Share Button) ---
+function setupLanguageSelector() {
+    const header = document.querySelector('header');
+    
+    // 1. PULIZIA: Rimuoviamo vecchi contenitori actions o icone "volanti"
+    const oldActions = header.querySelector('.header-actions');
+    if (oldActions) oldActions.remove();
+    
+    // Rimuove eventuali icone material residue messe manualmente nell'HTML
+    // (Conserva solo #view-title e il container che stiamo per creare)
+    const existingIcons = header.querySelectorAll('.material-icons');
+    existingIcons.forEach(icon => icon.remove());
+
+    // 2. CREAZIONE CONTENITORE DESTRO
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'header-actions'; // Il CSS lo gestisce flex
+    
+    // 3. RECUPERO DATI LINGUA
+    const currFlag = AVAILABLE_LANGS.find(l => l.code === currentLang).flag;
+    const currCode = currentLang.toUpperCase();
+
+    // 4. HTML SELETTORE LINGUA
+    const langSelector = document.createElement('div');
+    langSelector.className = 'lang-selector';
+    langSelector.innerHTML = `
+        <button class="current-lang-btn" onclick="toggleLangDropdown(event)">
+            <span class="lang-flag">${currFlag}</span> ${currCode} ▾
+        </button>
+        <div class="lang-dropdown" id="lang-dropdown">
+            ${AVAILABLE_LANGS.map(l => `
+                <button class="lang-opt ${l.code === currentLang ? 'active' : ''}" onclick="changeLanguage('${l.code}')">
+                    <span class="lang-flag">${l.flag}</span> ${l.label}
+                </button>
+            `).join('')}
+        </div>
+    `;
+    
+    // 5. CREAZIONE BOTTONE SHARE (JavaScript puro)
+    // Lo ricreiamo qui per essere sicuri al 100% che ci sia e funzioni
+    const shareBtn = document.createElement('span');
+    shareBtn.className = 'material-icons header-share-btn';
+    shareBtn.innerText = 'share'; // Icona di Google Fonts
+    shareBtn.onclick = shareApp;  // Collega la funzione
+    
+    // 6. ASSEMBLAGGIO
+    // Prima la lingua, poi lo share (così lo share è all'estrema destra)
+    actionsContainer.appendChild(langSelector);
+    actionsContainer.appendChild(shareBtn);
+
+    // 7. INSERIMENTO NELL'HEADER
+    header.appendChild(actionsContainer);
+}
+
+// Assicurati che questa funzione sia presente e invariata
+function toggleLangDropdown(e) {
+    e.stopPropagation();
+    const dd = document.getElementById('lang-dropdown');
+    dd.classList.toggle('show');
+}
+
+// --- NUOVA FUNZIONE: Aggiorna testi Nav Bar ---
+function updateNavBar() {
+    // Selezioniamo le etichette della nav bar (nav-label)
+    // Assumiamo che l'ordine sia: 0=Borghi(Home), 1=Cibo, 2=Outdoor, 3=Servizi
+    const labels = document.querySelectorAll('.nav-label');
+    if (labels.length >= 4) {
+        labels[0].innerText = t('nav_villages');
+        labels[1].innerText = t('nav_food');
+        labels[2].innerText = t('nav_outdoor');
+        labels[3].innerText = t('nav_services');
     }
 }
 
-// 3. RENDER MENU SECONDARIO (Sotto il titolo)
+function changeLanguage(langCode) {
+    currentLang = langCode;
+    localStorage.setItem('app_lang', langCode);
+    
+    setupLanguageSelector(); 
+    updateNavBar(); // Aggiorna subito la barra in basso
+    
+    // Ricarica vista
+    const activeNav = document.querySelector('.nav-item.active');
+    if(activeNav) {
+        const onclickAttr = activeNav.getAttribute('onclick');
+        const viewMatch = onclickAttr.match(/switchView\('([^']+)'/);
+        if(viewMatch) switchView(viewMatch[1], activeNav);
+        else switchView('home'); 
+    } else {
+        switchView('home');
+    }
+}
+
+window.addEventListener('click', () => {
+    const dd = document.getElementById('lang-dropdown');
+    if(dd) dd.classList.remove('show');
+});
+
+// --- FUNZIONI UTILITY & VISTE ---
+function getSmartUrl(name, folder = '', width = 600) {
+    if (!name) return 'https://via.placeholder.com/600x400?text=No+Image';
+    const safeName = encodeURIComponent(name); 
+    const folderPath = folder ? `${folder}/` : '';
+    return `${CLOUDINARY_BASE_URL}/w_${width},q_auto,f_auto,c_fill/${folderPath}${safeName}`;
+}
+
+const content = document.getElementById('app-content');
+const viewTitle = document.getElementById('view-title');
+
+async function switchView(view, el) {
+    if (!content) return;
+    
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    if (el) el.classList.add('active');
+    
+    content.innerHTML = `<div class="loader">${t('loading')}</div>`;
+
+    const titleMap = {
+        'home': 'home_title',
+        'cibo': 'food_title',
+        'outdoor': 'outdoor_title',
+        'servizi': 'services_title',
+        'mappe_monumenti': 'maps_title'
+    };
+    if(titleMap[view]) viewTitle.innerText = t(titleMap[view]);
+
+    try {
+        if (view === 'home') {
+            await renderHome();
+        } 
+        else if (view === 'cibo') {
+            renderSubMenu([
+                { label: t('menu_prod'), table: "Prodotti" },
+                { label: t('menu_rest'), table: "Ristoranti" }
+            ], 'Prodotti');
+        }
+        else if (view === 'outdoor') {
+            renderSubMenu([
+                { label: t('menu_trail'), table: "Sentieri" },
+                { label: t('menu_beach'), table: "Spiagge" }
+            ], 'Sentieri');
+        }
+        else if (view === 'servizi') {
+            renderSubMenu([
+                { label: t('menu_trans'), table: "Trasporti" },
+                { label: t('menu_num'), table: "Numeri_utili" },
+                { label: t('menu_pharm'), table: "Farmacie" }
+            ], 'Trasporti');
+        } else if (view === 'mappe_monumenti') {
+            renderSubMenu([
+                { label: t('menu_map'), table: "Mappe" },
+                { label: t('menu_monu'), table: "Attrazioni" }
+            ], 'Mappe');
+        }
+    } catch (err) {
+        console.error(err);
+        content.innerHTML = `<div class="error-msg">${t('error')}: ${err.message}</div>`;
+    }
+}
+
 function renderSubMenu(options, defaultTable) {
     let menuHtml = '<div class="sub-nav-bar">';
     options.forEach(opt => {
@@ -81,39 +261,36 @@ function renderSubMenu(options, defaultTable) {
     menuHtml += '</div><div id="sub-content"></div>';
     content.innerHTML = menuHtml;
 
-    // Attiva il primo bottone di default
     const firstBtn = content.querySelector('.sub-nav-item');
     if (firstBtn) loadTableData(defaultTable, firstBtn);
 }
 
-// 4. RENDER HOME (BORGHI)
+// RENDER HOME
 async function renderHome() {
     const { data, error } = await supabaseClient.from('Cinque_Terre').select('*');
     if (error) throw error;
     
     let html = '<div class="grid-container animate-fade">';
     data.forEach(v => {
-        // Passiamo v.Paesi (es. "Riomaggiore") e la cartella 'borghi'
-    const imgUrl = getSmartUrl(v.Paesi, '', 800); 
-    
-    // Escaping per il nome nel click
-    const safeName = v.Paesi.replace(/'/g, "\\'");
-    
-    html += `
-        <div class="village-card" style="background-image: url('${imgUrl}')" onclick="openModal('village', '${safeName}')">
-            <div class="card-title-overlay">${v.Paesi}</div>
-        </div>`;
-    });// --- NUOVA 6° CARD (CHIUSURA GRIGLIA) ---
-    // Uso un'immagine placeholder da Unsplash a tema mappa/esplorazione, cambiala pure con una tua.
+        const paeseName = v.Paesi; 
+        const imgUrl = getSmartUrl(paeseName, '', 800); 
+        const safeName = paeseName.replace(/'/g, "\\'");
+        
+        html += `
+            <div class="village-card" style="background-image: url('${imgUrl}')" onclick="openModal('village', '${safeName}')">
+                <div class="card-title-overlay">${paeseName}</div>
+            </div>`;
+    });
+
     html += `
         <div class="village-card" style="background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')" onclick="switchView('mappe_monumenti', null)">
-            <div class="card-title-overlay">Mappe & Monumenti</div>
+            <div class="card-title-overlay">${t('maps_title')}</div>
         </div>`;
         
     content.innerHTML = html + '</div>';
 }
 
-// 5. CARICAMENTO DATI TABELLE (MOTORE CENTRALE)
+// CARICAMENTO DATI
 async function loadTableData(tableName, btnEl) {
     const subContent = document.getElementById('sub-content');
     if (!subContent) return;
@@ -121,18 +298,16 @@ async function loadTableData(tableName, btnEl) {
     document.querySelectorAll('.sub-nav-item').forEach(b => b.classList.remove('active-sub'));
     if (btnEl) btnEl.classList.add('active-sub');
 
-    subContent.innerHTML = '<div class="loader">Caricamento dati...</div>';
-    
+    subContent.innerHTML = `<div class="loader">${t('loading')}</div>`;
 
     const { data, error } = await supabaseClient.from(tableName).select('*');
     if (error) {
-        subContent.innerHTML = `<p class="error-msg">Errore: ${error.message}</p>`;
+        subContent.innerHTML = `<p class="error-msg">${t('error')}: ${error.message}</p>`;
         return;
     }
 
     let html = '<div class="list-container animate-fade">';
 
-    // --- SWITCH RENDERER ---
     if (tableName === 'Sentieri') {
         renderGenericFilterableView(data, 'Label', subContent, sentieroRenderer);
         return;
@@ -148,77 +323,46 @@ async function loadTableData(tableName, btnEl) {
     else if (tableName === 'Farmacie') {
        renderGenericFilterableView(data, 'Paesi', subContent, farmaciaRenderer);
        return;
-    }
-    else if (tableName === 'Attrazioni') {
-       // CORREZIONE: Qui ora chiama la funzione attrazioniRenderer che ho aggiunto in fondo
-       renderGenericFilterableView(data, 'Paese', subContent, attrazioniRenderer);
-       return;
-    }
+    } 
     else if (tableName === 'Prodotti') {
         data.forEach(p => {
-                        const titolo = p.Prodotti || p.Nome; 
-                const imgUrl = getSmartUrl(titolo, '', 400);
-                const safeObj = JSON.stringify(p).replace(/'/g, "'");
-                            
-                html += `
-                    <div class="card-product" onclick='openModal("product", ${safeObj})'>
+            const titolo = dbCol(p, 'Prodotti') || dbCol(p, 'Nome'); 
+            const imgUrl = getSmartUrl(p.Prodotti || p.Nome, '', 400);
+            const safeObj = JSON.stringify(p).replace(/'/g, "'");
                         
-                        <div class="prod-info">
-                            <div class="prod-title">${titolo}</div>
-                            <div class="prod-arrow">➜</div>
-                        </div>
-                        
-                        <img 
-                            src="${imgUrl}" 
-                            class="prod-thumb" 
-                            loading="lazy" 
-                            alt="${titolo}"
-                            onerror="this.style.display='none'"
-                        >
-                    </div>`;
+            html += `
+                <div class="card-product" onclick='openModal("product", ${safeObj})'>
+                    <div class="prod-info">
+                        <div class="prod-title">${titolo}</div>
+                        <div class="prod-arrow">➜</div>
+                    </div>
+                    <img src="${imgUrl}" class="prod-thumb" loading="lazy" alt="${titolo}" onerror="this.style.display='none'">
+                </div>`;
         });
-    }
+    } 
     else if (tableName === 'Trasporti') {
-        data.forEach(t => {// 1. Determina il nome (chiave per Cloudinary e Titolo visualizzato)
-            // Se nel DB hai colonne diverse (es. 'Mezzo'), il codice cerca la prima piena.
-            const nome = t.Località || t.Mezzo;
-
-            // 2. Genera l'URL Cloudinary
-            // NOTA: Assicurati che su Cloudinary le foto siano nella cartella 'trasporti'
-            // o cambia il secondo parametro in '' se sono nella root.
-            const imgUrl = getSmartUrl(nome, '', 400);
-
-            // 3. Prepara l'oggetto per il modale (gestione apostrofi)
-            const safeObj = JSON.stringify(t).replace(/'/g, "\\'");
+        data.forEach(t => {
+            const nomeDisplay = dbCol(t, 'Località') || dbCol(t, 'Mezzo');
+            const imgUrl = getSmartUrl(t.Località || t.Mezzo, '', 400);
+            const safeObj = JSON.stringify(t).replace(/'/g, "'");
             
             html += `
                 <div class="card-product" onclick='openModal("transport", ${safeObj})'>
-                    
                     <div class="prod-info">
-                        <div class="prod-title">${nome}</div>
+                        <div class="prod-title">${nomeDisplay}</div>
                     </div>
-
-                    <img 
-                        src="${imgUrl}" 
-                        class="prod-thumb" 
-                        loading="lazy"
-                        alt="${nome}"
-                        onerror="this.style.display='none'"
-                    >
-                </div>`;});
-    } else if (tableName === 'Mappe') {
-            subContent.innerHTML = `
-            <div class="map-container animate-fade">
-                <iframe src="<iframe src="https://www.google.com/maps/d/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F" width="640" height="480"></iframe>" 
-                width="640" 
-                height="480">
-                </iframe>
-                <div class="map-note">Mappa caricata da Supabase</div>
-            </div>`;
-        return; // Esce qui
-    }
-
-    // --- B. ATTRAZIONI (MONUMENTI) ---
+                    <img src="${imgUrl}" class="prod-thumb" loading="lazy" alt="${nomeDisplay}" onerror="this.style.display='none'">
+                </div>`;
+        });
+    } 
+    else if (tableName === 'Mappe') {
+        subContent.innerHTML = `
+        <div class="map-container animate-fade">
+           <iframe src="https://www.google.com/maps/d/u/1/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F" width="640" height="640"></iframe> 
+            <div class="map-note">${t('map_loaded')}</div>
+        </div>`;
+        return; 
+    } 
     else if (tableName === 'Attrazioni') {
         renderGenericFilterableView(data, 'Paese', subContent, attrazioniRenderer);
         return;
@@ -238,7 +382,157 @@ async function loadTableData(tableName, btnEl) {
     subContent.innerHTML = html + '</div>';
 }
 
-// 6. GESTIONE MODALI (POPUP)
+// RENDERER CARD
+const sentieroRenderer = (s) => {
+    const paesi = dbCol(s, 'Paesi');
+    const label = dbCol(s, 'Label'); 
+    const desc = dbCol(s, 'Descrizione');
+    const diff = dbCol(s, 'Difficoltà');
+    const safePaesi = paesi.replace(/'/g, "\\'");
+    const safeDesc = desc ? desc.replace(/'/g, "\\'") : '';
+    const linkGpx = s.Gpxlink || s.gpxlink;
+    const linkMappa = s.Mappa || s.mappa;
+
+    let buttonHtml = '';
+    if (linkGpx) {
+        buttonHtml = `<button onclick="openGpxMap('${linkGpx}', '${safePaesi}')" class="btn-sentiero-small" style="cursor:pointer; background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb;">${t('btn_map')} 🗺️</button>`;
+    } else if (linkMappa) {
+        buttonHtml = `<a href="${linkMappa}" target="_blank" class="btn-sentiero-small">GOOGLE MAPS</a>`;
+    } else {
+        buttonHtml = `<span class="btn-sentiero-small" style="opacity:0.5">NO MAPPA</span>`;
+    }
+
+    return `
+    <div class="card-sentiero">
+        <div class="sentiero-header">
+            <strong>${s.Distanza || '--'}</strong>
+            <span>${s.Durata || '--'}</span>
+        </div>
+        <div class="sentiero-body" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
+            <div style="font-size:0.75rem; color:#e67e22; text-transform:uppercase;">${label}</div>
+            <h4>${paesi}</h4>
+            <p class="difficolta">${diff || ''}</p>
+        </div>
+        <div class="sentiero-footer">
+            ${buttonHtml}
+            ${s.Pedaggio ? `<a href="${s.Pedaggio}" target="_blank" class="btn-sentiero-small">${t('btn_toll')}</a>` : '<span></span>'}
+        </div>
+    </div>`;
+};
+
+const spiaggiaRenderer = (s) => {
+    const nome = dbCol(s, 'Nome');
+    const desc = dbCol(s, 'Descrizione');
+    const paesi = dbCol(s, 'Paesi');
+    const safeNome = nome.replace(/'/g, "\\'");
+    const safeDesc = desc ? desc.replace(/'/g, "\\'") : '';
+
+    return `
+    <div class="card-spiaggia">
+        <div class="spiaggia-header">
+            <div class="spiaggia-title">${nome}</div>
+            <span style="font-size:1.2rem;">🏖️</span>
+        </div>
+        <div class="spiaggia-location">📍 ${paesi}</div>
+        <div class="spiaggia-footer">
+             <button class="btn-azure" onclick="simpleAlert('${safeNome}', '${safeDesc}')">${t('btn_info')}</button>
+             ${s.Maps ? `<a href="${s.Maps}" target="_blank" class="btn-azure">${t('btn_map')}</a>` : ''}
+        </div>
+    </div>`;
+};
+
+const ristoranteRenderer = (r) => {
+    const nome = dbCol(r, 'Nome');
+    const tipo = dbCol(r, 'Tipo') || 'Ristorante';
+    const paesi = dbCol(r, 'Paesi');
+    const fullAddress = `${r.Indirizzo}, ${r.Paesi}`;
+    const mapLink = `http://googleusercontent.com/maps.google.com/?q=${encodeURIComponent(fullAddress)}`;
+    const safeObj = JSON.stringify(r).replace(/'/g, "'");
+
+    return `
+    <div class="card-list-item" onclick='openModal("restaurant", ${safeObj})'>
+        <div class="item-info">
+            <div class="item-header-row">
+                <div class="item-title">${nome}</div>
+                <div class="item-tag">${tipo}</div>
+            </div>
+            <div class="item-subtitle">📍 ${paesi}</div>
+            <div class="card-actions">
+                ${r.Telefono ? `<a href="tel:${r.Telefono}" class="action-btn btn-phone" onclick="event.stopPropagation()"><span>📞</span> ${t('btn_call')}</a>` : ''}
+                ${r.Indirizzo ? `<a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()"><span>🗺️</span> ${t('btn_map')}</a>` : ''}
+            </div>
+        </div>
+        <div class="item-arrow" style="display:none !important;">➜</div>
+    </div>`;
+};
+
+const farmaciaRenderer = (f) => {
+    const nome = dbCol(f, 'Nome');
+    const paesi = dbCol(f, 'Paesi');
+    const safeObj = JSON.stringify(f).replace(/'/g, "'");
+    const fullAddress = `${f.Indirizzo}, ${f.Paesi}`;
+    const mapLink = `http://googleusercontent.com/maps.google.com/?q=${encodeURIComponent(fullAddress)}`;
+
+    return `
+    <div class="card-list-item" onclick='openModal("farmacia", ${safeObj})'>
+        <div class="item-info">
+            <div class="item-header-row">
+                <div class="item-title">${nome}</div>
+                <div class="item-tag" style="background-color:#4CAF50;">${t('pharmacy_tag')}</div>
+            </div>
+            <div class="item-subtitle">📍 ${paesi}</div>
+            <div class="card-actions">
+                ${f.Numero ? `<a href="tel:${f.Numero}" class="action-btn btn-phone" onclick="event.stopPropagation()"><span>📞</span> ${t('btn_call')}</a>` : ''}
+                ${f.Indirizzo ? `<a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()"><span>🗺️</span> ${t('btn_map')}</a>` : ''}
+            </div>
+        </div>
+    </div>`;
+};
+
+const numeriUtiliRenderer = (n) => {
+    const nome = dbCol(n, 'Nome');
+    const comune = dbCol(n, 'Comune');
+    const paesi = dbCol(n, 'Paesi'); 
+
+    return `
+    <div class="card-list-item" style="cursor:default;">
+        <div class="item-info">
+            <div class="item-header-row">
+                <div class="item-title">${nome}</div>
+                <div class="item-tag" style="background-color:#607d8b;">${comune}</div>
+            </div>
+            <div class="item-subtitle" style="margin-top:6px; color:#555;"><strong>${t('coverage')}:</strong> ${paesi}</div>
+            <div class="card-actions">
+                <a href="tel:${n.Numero}" class="action-btn btn-phone" onclick="event.stopPropagation()">
+                    <span style="font-size:1.2rem; margin-right:5px;">📞</span> ${t('btn_call')} ${n.Numero}
+                </a>
+            </div>
+        </div>
+    </div>`;
+};
+
+const attrazioniRenderer = (item) => {
+    const titolo = dbCol(item, 'Attrazioni') || 'Attrazione';
+    const safeObj = JSON.stringify(item).replace(/'/g, "'");
+    const diff = dbCol(item, 'Difficoltà Accesso') || 'Accessibile';
+    const paese = dbCol(item, 'Paese');
+    const isHard = diff.toLowerCase().match(/alta|hard|difficile|schwer|difícil/); 
+    const diffStyle = isHard ? 'background:#ffebee; color:#c62828;' : 'background:#e8f5e9; color:#2e7d32;';
+
+    return `
+    <div class="card-list-item monument-mode" onclick='openModal("attrazione", ${safeObj})'>
+        <div class="item-info">
+            <div class="item-header-row"><div class="item-title">${titolo}</div></div>
+            <div class="item-subtitle" style="margin-bottom: 8px;">📍 ${paese}</div>
+            <div class="monument-meta" style="display:flex; gap:8px;">
+                <span class="meta-badge" style="${diffStyle} padding:2px 8px; border-radius:4px; font-size:0.75rem;">${diff}</span>
+                <span class="meta-badge badge-time" style="background:#f5f5f5; padding:2px 8px; border-radius:4px; font-size:0.75rem;">⏱ ${item["Tempo Visita (min)"] || '--'} ${t('visit_time')}</span>
+            </div>
+        </div>
+        <div class="item-arrow" style="margin-top: auto; margin-bottom: auto;">➜</div>
+    </div>`;
+};
+
 function simpleAlert(titolo, testo) {
     alert(`${titolo}\n\n${testo}`);
 }
@@ -250,69 +544,40 @@ async function openModal(type, payload) {
     modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
 
     let contentHtml = '';
-
     if (type === 'village') {
         const bigImg = getSmartUrl(payload, '', 1000);
-        // Recupera descrizione
         const { data } = await supabaseClient.from('Cinque_Terre').select('*').eq('Paesi', payload).single();
-        const desc = data ? data.Descrizione : 'Caricamento...';
-        
-        contentHtml = `
-            <img src="${bigImg}" style="width:100%; border-radius:12px; height:220px; object-fit:cover;">
-            <h2>${payload}</h2>
-            <p>${desc}</p>`;
+        const desc = data ? dbCol(data, 'Descrizione') : t('loading');
+        contentHtml = `<img src="${bigImg}" style="width:100%; border-radius:12px; height:220px; object-fit:cover;"><h2>${payload}</h2><p>${desc}</p>`;
     } 
     else if (type === 'product') {
-        const nome = payload.Prodotti || payload.Nome;
-        const bigImg = getSmartUrl(nome, 'prodotti', 800);
-        contentHtml = `
-            <img src="${bigImg}" style="width:100%; border-radius:12px; height:200px; object-fit:cover;" onerror="this.style.display='none'">
-            <h2>${nome}</h2>
-            <p>${payload.Descrizione || ''}</p>
-            <hr>
-            <p><strong>Ideale per:</strong> ${payload["Ideale per"] || payload.IdealePer || ''}</p>`;
+        const nome = dbCol(payload, 'Prodotti') || dbCol(payload, 'Nome');
+        const desc = dbCol(payload, 'Descrizione');
+        const ideale = dbCol(payload, 'Ideale per') || dbCol(payload, 'IdealePer');
+        const bigImg = getSmartUrl(payload.Prodotti || payload.Nome, 'prodotti', 800);
+        contentHtml = `<img src="${bigImg}" style="width:100%; border-radius:12px; height:200px; object-fit:cover;" onerror="this.style.display='none'"><h2>${nome}</h2><p>${desc || ''}</p><hr><p><strong>${t('ideal_for')}:</strong> ${ideale || ''}</p>`;
     }
     else if (type === 'transport') {
-        contentHtml = `
-            <h2>${payload.Località || 'Trasporto'}</h2>
-            <p>${payload.Descrizione || ''}</p>
-            <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-                ${payload["Link"] ? `<a href="${payload["Link"]}" target="_blank" class="btn-yellow" style="text-align:center;">VAI AL SITO</a>` : ''}
-                ${payload["Link_2"] ? `<a href="${payload["Link_2"]}" target="_blank" class="btn-yellow" style="text-align:center;">ORARI</a>` : ''}
-            </div>`;
+        const nome = dbCol(payload, 'Località') || dbCol(payload, 'Mezzo');
+        const desc = dbCol(payload, 'Descrizione');
+        contentHtml = `<h2>${nome}</h2><p>${desc || ''}</p><div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">${payload["Link"] ? `<a href="${payload["Link"]}" target="_blank" class="btn-yellow" style="text-align:center;">${t('btn_website')}</a>` : ''}${payload["Link_2"] ? `<a href="${payload["Link_2"]}" target="_blank" class="btn-yellow" style="text-align:center;">${t('btn_hours')}</a>` : ''}</div>`;
     }
     else if (type === 'attrazione') {
-        contentHtml = `
-            <h2>${payload.Attrazioni}</h2>
-            <div style="color:#666; margin-bottom:15px; font-weight:600;">📍 ${payload.Paese}</div>
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <span class="meta-badge" style="background:#eee; padding:5px; border-radius:8px;">⏱ ${payload["Tempo Visita (min)"] || '--'} min</span>
-                <span class="meta-badge" style="background:#eee; padding:5px; border-radius:8px;">${payload["Difficoltà Accesso"] || 'Accessibile'}</span>
-            </div>
-            <p>${payload.Descrizione || ''}</p>
-            ${payload.Curiosità ? `<div class="curiosity-box" style="margin-top:10px; padding:10px; background:#f9f9f9; border-left:4px solid orange;">💡 ${payload.Curiosità}</div>` : ''}
-            <div style="margin-top:20px;">
-                ${payload["Icona MyMaps"] ? `<a href="${payload["Icona MyMaps"]}" target="_blank" class="btn-yellow" style="display:block; text-align:center;">VAI ALLA POSIZIONE</a>` : ''}
-            </div>`;
+        const titolo = dbCol(payload, 'Attrazioni');
+        const paese = dbCol(payload, 'Paese'); 
+        const desc = dbCol(payload, 'Descrizione');
+        const curio = dbCol(payload, 'Curiosità');
+        const diff = dbCol(payload, 'Difficoltà Accesso') || 'Accessibile';
+        contentHtml = `<h2>${titolo}</h2><div style="color:#666; margin-bottom:15px; font-weight:600;">📍 ${paese}</div><div style="display:flex; gap:10px; margin-bottom:15px;"><span class="meta-badge" style="background:#eee; padding:5px; border-radius:8px;">⏱ ${payload["Tempo Visita (min)"] || '--'} ${t('visit_time')}</span><span class="meta-badge" style="background:#eee; padding:5px; border-radius:8px;">${diff}</span></div><p>${desc || ''}</p>${curio ? `<div class="curiosity-box" style="margin-top:10px; padding:10px; background:#f9f9f9; border-left:4px solid orange;">💡 ${curio}</div>` : ''}<div style="margin-top:20px;">${payload["Icona MyMaps"] ? `<a href="${payload["Icona MyMaps"]}" target="_blank" class="btn-yellow" style="display:block; text-align:center;">${t('btn_position')}</a>` : ''}</div>`;
     }
     else if (type === 'restaurant' || type === 'farmacia') {
-         contentHtml = `<h2>${payload.Nome}</h2><p>${payload.Indirizzo}</p>`;
+        contentHtml = `<h2>${dbCol(payload, 'Nome')}</h2><p>${payload.Indirizzo}</p>`;
     }
-
-    modal.innerHTML = `
-        <div class="modal-content">
-            <span class="close-modal" onclick="this.parentElement.parentElement.remove()">×</span>
-            ${contentHtml}
-        </div>`;
+    modal.innerHTML = `<div class="modal-content"><span class="close-modal" onclick="this.parentElement.parentElement.remove()">×</span>${contentHtml}</div>`;
 }
 
-// 7. MOTORE DI FILTRO
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
-    container.innerHTML = `
-        <div class="filter-bar" id="dynamic-filters"></div>
-        <div class="list-container animate-fade" id="dynamic-list"></div>
-    `;
-
+    container.innerHTML = `<div class="filter-bar" id="dynamic-filters"></div><div class="list-container animate-fade" id="dynamic-list"></div>`;
     const filterBar = container.querySelector('#dynamic-filters');
     const listContainer = container.querySelector('#dynamic-list');
     
@@ -334,18 +599,12 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
         btn.className = 'filter-chip';
         btn.innerText = tag;
         if (tag === 'Tutti') btn.classList.add('active-filter');
-
         btn.onclick = () => {
             filterBar.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active-filter'));
             btn.classList.add('active-filter');
-            
-            const filtered = tag === 'Tutti' 
-                ? allData 
-                : allData.filter(item => {
-                    const matchTag = item[filterKey] === tag;
-                    const isUniversal = item.Nome && (item.Nome.includes('112') || item.Nome.toLowerCase().includes('emergenza'));
-                    return matchTag || isUniversal;
-                });
+            const filtered = tag === 'Tutti' ? allData : allData.filter(item => {
+                return (item[filterKey] === tag) || (item.Nome && (item.Nome.includes('112') || item.Nome.toLowerCase().includes('emergenza')));
+            });
             updateList(filtered);
         };
         filterBar.appendChild(btn);
@@ -353,7 +612,7 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
 
     function updateList(items) {
         if (!items || items.length === 0) {
-            listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#999;">Nessun risultato.</p>';
+            listContainer.innerHTML = `<p style="text-align:center; padding:20px; color:#999;">${t('no_results')}</p>`;
             return;
         }
         listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
@@ -361,242 +620,43 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
     updateList(allData);
 }
 
-const sentieroRenderer = (s) => {
-    const paesi = s.Paesi || s.paesi || 'Nome mancante';
-    const label = s.Label || s.label || 'Nessuna cat.';
-    const desc = s.Descrizione || s.descrizione || '';
-    const safePaesi = paesi.replace(/'/g, "\\'");
-    const safeDesc = desc.replace(/'/g, "\\'");
-
-    // Cerca il link GPX
-    const linkGpx = s.Gpxlink || s.gpxlink;
-    // Cerca il link Google (fallback)
-    const linkMappa = s.Mappa || s.mappa;
-
-    let buttonHtml = '';
-
-    if (linkGpx) {
-        // CASO 1: C'è il GPX -> Apre mappa interna (tua richiesta)
-        buttonHtml = `<button onclick="openGpxMap('${linkGpx}', '${safePaesi}')" class="btn-sentiero-small" style="cursor:pointer; background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb;">VEDI MAPPA 🗺️</button>`;
-    } else if (linkMappa) {
-        // CASO 2: Solo link Google -> Apre nuova scheda
-        buttonHtml = `<a href="${linkMappa}" target="_blank" class="btn-sentiero-small">GOOGLE MAPS</a>`;
-    } else {
-        buttonHtml = `<span class="btn-sentiero-small" style="opacity:0.5">NO MAPPA</span>`;
-    }
-
-    return `
-    <div class="card-sentiero">
-        <div class="sentiero-header">
-            <strong>${s.Distanza || '--'}</strong>
-            <span>${s.Durata || '--'}</span>
-        </div>
-        <div class="sentiero-body" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
-            <div style="font-size:0.75rem; color:#e67e22; text-transform:uppercase;">${label}</div>
-            <h4>${paesi}</h4>
-            <p class="difficolta">${s.Difficoltà || ''}</p>
-        </div>
-        <div class="sentiero-footer">
-            ${buttonHtml}
-            ${s.Pedaggio ? `<a href="${s.Pedaggio}" target="_blank" class="btn-sentiero-small">PEDAGGIO</a>` : '<span></span>'}
-        </div>
-    </div>`;
-};
-
-const spiaggiaRenderer = (s) => {
-    const safeNome = s.Nome.replace(/'/g, "\\'");
-    const safeDesc = s.Descrizione ? s.Descrizione.replace(/'/g, "\\'") : 'Nessuna descrizione.';
-    return `
-    <div class="card-spiaggia">
-        <div class="spiaggia-header">
-            <div class="spiaggia-title">${s.Nome}</div>
-            <span style="font-size:1.2rem;">🏖️</span>
-        </div>
-        <div class="spiaggia-location">📍 ${s.Paesi}</div>
-        <div class="spiaggia-footer">
-             <button class="btn-azure" onclick="simpleAlert('${safeNome}', '${safeDesc}')">INFO</button>
-             ${s.Maps ? `<a href="${s.Maps}" target="_blank" class="btn-azure">MAPPA</a>` : ''}
-        </div>
-    </div>`;
-};
-
-const ristoranteRenderer = (r) => {
-    const nome = r.Nome || r.nome;
-    const fullAddress = `${r.Indirizzo}, ${r.Paesi}`;
-    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
-    const safeObj = JSON.stringify(r).replace(/'/g, "'").replace(/"/g, "&quot;");
-
-    return `
-    <div class="card-list-item" onclick='openModal("restaurant", ${safeObj})'>
-        <div class="item-info">
-            <div class="item-header-row">
-                <div class="item-title">${nome}</div>
-                <div class="item-tag">${r.Tipo || 'Ristorante'}</div>
-            </div>
-            <div class="item-subtitle">📍 ${r.Paesi}</div>
-            <div class="card-actions">
-                ${r.Telefono ? `<a href="tel:${r.Telefono}" class="action-btn btn-phone" onclick="event.stopPropagation()"><span>📞</span> Chiama</a>` : ''}
-                ${r.Indirizzo ? `<a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()"><span>🗺️</span> Mappa</a>` : ''}
-            </div>
-        </div>
-        <div class="item-arrow" style="align-self: flex-start; margin-top: 5px;">➜</div>
-    </div>`;
-};
-
-const farmaciaRenderer = (f) => {
-    const safeObj = JSON.stringify(f).replace(/'/g, "'").replace(/"/g, "&quot;");
-    const fullAddress = `${f.Indirizzo}, ${f.Paesi}`;
-    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
-
-    return `
-    <div class="card-list-item" onclick='openModal("farmacia", ${safeObj})'>
-        <div class="item-info">
-            <div class="item-header-row">
-                <div class="item-title">${f.Nome}</div>
-                <div class="item-tag" style="background-color:#4CAF50;">FARMACIA</div>
-            </div>
-            <div class="item-subtitle">📍 ${f.Paesi}</div>
-            <div class="card-actions">
-                ${f.Numero ? `<a href="tel:${f.Numero}" class="action-btn btn-phone" onclick="event.stopPropagation()"><span>📞</span> Chiama</a>` : ''}
-                ${f.Indirizzo ? `<a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()"><span>🗺️</span> Mappa</a>` : ''}
-            </div>
-        </div>
-        <div class="item-arrow" style="align-self: flex-start; margin-top: 5px;">➜</div>
-    </div>`;
-};
-
-const numeriUtiliRenderer = (n) => {
-    return `
-    <div class="card-list-item" style="cursor:default;">
-        <div class="item-info">
-            <div class="item-header-row">
-                <div class="item-title">${n.Nome}</div>
-                <div class="item-tag" style="background-color:#607d8b;">${n.Comune}</div>
-            </div>
-            <div class="item-subtitle" style="margin-top:6px; color:#555;"><strong>Copertura:</strong> ${n.Paesi}</div>
-            <div class="card-actions">
-                <a href="tel:${n.Numero}" class="action-btn btn-phone" onclick="event.stopPropagation()">
-                    <span style="font-size:1.2rem; margin-right:5px;">📞</span> Chiama ${n.Numero}
-                </a>
-            </div>
-        </div>
-    </div>`;
-};
-
-// CORREZIONE: Aggiunto il renderer mancante per le Attrazioni
-const attrazioniRenderer = (item) => {
-    const titolo = item.Attrazioni || 'Attrazione';
-    const safeObj = JSON.stringify(item).replace(/'/g, "'").replace(/"/g, "&quot;");
-    const diff = item["Difficoltà Accesso"] || 'Facile';
-    const diffStyle = (diff.toLowerCase().includes('alta')) ? 'background:#ffebee; color:#c62828;' : 'background:#e8f5e9; color:#2e7d32;';
-
-    return `
-    <div class="card-list-item monument-mode" onclick='openModal("attrazione", ${safeObj})'>
-        <div class="item-info">
-            <div class="item-header-row"><div class="item-title">${titolo}</div></div>
-            <div class="item-subtitle" style="margin-bottom: 8px;">📍 ${item.Paese}</div>
-            <div class="monument-meta" style="display:flex; gap:8px;">
-                <span class="meta-badge" style="${diffStyle} padding:2px 8px; border-radius:4px; font-size:0.75rem;">${diff}</span>
-                <span class="meta-badge badge-time" style="background:#f5f5f5; padding:2px 8px; border-radius:4px; font-size:0.75rem;">⏱ ${item["Tempo Visita (min)"] || '--'} min</span>
-            </div>
-        </div>
-        <div class="item-arrow" style="margin-top: auto; margin-bottom: auto;">➜</div>
-    </div>`;
-};
-
-// Avvio app
-document.addEventListener('DOMContentLoaded', () => switchView('home'));
-
 async function shareApp() {
     try {
-        if (navigator.share) {
-            await navigator.share({ title: '5 Terre App', text: 'Guarda questa guida!', url: window.location.href });
-        } else {
-            navigator.clipboard.writeText(window.location.href);
-            alert("Link copiato!");
-        }
+        if (navigator.share) await navigator.share({ title: '5 Terre App', text: 'Guarda questa guida!', url: window.location.href });
+        else { navigator.clipboard.writeText(window.location.href); alert("Link copiato!"); }
     } catch (err) { console.log("Errore:", err); }
 }
 
-// ZOOM BLOCK
-// ==========================================
-// BLOCCO ZOOM IOS (Versione Aggiornata)
-// ==========================================
-
-// 1. Impedisce il pinch-to-zoom (due dita)
-document.addEventListener('touchmove', function(event) {
-    if (event.scale !== 1) {
-        event.preventDefault();
-    }
-}, { passive: false });
-
-// 2. Impedisce il doppio tocco veloce (Double Tap Zoom)
+document.addEventListener('touchmove', function(event) { if (event.scale !== 1) event.preventDefault(); }, { passive: false });
 let lastTouchEnd = 0;
 document.addEventListener('touchend', function(event) {
     const now = (new Date()).getTime();
-    if (now - lastTouchEnd <= 300) {
-        event.preventDefault();
-    }
+    if (now - lastTouchEnd <= 300) event.preventDefault();
     lastTouchEnd = now;
 }, false);
+document.addEventListener('touchstart', function(event) { if (event.touches.length > 1) event.preventDefault(); }, { passive: false });
 
-// 3. Impedisce il "tap" con due dita (spesso causa zoom su iOS)
-document.addEventListener('touchstart', function(event) {
-    if (event.touches.length > 1) {
-        event.preventDefault();
-    }
-}, { passive: false });
-
-// Variabile globale per evitare conflitti mappa
 let activeMap = null;
-
 function openGpxMap(gpxUrl, titolo) {
-    // 1. Controllo sicurezza link
     if (!gpxUrl) return;
-
-    // 2. Crea il modale
     const modal = document.createElement('div');
     modal.className = 'modal-overlay animate-fade';
-    // Layout della finestra mappa
-    modal.innerHTML = `
-        <div class="modal-content" style="height:80vh; padding:0; display:flex; flex-direction:column; overflow:hidden;">
-            <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:white; z-index:10;">
-                <h3 style="margin:0; font-size:1.1rem;">${titolo}</h3>
-                <span class="close-modal" style="font-size:2rem; cursor:pointer; line-height:1;">&times;</span>
-            </div>
-            <div id="gpx-map-container" style="flex:1; width:100%; background:#f0f0f0;"></div>
-        </div>`;
-    
+    modal.innerHTML = `<div class="modal-content" style="height:80vh; padding:0; display:flex; flex-direction:column; overflow:hidden;"><div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:white; z-index:10;"><h3 style="margin:0; font-size:1.1rem;">${titolo}</h3><span class="close-modal" style="font-size:2rem; cursor:pointer; line-height:1;">×</span></div><div id="gpx-map-container" style="flex:1; width:100%; background:#f0f0f0;"></div></div>`;
     document.body.appendChild(modal);
-
-    // Funzione chiusura
-    const closeModal = () => {
-        if (activeMap) { activeMap.remove(); activeMap = null; } // Pulisce memoria
-        modal.remove();
-    };
+    const closeModal = () => { if (activeMap) { activeMap.remove(); activeMap = null; } modal.remove(); };
     modal.querySelector('.close-modal').onclick = closeModal;
     modal.onclick = (e) => { if(e.target === modal) closeModal(); };
 
-    // 3. Avvia la Mappa (con piccolo ritardo per permettere al modale di aprirsi)
     setTimeout(() => {
         if (!document.getElementById('gpx-map-container')) return;
-        
-        // Inizializza mappa base
         activeMap = L.map('gpx-map-container');
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(activeMap);
-
-        // Carica e disegna il file GPX
-        new L.GPX(gpxUrl, {
-            async: true,
-            marker_options: {
-                startIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-start.png',
-                endIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-end.png',
-                shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-shadow.png'
-            }
-        }).on('loaded', function(e) {
-            activeMap.fitBounds(e.target.getBounds()); // Centra la vista sul sentiero
-        }).addTo(activeMap);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(activeMap);
+        new L.GPX(gpxUrl, { async: true, marker_options: { startIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-start.png', endIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-end.png', shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-shadow.png' } }).on('loaded', function(e) { activeMap.fitBounds(e.target.getBounds()); }).addTo(activeMap);
     }, 200);
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupLanguageSelector(); 
+    updateNavBar(); // Traduce subito la nav bar all'avvio
+    switchView('home');      
+});
