@@ -43,7 +43,7 @@ body {
 
 /* Titoli in Font Montserrat per carattere */
  .card-title-overlay {
-    font-family: 'Kranky', cursive; 
+    font-family: 'Kranky'; 
     font-weight: 400; 
     
     /* Colore: Kranky sta benissimo con il tuo Blu Notte o anche con il Corallo */
@@ -52,13 +52,6 @@ body {
     font-size: 1.6rem; /* Deve essere grande! */
     line-height: 1.1;
     
-    /* Kranky è bello sia maiuscolo che minuscolo. 
-       Maiuscolo è più "URBAN", minuscolo è più "FRIENDLY". */
-    /* text-transform: uppercase; */ 
-    
-    margin-bottom: 5px;
-    letter-spacing: 1px; /* Un po' di aria aiuta l'effetto pennarello */
-
 }
 
 /* ============================================================
@@ -502,7 +495,49 @@ main, #app-content {
     background-color: var(--accent-col); color: white; 
     transform: scale(0.95);
 }
+/* --- CORPO DELLA SCHEDA (Area Centrale) --- */
+.sentiero-body {
+    padding: 15px 20px;
+    
+    /* QUESTE 3 RIGHE CENTRANO TUTTO: */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra orizzontalmente i blocchi */
+    text-align: center;  /* Centra il testo dentro i blocchi */
+}
 
+/* --- EXTRA (L'etichetta arancione sopra) --- */
+.sentiero-extra {
+    font-family: 'Arial', sans-serif; /* O il font che preferisci */
+    font-size: 0.8rem; 
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    
+    color: #ffffff; /* Arancione */
+    background: #00897B; /* Sfondo pallido opzionale */
+    padding: 4px 10px;
+    border-radius: 12px;
+    
+    margin-bottom: 8px; /* Spazio prima del titolo */
+    display: inline-block; /* Necessario per il background stretto */
+}
+
+/* --- TITOLO (Paesi) --- */
+.sentiero-title {
+    font-family: 'Kranky', cursive; /* O Ultra, o quello scelto */
+    font-size: 1.2rem;
+    color: var(--primary-dark);
+    margin: 0 0 5px 0;
+    line-height: 1.1;
+}
+
+/* --- DIFFICOLTÀ (Sotto il titolo) --- */
+.difficolta {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
 /* Spiagge: Sfondo Turchese Chiaro */
 .btn-azure { 
     padding: 10px 18px; 

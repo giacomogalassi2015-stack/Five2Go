@@ -384,39 +384,48 @@ async function loadTableData(tableName, btnEl) {
 
 // RENDERER CARD
 const sentieroRenderer = (s) => {
+    // Recupero dati
     const paesi = dbCol(s, 'Paesi');
-    const label = dbCol(s, 'Label'); 
+    const label = dbCol(s, 'Extra'); // Questo è l'Extra (es. "SVA-592")
     const desc = dbCol(s, 'Descrizione');
     const diff = dbCol(s, 'Difficoltà');
     const safePaesi = paesi.replace(/'/g, "\\'");
     const safeDesc = desc ? desc.replace(/'/g, "\\'") : '';
+    
+    // Logica Bottoni Mappa
     const linkGpx = s.Gpxlink || s.gpxlink;
     const linkMappa = s.Mappa || s.mappa;
-
     let buttonHtml = '';
+    
     if (linkGpx) {
-        buttonHtml = `<button onclick="openGpxMap('${linkGpx}', '${safePaesi}')" class="btn-sentiero-small" style="cursor:pointer; background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb;">${t('btn_map')} 🗺️</button>`;
+        buttonHtml = `<button onclick="openGpxMap('${linkGpx}', '${safePaesi}')" class="btn-sentiero-small map-btn">${t('btn_map')} 🗺️</button>`;
     } else if (linkMappa) {
-        buttonHtml = `<a href="${linkMappa}" target="_blank" class="btn-sentiero-small">GOOGLE MAPS</a>`;
+        buttonHtml = `<a href="${linkMappa}" target="_blank" class="btn-sentiero-small map-btn">GOOGLE MAPS</a>`;
     } else {
-        buttonHtml = `<span class="btn-sentiero-small" style="opacity:0.5">NO MAPPA</span>`;
+        buttonHtml = `<span class="btn-sentiero-small no-map">NO MAPPA</span>`;
     }
 
+    // --- HTML PULITO (Classi CSS gestiscono la posizione) ---
     return `
     <div class="card-sentiero">
+        
         <div class="sentiero-header">
             <strong>${s.Distanza || '--'}</strong>
             <span>${s.Durata || '--'}</span>
         </div>
+
         <div class="sentiero-body" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
-            <div style="font-size:0.75rem; color:#e67e22; text-transform:uppercase;">${label}</div>
-            <h4>${paesi}</h4>
+            <div class="sentiero-extra">${label}</div>
+            <h4 class="sentiero-title">${paesi}</h4>
+            
             <p class="difficolta">${diff || ''}</p>
         </div>
+
         <div class="sentiero-footer">
             ${buttonHtml}
-            ${s.Pedaggio ? `<a href="${s.Pedaggio}" target="_blank" class="btn-sentiero-small">${t('btn_toll')}</a>` : '<span></span>'}
+            ${s.Pedaggio ? `<a href="${s.Pedaggio}" target="_blank" class="btn-sentiero-small btn-toll">${t('btn_toll')}</a>` : '<span></span>'}
         </div>
+
     </div>`;
 };
 
