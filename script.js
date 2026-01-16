@@ -25,7 +25,7 @@ let currentLang = localStorage.getItem('app_lang') || 'it';
 const UI_TEXT = {
     it: {
         loading: "Caricamento...", error: "Errore",
-        home_title: "5 Terre", food_title: "Cibo & Sapori", outdoor_title: "Outdoor", services_title: "Servizi", maps_title: "Mappe & Cultura",
+        home_title: "Five2Go", food_title: "Cibo & Sapori", outdoor_title: "Outdoor", services_title: "Servizi", maps_title: "Mappe & Cultura",
         // Nav Bar
         nav_villages: "Borghi", nav_food: "Cibo", nav_outdoor: "Outdoor", nav_services: "Servizi",
         // Menu Sotto-header
