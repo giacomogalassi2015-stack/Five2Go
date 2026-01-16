@@ -316,7 +316,10 @@ function initPendingMaps() {
                         opacity: 0.8
                     }
                 }).on('loaded', function(e) {
-                    map.fitBounds(e.target.getBounds(), { padding: [20, 20] });
+                    map.fitBounds(e.target.getBounds(), {
+        paddingTopLeft: [20, 20],
+        paddingBottomRight: [20, 180] // <-- I 180px "alzano" il sentiero
+    });
                 }).addTo(map);
             }
         }
