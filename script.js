@@ -3,6 +3,9 @@ const SUPABASE_URL = 'https://ydrpicezcwtfwdqpihsb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkcnBpY2V6Y3d0ZndkcXBpaHNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNTQzMDAsImV4cCI6MjA4MzYzMDMwMH0.c89-gAZ8Pgp5Seq89BYRraTG-qqmP03LUCl1KqG9bOg';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// --- VARIABILE GLOBALE PER CODA MAPPE ---
+window.mapsToInit = [];
+
 const CLOUDINARY_CLOUD_NAME = 'dkg0jfady'; 
 const CLOUDINARY_BASE_URL = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/`;
 
@@ -94,38 +97,30 @@ function dbCol(item, field) {
     return item[field];
 }
 
-// --- SETUP HEADER: Lingua (Abs Sinistra) - Titolo (Abs Centro) - Share (Abs Destra) ---
 function setupLanguageSelector() {
     const header = document.querySelector('header');
     
-    // 1. PULIZIA TOTALE
+    // PULIZIA
     const oldActions = header.querySelector('.header-actions');
     if (oldActions) oldActions.remove();
-    
-    const oldShare = header.querySelector('.header-share-left'); // Rimuovo anche il vecchio ID/classe se c'era
+    const oldShare = header.querySelector('.header-share-left');
     if (oldShare) oldShare.remove();
-    
-    // Rimuove eventuali share button con la vecchia classe o style
-    const allIcons = header.querySelectorAll('.material-icons');
-    allIcons.forEach(icon => icon.remove());
+    header.querySelectorAll('.material-icons').forEach(i => i.remove());
 
-    // 2. CREAZIONE CONTENITORE LINGUA (ORA A SINISTRA)
+    // --- A. LINGUA (SINISTRA) ---
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'header-actions'; 
+    actionsContainer.id = 'header-btn-lang'; // <--- ID NUOVO IMPORTANTE
     
-    // POSIZIONAMENTO ASSOLUTO A SINISTRA
     actionsContainer.style.position = 'absolute';
     actionsContainer.style.left = '20px';
     actionsContainer.style.top = '50%';
     actionsContainer.style.transform = 'translateY(-50%)';
     actionsContainer.style.zIndex = '20';
 
-    // Recupero dati lingua
     const currFlag = AVAILABLE_LANGS.find(l => l.code === currentLang).flag;
     const currCode = currentLang.toUpperCase();
 
-    // HTML Selettore
-    // Nota: Ho aggiunto style="left:0; right:auto;" al dropdown per farlo aprire correttamente a sinistra
     const langSelector = document.createElement('div');
     langSelector.className = 'lang-selector';
     langSelector.innerHTML = `
@@ -142,33 +137,24 @@ function setupLanguageSelector() {
     `;
     actionsContainer.appendChild(langSelector);
 
-    // 3. CREAZIONE BOTTONE SHARE (ORA A DESTRA)
+    // --- B. CONDIVIDI (DESTRA) ---
     const shareBtn = document.createElement('span');
     shareBtn.className = 'material-icons header-share-right'; 
+    shareBtn.id = 'header-btn-share'; // <--- ID NUOVO IMPORTANTE
     shareBtn.innerText = 'share'; 
     shareBtn.onclick = shareApp;
     
-    // POSIZIONAMENTO ASSOLUTO A DESTRA
     shareBtn.style.position = 'absolute'; 
-    shareBtn.style.right = '20px';         // Fisso a destra
+    shareBtn.style.right = '20px';         
     shareBtn.style.top = '50%';           
     shareBtn.style.transform = 'translateY(-50%)';
-    
-    // STILI GRAFICI
-    shareBtn.style.color = '#000000'; // Nero
+    shareBtn.style.color = '#000000';
     shareBtn.style.cursor = 'pointer';
     shareBtn.style.fontSize = '26px';
     shareBtn.style.zIndex = '20';
 
-    // 4. INSERIMENTO NELL'HEADER
-    header.appendChild(actionsContainer); // Lingua a sinistra
-    header.appendChild(shareBtn);         // Share a destra
-}
-// Assicurati che questa funzione sia presente e invariata
-function toggleLangDropdown(e) {
-    e.stopPropagation();
-    const dd = document.getElementById('lang-dropdown');
-    dd.classList.toggle('show');
+    header.appendChild(actionsContainer);
+    header.appendChild(shareBtn);
 }
 
 // --- NUOVA FUNZIONE: Aggiorna testi Nav Bar ---
@@ -222,9 +208,25 @@ const viewTitle = document.getElementById('view-title');
 async function switchView(view, el) {
     if (!content) return;
     
+    // Gestione menu attivo in basso
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     if (el) el.classList.add('active');
     
+    // --- GESTIONE ICONE HEADER (Solo in Home) ---
+    const shareBtn = document.getElementById('header-btn-share');
+    const langBtn = document.getElementById('header-btn-lang');
+    
+    if (shareBtn && langBtn) {
+        if (view === 'home') {
+            shareBtn.style.display = 'block';
+            langBtn.style.display = 'block';
+        } else {
+            shareBtn.style.display = 'none';
+            langBtn.style.display = 'none';
+        }
+    }
+    // ---------------------------------------------
+
     content.innerHTML = `<div class="loader">${t('loading')}</div>`;
 
     const titleMap = {
@@ -268,6 +270,49 @@ async function switchView(view, el) {
         console.error(err);
         content.innerHTML = `<div class="error-msg">${t('error')}: ${err.message}</div>`;
     }
+}
+function initPendingMaps() {
+    if (!window.mapsToInit || window.mapsToInit.length === 0) return;
+
+    window.mapsToInit.forEach(mapData => {
+        const element = document.getElementById(mapData.id);
+        // Se l'elemento esiste e non ha già una mappa inizializzata
+        if (element && !element._leaflet_id) {
+            
+            // 1. Crea la mappa (senza controlli zoom per pulizia)
+            const map = L.map(mapData.id, {
+                zoomControl: false,
+                dragging: false, // Blocca drag per non disturbare lo scroll pagina
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                attributionControl: false
+            });
+
+            // 2. Aggiungi Tile (OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            // 3. Carica GPX
+            if (mapData.gpx) {
+                new L.GPX(mapData.gpx, {
+                    async: true,
+                    marker_options: {
+                        startIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-start.png',
+                        endIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-end.png',
+                        shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-shadow.png',
+                        iconSize: [20, 30] // Pin più piccoli
+                    },
+                    polyline_options: {
+                        color: '#E76F51', // Colore Percorso (Corallo)
+                        weight: 5,
+                        opacity: 0.8
+                    }
+                }).on('loaded', function(e) {
+                    map.fitBounds(e.target.getBounds(), { padding: [20, 20] });
+                }).addTo(map);
+            }
+        }
+    });
+    window.mapsToInit = []; // Svuota la coda
 }
 
 function renderSubMenu(options, defaultTable) {
@@ -399,50 +444,47 @@ async function loadTableData(tableName, btnEl) {
     subContent.innerHTML = html + '</div>';
 }
 
-// RENDERER CARD
 const sentieroRenderer = (s) => {
-    // Recupero dati
     const paesi = dbCol(s, 'Paesi');
-    const label = dbCol(s, 'Extra'); // Questo è l'Extra (es. "SVA-592")
+    const label = dbCol(s, 'Extra'); 
     const desc = dbCol(s, 'Descrizione');
     const diff = dbCol(s, 'Difficoltà');
     const safePaesi = paesi.replace(/'/g, "\\'");
     const safeDesc = desc ? desc.replace(/'/g, "\\'") : '';
     
-    // Logica Bottoni Mappa
-    const linkGpx = s.Gpxlink || s.gpxlink;
-    const linkMappa = s.Mappa || s.mappa;
-    let buttonHtml = '';
-    
-    if (linkGpx) {
-        buttonHtml = `<button onclick="openGpxMap('${linkGpx}', '${safePaesi}')" class="btn-sentiero-small map-btn">${t('btn_map')} 🗺️</button>`;
-    } else if (linkMappa) {
-        buttonHtml = `<a href="${linkMappa}" target="_blank" class="btn-sentiero-small map-btn">GOOGLE MAPS</a>`;
-    } else {
-        buttonHtml = `<span class="btn-sentiero-small no-map">NO MAPPA</span>`;
+    // Gestione GPX
+    const gpxUrl = s.Gpxlink || s.gpxlink;
+    // Genera un ID univoco casuale per la mappa
+    const uniqueMapId = `map-trail-${Math.random().toString(36).substr(2, 9)}`;
+
+    // SE C'È IL GPX, LO METTIAMO IN CODA PER ESSERE DISEGNATO DOPO
+    if (gpxUrl) {
+        window.mapsToInit.push({ id: uniqueMapId, gpx: gpxUrl });
     }
 
-    // --- HTML PULITO (Classi CSS gestiscono la posizione) ---
+    // HTML Placeholder per la mappa (o messaggio se manca)
+    const mapHtml = gpxUrl 
+        ? `<div id="${uniqueMapId}" class="sentiero-map-area"></div>`
+        : `<div class="sentiero-map-area" style="display:flex;align-items:center;justify-content:center;color:#999;">NO MAP DATA</div>`;
+
     return `
     <div class="card-sentiero">
         
-        <div class="sentiero-header">
-            <strong>${s.Distanza || '--'}</strong>
-            <span>${s.Durata || '--'}</span>
-        </div>
+        ${mapHtml}
 
         <div class="sentiero-body" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
+            
+            <div class="sentiero-header-row">
+                <span style="font-weight:700; color:#2A9D8F;">📏 ${s.Distanza || '--'}</span>
+                <span style="font-weight:700; color:#E76F51;">⏱ ${s.Durata || '--'}</span>
+            </div>
+
             <div class="sentiero-extra">${label}</div>
             <h4 class="sentiero-title">${paesi}</h4>
-            
             <p class="difficolta">${diff || ''}</p>
-        </div>
 
-        <div class="sentiero-footer">
-            ${buttonHtml}
-            ${s.Pedaggio ? `<a href="${s.Pedaggio}" target="_blank" class="btn-sentiero-small btn-toll">${t('btn_toll')}</a>` : '<span></span>'}
+            ${s.Pedaggio ? `<a href="${s.Pedaggio}" target="_blank" class="btn-toll-full" style="margin-top:15px; width:100%; display:block; background:#FFF3E0; color:#E67E22; padding:10px; border-radius:50px; text-decoration:none; font-weight:bold;">🎫 ${t('btn_toll')}</a>` : ''}
         </div>
-
     </div>`;
 };
 
@@ -603,14 +645,18 @@ async function openModal(type, payload) {
 }
 
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
+    // 1. Prepara la struttura HTML vuota
     container.innerHTML = `<div class="filter-bar" id="dynamic-filters"></div><div class="list-container animate-fade" id="dynamic-list"></div>`;
+    
     const filterBar = container.querySelector('#dynamic-filters');
     const listContainer = container.querySelector('#dynamic-list');
     
+    // 2. Calcola i tag/filtri unici (es. Riomaggiore, Manarola...)
     let tagsRaw = [...new Set(allData.map(item => item[filterKey]))].filter(x => x);
     const customOrder = ["Tutti", "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso"];
     if (!tagsRaw.includes('Tutti')) tagsRaw.unshift('Tutti');
 
+    // Ordina i tag
     const uniqueTags = tagsRaw.sort((a, b) => {
         const indexA = customOrder.indexOf(a);
         const indexB = customOrder.indexOf(b);
@@ -620,32 +666,50 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
         return a.localeCompare(b);
     });
 
+    // 3. Crea i bottoni dei filtri
     uniqueTags.forEach(tag => {
         const btn = document.createElement('button');
         btn.className = 'filter-chip';
         btn.innerText = tag;
         if (tag === 'Tutti') btn.classList.add('active-filter');
+        
         btn.onclick = () => {
+            // Gestione click filtro
             filterBar.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active-filter'));
             btn.classList.add('active-filter');
+            
             const filtered = tag === 'Tutti' ? allData : allData.filter(item => {
                 return (item[filterKey] === tag) || (item.Nome && (item.Nome.includes('112') || item.Nome.toLowerCase().includes('emergenza')));
             });
+            
             updateList(filtered);
         };
         filterBar.appendChild(btn);
     });
 
+    // 4. FUNZIONE DI AGGIORNAMENTO LISTA (Qui avviene la magia delle mappe)
     function updateList(items) {
         if (!items || items.length === 0) {
             listContainer.innerHTML = `<p style="text-align:center; padding:20px; color:#999;">${t('no_results')}</p>`;
             return;
         }
+        
+        // Genera l'HTML delle schede
         listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
+
+        // --- FIX IMPORTANTE PER LE MAPPE ---
+        // Se esiste la funzione initPendingMaps, la chiamiamo con un piccolo ritardo
+        // per dare tempo al browser di disegnare i div delle mappe
+        if (typeof initPendingMaps === 'function') {
+            setTimeout(() => {
+                initPendingMaps();
+            }, 100); // 100 millisecondi di attesa sono sufficienti
+        }
     }
+
+    // 5. Avvia la lista iniziale
     updateList(allData);
 }
-
 async function shareApp() {
     try {
         if (navigator.share) await navigator.share({ title: '5 Terre App', text: 'Guarda questa guida!', url: window.location.href });
