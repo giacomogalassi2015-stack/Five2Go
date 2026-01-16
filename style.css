@@ -336,48 +336,154 @@ main, #app-content {
 
 /* --- A. CARD BORGHI (HOME) - Stile "Cartolina" --- */
 .grid-container { 
+
     display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 12px; /* Spazio bilanciato */
-    padding: 10px 0; 
+
+    grid-template-columns: 1fr 1fr; /* 2 Colonne affiancate */
+
+    gap: 0; /* NESSUNO SPAZIO TRA LE FOTO */
+
+    
+
+    /* TRUCCO: Margini negativi per uscire dal contenitore e toccare i bordi dello schermo */
+
+    margin: -5px -20px 0 -20px; 
+
+    width: calc(100% + 40px); /* Compensa i margini negativi */
+
+    
+
+    padding-bottom: 20px;
+
 }
+
+
 
 .village-card {
-    height: 190px; /* Più slanciata per dare spazio alla foto */
+
     position: relative; 
-    overflow: hidden;
+
+    height: 180px; /* Altezza fissa rettangolare */
+
+    width: 100%;
+
+    
+
     background-size: cover; 
+
     background-position: center; 
+
     
+
+    /* DESIGN MODERNO: Spigoli vivi, niente curve */
+
+    border-radius: 0; 
+
     border: none;
-    border-radius: 24px; /* Curve moderne stile iOS */
+
+    margin: 0;
+
+    box-shadow: none; /* Via le ombre esterne */
+
     
-    /* Ombra profonda per staccare dallo sfondo */
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); 
+
+    /* Separatore sottilissimo per distinguere i pulsanti */
+
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+
+    border-right: 1px solid rgba(255,255,255,0.3);
+
     
-    /* Reset margini per la griglia */
-    margin-bottom: 0 !important; 
-    
-    /* Animazione elastica al tocco */
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    cursor: pointer;
+
+    overflow: hidden;
+
 }
+
+
+
+/* Effetto interazione: quando tocchi si scurisce leggermente */
+
+.village-card:active::after {
+
+    content: '';
+
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+
+    background: rgba(0,0,0,0.2);
+
+}
+
+
+
+/* Overlay Titolo: Alla base con gradiente */
+
+.card-title-overlay {
+
+    position: absolute; 
+
+    top: 0; left: 0; width: 100%; height: 100%;
+
+    
+
+    /* 1. L'EFFETTO GRADIENTE (Il "collegato") */
+
+    /* Sfumatura: trasparente in alto (0%), inizia a scurirsi a metà (50%), scuro in basso (100%) */
+
+    background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.85) 100%);
+
+    
+
+    /* 2. POSIZIONAMENTO ALLA BASE */
+
+    display: flex; 
+
+    align-items: flex-end; /* Spinge il testo in basso */
+
+    justify-content: center; /* Mantiene il testo centrato orizzontalmente */
+
+    padding-bottom: 20px; /* Un po' di respiro dal bordo inferiore */
+
+    
+
+    /* Stili Testo */
+
+    color: white; 
+
+    font-family: 'Kranky', cursive; /* O il font che stai usando */
+
+    font-size: 1.5rem; /* Leggermente più piccolo per stare alla base */
+
+    text-transform: uppercase;
+
+    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+
+    
+
+    transition: background 0.3s ease;
+
+}
+
+
+
+/* Effetto tocco: Intensifica il gradiente scuro */
+
+.village-card:active .card-title-overlay {
+
+    background: linear-gradient(to bottom, transparent 30%, rgba(0, 0, 0, 0.95) 100%);
+
+}
+
+
+
+
 
 /* Effetto pressione */
+
 .village-card:active { transform: scale(0.96); }
 
-/* Overlay Titolo: Gradiente migliorato per leggibilità */
-.card-title-overlay {
-    position: absolute; bottom: 0; width: 100%; height: 60%;
-    /* Sfumatura dal nero trasparente al trasparente totale */
-    background: linear-gradient(to top, rgba(38, 70, 83, 0.9) 0%, transparent 100%);
-    
-    display: flex; align-items: flex-end; /* Testo in basso */
-    padding: 15px;
-    
-    color: white; 
-    font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px;
-    text-shadow: 0 2px 5px rgba(0,0,0,0.3);
-}
+
 
 /* --- B. CARD RISTORANTI & GENERICHE (Clean Design) --- */
 .card-list-item {
