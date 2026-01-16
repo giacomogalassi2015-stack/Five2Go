@@ -43,7 +43,7 @@ body {
 
 /* Titoli in Font Montserrat per carattere */
  .card-title-overlay {
-    font-family: 'C'; 
+    font-family: 'Monomakh'; 
     font-weight: 400; 
     
     /* Colore: Kranky sta benissimo con il tuo Blu Notte o anche con il Corallo */
@@ -207,7 +207,7 @@ main, #app-content {
 
 /* --- C. TIPOGRAFIA TITOLI CARD (Montserrat) --- */
 .item-title, .prod-title, .spiaggia-title, .transport-title, .pharmacy-name {
-    font-family: 'Kranky', sans-serif; /* Coerenza con Header */
+    font-family: 'Monomakh', sans-serif; /* Coerenza con Header */
     font-weight: 700;
     color: var(--primary-dark); /* Blu notte elegante */
     font-size: 1.15rem;
@@ -217,7 +217,7 @@ main, #app-content {
 
 /* --- D. TIPOGRAFIA SOTTOTITOLI/INFO (Nunito) --- */
 .item-subtitle, .spiaggia-location, .transport-desc, .pharmacy-address {
-    font-family: 'Kranky', sans-serif;
+    font-family: 'Monomakh', sans-serif;
     font-size: 0.9rem;
     color: var(--text-light);
     font-weight: 600; /* Leggermente più marcato per leggibilità al sole */
@@ -227,7 +227,7 @@ main, #app-content {
 /* --- E. BASE DEI BOTTONI (Action & Chips) - Stile Pillola --- */
 .action-btn, .btn-sentiero-small, .btn-azure, .btn-pharmacy-call, .filter-chip {
     display: inline-flex; align-items: center; justify-content: center;
-    font-family: 'Kranky', sans-serif;
+    font-family: 'Monomakh', sans-serif;
     font-weight: 600; 
     text-decoration: none; 
     border-radius: 50px; /* Forme completamente arrotondate (Pillola) */
@@ -466,7 +466,7 @@ sub-nav-bar {
 .sentiero-header { 
     display: flex; justify-content: space-between; align-items: center;
     color: var(--accent-col); /* Corallo */
-    font-family: 'Kranky', sans-serif;
+    font-family: 'Monomakh', sans-serif;
     font-size: 0.85rem; font-weight: 800; 
     text-transform: uppercase; letter-spacing: 1px;
     margin-bottom: 12px;
@@ -552,7 +552,7 @@ sub-nav-bar {
 
 /* Titolo: Rigorosamente su una riga */
 .sentiero-overlay-title {
-    font-family: 'Kranky', cursive;
+    font-family: 'Monomakh', cursive;
     font-size: 1.25rem;
     color: #222;
     margin: 0 0 12px 0;
@@ -696,7 +696,7 @@ sub-nav-bar {
     border-radius: 50px; /* Pillola completa */
     border: none; 
     font-weight: 700;
-    font-family: 'Kranky', sans-serif;
+    font-family: 'Monomakh', sans-serif;
     
     /* Transizioni fluide */
     transition: transform 0.2s ease, filter 0.2s;

@@ -271,9 +271,9 @@ async function switchView(view, el) {
             ], 'Trasporti');
         } else if (view === 'mappe_monumenti') {
             renderSubMenu([
-                { label: t('menu_map'), table: "Mappe" },
-                { label: t('menu_monu'), table: "Attrazioni" }
-            ], 'Mappe');
+                { label: t('menu_map'), table: "Attrazioni" },
+                { label: t('menu_monu'), table: "Mappe" }
+            ], 'Attrazioni');
         }
     } catch (err) {
         console.error(err);
@@ -328,11 +328,20 @@ function initPendingMaps() {
 }
 
 function renderSubMenu(options, defaultTable) {
-    let menuHtml = '<div class="sub-nav-bar">';
-    options.forEach(opt => {
-        menuHtml += `<button class="sub-nav-item" onclick="loadTableData('${opt.table}', this)">${opt.label}</button>`;
-    });
-    menuHtml += '</div><div id="sub-content"></div>';
+    // Modifica grafica:
+    // A destra ora c'è un bottone chiaro con scritto "FILTRA"
+    let menuHtml = `
+    <div class="sub-nav-bar" style="display: flex; justify-content: space-between; align-items: center; padding-right: 15px;">
+        <div class="sub-nav-tabs" style="display:flex; overflow-x: auto; white-space: nowrap;">
+            ${options.map(opt => `<button class="sub-nav-item" onclick="loadTableData('${opt.table}', this)">${opt.label}</button>`).join('')}
+        </div>
+        
+        <button id="filter-toggle-btn" style="display: none; background: #f0f0f0; border: 1px solid #ccc; border-radius: 20px; padding: 5px 12px; font-size: 0.8rem; font-weight: bold; color: #333; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+             FILTRA
+        </button>
+    </div>
+    <div id="sub-content"></div>`;
+    
     content.innerHTML = menuHtml;
 
     const firstBtn = content.querySelector('.sub-nav-item');
@@ -367,10 +376,16 @@ async function renderHome() {
 // CARICAMENTO DATI
 async function loadTableData(tableName, btnEl) {
     const subContent = document.getElementById('sub-content');
+    const filterBtn = document.getElementById('filter-toggle-btn'); // Recuperiamo il pulsante filtro
+    
     if (!subContent) return;
 
+    // Gestione classi attive pulsanti
     document.querySelectorAll('.sub-nav-item').forEach(b => b.classList.remove('active-sub'));
     if (btnEl) btnEl.classList.add('active-sub');
+
+    // Reset tasto filtro (lo nascondiamo di default, lo riattiviamo dentro renderGenericFilterableView)
+    if(filterBtn) filterBtn.style.display = 'none';
 
     subContent.innerHTML = `<div class="loader">${t('loading')}</div>`;
 
@@ -382,8 +397,11 @@ async function loadTableData(tableName, btnEl) {
 
     let html = '<div class="list-container animate-fade">';
 
+    // --- LOGICA SPECIFICA PER OGNI TABELLA ---
+
     if (tableName === 'Sentieri') {
-        renderGenericFilterableView(data, 'Label', subContent, sentieroRenderer);
+        // MODIFICA QUI: Cambiato 'Label' con 'Difficoltà'
+        renderGenericFilterableView(data, 'Difficolta', subContent, sentieroRenderer);
         return;
     }
     else if (tableName === 'Spiagge') {
@@ -398,12 +416,30 @@ async function loadTableData(tableName, btnEl) {
        renderGenericFilterableView(data, 'Paesi', subContent, farmaciaRenderer);
        return;
     } 
-    else if (tableName === 'Prodotti') {
+    else if (tableName === 'Attrazioni') {
+        renderGenericFilterableView(data, 'Paese', subContent, attrazioniRenderer);
+        return;
+    }
+    else if (tableName === 'Numeri_utili') {
+        // Logica ordinamento emergenza
+        data.sort((a, b) => {
+            const isEmergenzaA = a.Nome.includes('112') || a.Nome.toLowerCase().includes('emergenza');
+            const isEmergenzaB = b.Nome.includes('112') || b.Nome.toLowerCase().includes('emergenza');
+            if (isEmergenzaA && !isEmergenzaB) return -1;
+            if (!isEmergenzaA && isEmergenzaB) return 1;
+            return 0;
+        }); 
+        renderGenericFilterableView(data, 'Comune', subContent, numeriUtiliRenderer);
+        return;
+    };
+
+    // --- RENDER STANDARD SENZA FILTRI (Prodotti, Trasporti, Mappe) ---
+    
+    if (tableName === 'Prodotti') {
         data.forEach(p => {
             const titolo = dbCol(p, 'Prodotti') || dbCol(p, 'Nome'); 
             const imgUrl = getSmartUrl(p.Prodotti || p.Nome, '', 400);
             const safeObj = JSON.stringify(p).replace(/'/g, "'");
-                        
             html += `
                 <div class="card-product" onclick='openModal("product", ${safeObj})'>
                     <div class="prod-info">
@@ -419,7 +455,6 @@ async function loadTableData(tableName, btnEl) {
             const nomeDisplay = dbCol(t, 'Località') || dbCol(t, 'Mezzo');
             const imgUrl = getSmartUrl(t.Località || t.Mezzo, '', 400);
             const safeObj = JSON.stringify(t).replace(/'/g, "'");
-            
             html += `
                 <div class="card-product" onclick='openModal("transport", ${safeObj})'>
                     <div class="prod-info">
@@ -437,21 +472,6 @@ async function loadTableData(tableName, btnEl) {
         </div>`;
         return; 
     } 
-    else if (tableName === 'Attrazioni') {
-        renderGenericFilterableView(data, 'Paese', subContent, attrazioniRenderer);
-        return;
-    }
-    else if (tableName === 'Numeri_utili') {
-        data.sort((a, b) => {
-            const isEmergenzaA = a.Nome.includes('112') || a.Nome.toLowerCase().includes('emergenza');
-            const isEmergenzaB = b.Nome.includes('112') || b.Nome.toLowerCase().includes('emergenza');
-            if (isEmergenzaA && !isEmergenzaB) return -1;
-            if (!isEmergenzaA && isEmergenzaB) return 1;
-            return 0;
-        }); 
-        renderGenericFilterableView(data, 'Comune', subContent, numeriUtiliRenderer);
-        return;
-    };
     
     subContent.innerHTML = html + '</div>';
 }
@@ -710,23 +730,61 @@ async function openModal(type, payload) {
 }
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
     // 1. Prepara la struttura HTML vuota
-    container.innerHTML = `<div class="filter-bar" id="dynamic-filters"></div><div class="list-container animate-fade" id="dynamic-list"></div>`;
+    container.innerHTML = `<div class="filter-bar animate-fade" id="dynamic-filters" style="display:none;"></div><div class="list-container animate-fade" id="dynamic-list"></div>`;
     
     const filterBar = container.querySelector('#dynamic-filters');
     const listContainer = container.querySelector('#dynamic-list');
+    const filterBtn = document.getElementById('filter-toggle-btn');
+
+    // --- GESTIONE PULSANTE FILTRO ---
+    if (filterBtn) {
+        filterBtn.style.display = 'block'; 
+        
+        const newBtn = filterBtn.cloneNode(true);
+        filterBtn.parentNode.replaceChild(newBtn, filterBtn);
+        
+        newBtn.onclick = () => {
+            if (filterBar.style.display === 'none') {
+                filterBar.style.display = 'flex';
+                newBtn.style.background = '#e0e0e0'; 
+            } else {
+                filterBar.style.display = 'none';
+                newBtn.style.background = '#f0f0f0'; 
+            }
+        };
+    }
+
+    // 2. CALCOLO TAG UNICI (PULIZIA SPAZI)
+    let rawValues = allData.map(item => {
+        const val = item[filterKey];
+        return val ? val.trim() : null; 
+    }).filter(x => x);
+
+    let tagsRaw = [...new Set(rawValues)];
     
-    // 2. Calcola i tag/filtri unici (es. Riomaggiore, Manarola...)
-    let tagsRaw = [...new Set(allData.map(item => item[filterKey]))].filter(x => x);
-    const customOrder = ["Tutti", "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso"];
+    // --- QUI HO CAMBIATO L'ORDINE ---
+    // Ho aggiunto "Media" e "Difficile" dopo Facile. 
+    // L'ordine in questa lista è l'ordine che vedrai a schermo.
+    const customOrder = [
+        "Tutti", 
+        "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso", // Per i paesi
+        "Facile", "Media", "Difficile", // <-- IL TUO ORDINE PERSONALIZZATO
+        "Turistico", "Escursionistico", "Esperto" // Altri possibili valori (per sicurezza)
+    ];
+    
     if (!tagsRaw.includes('Tutti')) tagsRaw.unshift('Tutti');
 
-    // Ordina i tag
+    // Ordina i tag in base alla lista sopra
     const uniqueTags = tagsRaw.sort((a, b) => {
         const indexA = customOrder.indexOf(a);
         const indexB = customOrder.indexOf(b);
+        // Se entrambi sono nella lista custom, vince chi ha l'indice più basso
         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        // Se solo A è nella lista, vince A
         if (indexA !== -1) return -1;
+        // Se solo B è nella lista, vince B
         if (indexB !== -1) return 1;
+        // Altrimenti ordine alfabetico
         return a.localeCompare(b);
     });
 
@@ -738,12 +796,12 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
         if (tag === 'Tutti') btn.classList.add('active-filter');
         
         btn.onclick = () => {
-            // Gestione click filtro
             filterBar.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active-filter'));
             btn.classList.add('active-filter');
             
             const filtered = tag === 'Tutti' ? allData : allData.filter(item => {
-                return (item[filterKey] === tag) || (item.Nome && (item.Nome.includes('112') || item.Nome.toLowerCase().includes('emergenza')));
+                const valDB = item[filterKey] ? item[filterKey].trim() : '';
+                return (valDB === tag) || (item.Nome && (item.Nome.includes('112') || item.Nome.toLowerCase().includes('emergenza')));
             });
             
             updateList(filtered);
@@ -751,27 +809,22 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
         filterBar.appendChild(btn);
     });
 
-    // 4. FUNZIONE DI AGGIORNAMENTO LISTA (Qui avviene la magia delle mappe)
+    // 4. Update List
     function updateList(items) {
         if (!items || items.length === 0) {
             listContainer.innerHTML = `<p style="text-align:center; padding:20px; color:#999;">${t('no_results')}</p>`;
             return;
         }
         
-        // Genera l'HTML delle schede
         listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
 
-        // --- FIX IMPORTANTE PER LE MAPPE ---
-        // Se esiste la funzione initPendingMaps, la chiamiamo con un piccolo ritardo
-        // per dare tempo al browser di disegnare i div delle mappe
         if (typeof initPendingMaps === 'function') {
             setTimeout(() => {
                 initPendingMaps();
-            }, 100); // 100 millisecondi di attesa sono sufficienti
+            }, 100);
         }
     }
 
-    // 5. Avvia la lista iniziale
     updateList(allData);
 }
 async function shareApp() {
