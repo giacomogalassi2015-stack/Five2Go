@@ -194,12 +194,20 @@ window.addEventListener('click', () => {
     if(dd) dd.classList.remove('show');
 });
 
-// --- FUNZIONI UTILITY & VISTE ---
+// --- FUNZIONE STANDARD OTTIMIZZATA ---
 function getSmartUrl(name, folder = '', width = 600) {
     if (!name) return 'https://via.placeholder.com/600x400?text=No+Image';
-    const safeName = encodeURIComponent(name); 
+    
+    const safeName = encodeURIComponent(name.trim()); 
     const folderPath = folder ? `${folder}/` : '';
-    return `${CLOUDINARY_BASE_URL}/w_${width},q_auto,f_auto,c_fill/${folderPath}${safeName}`;
+
+    // Utilizziamo i 4 parametri "Standard" per il caricamento rapido:
+    // 1. w_      -> Larghezza precisa (non scarica pixel inutili)
+    // 2. c_fill  -> Ritaglio intelligente al centro
+    // 3. f_auto  -> Converte in automatico nel formato più leggero (WebP o AVIF)
+    // 4. q_auto:good -> Massima compressione senza perdita di qualità visibile
+    
+    return `${CLOUDINARY_BASE_URL}/w_${width},c_fill,f_auto,q_auto:good,fl_progressive/${folderPath}${safeName}`;
 }
 
 const content = document.getElementById('app-content');
@@ -483,6 +491,60 @@ const sentieroRenderer = (s) => {
         </div>
     </div>`;
 };
+const ristoranteRenderer = (r) => {
+    const nome = dbCol(r, 'Nome');
+    const paesi = dbCol(r, 'Paesi');
+    const safeObj = JSON.stringify(r).replace(/'/g, "\\'");
+    
+    // Genera link Google Maps basato su Nome e Paese
+    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.Nome + ' ' + r.Paesi)}`;
+
+    return `
+    <div class="card-list-item" onclick='openModal("restaurant", ${safeObj})'>
+        <div class="item-info">
+            <div class="item-header-row">
+                <div class="item-title">${nome}</div>
+                <div class="item-tag">${paesi}</div>
+            </div>
+            <div class="item-subtitle">📍 ${r.Indirizzo || ''}</div>
+            
+            <div class="card-actions">
+                ${r.Numero ? `
+                    <a href="tel:${r.Numero}" class="action-btn btn-phone" onclick="event.stopPropagation()">
+                        <span>📞</span> ${t('btn_call')}
+                    </a>` : ''}
+                <a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()">
+                    <span>🗺️</span> ${t('btn_map')}
+                </a>
+            </div>
+        </div>
+    </div>`;
+};
+const spiaggiaRenderer = (s) => {
+    const nome = dbCol(s, 'Nome') || 'Spiaggia';
+    const paesi = dbCol(s, 'Paesi');
+    const desc = dbCol(s, 'Descrizione') || '';
+    const safePaesi = paesi.replace(/'/g, "\\'");
+    const safeDesc = desc.replace(/'/g, "\\'");
+    
+    const mapLink = `https://www.google.com/maps/search/?api=1&query=Spiaggia ${encodeURIComponent(nome + ' ' + paesi)}`;
+
+    return `
+    <div class="card-spiaggia" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
+        <div class="spiaggia-header">
+            <div class="spiaggia-location">📍 ${paesi}</div>
+            <span>🏖️</span>
+        </div>
+        
+        <div class="item-title" style="font-size: 1.3rem; margin: 10px 0;">${nome}</div>
+        
+        <div class="spiaggia-footer">
+            <a href="${mapLink}" target="_blank" class="btn-azure" onclick="event.stopPropagation()">
+                ${t('btn_position')}
+            </a>
+        </div>
+    </div>`;
+};
 const farmaciaRenderer = (f) => {
     const nome = dbCol(f, 'Nome');
     const paesi = dbCol(f, 'Paesi');
@@ -674,25 +736,6 @@ document.addEventListener('touchend', function(event) {
     lastTouchEnd = now;
 }, false);
 document.addEventListener('touchstart', function(event) { if (event.touches.length > 1) event.preventDefault(); }, { passive: false });
-
-let activeMap = null;
-function openGpxMap(gpxUrl, titolo) {
-    if (!gpxUrl) return;
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay animate-fade';
-    modal.innerHTML = `<div class="modal-content" style="height:80vh; padding:0; display:flex; flex-direction:column; overflow:hidden;"><div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:white; z-index:10;"><h3 style="margin:0; font-size:1.1rem;">${titolo}</h3><span class="close-modal" style="font-size:2rem; cursor:pointer; line-height:1;">×</span></div><div id="gpx-map-container" style="flex:1; width:100%; background:#f0f0f0;"></div></div>`;
-    document.body.appendChild(modal);
-    const closeModal = () => { if (activeMap) { activeMap.remove(); activeMap = null; } modal.remove(); };
-    modal.querySelector('.close-modal').onclick = closeModal;
-    modal.onclick = (e) => { if(e.target === modal) closeModal(); };
-
-    setTimeout(() => {
-        if (!document.getElementById('gpx-map-container')) return;
-        activeMap = L.map('gpx-map-container');
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(activeMap);
-        new L.GPX(gpxUrl, { async: true, marker_options: { startIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-start.png', endIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-end.png', shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-shadow.png' } }).on('loaded', function(e) { activeMap.fitBounds(e.target.getBounds()); }).addTo(activeMap);
-    }, 200);
-}
 
 document.addEventListener('DOMContentLoaded', () => {
     setupLanguageSelector(); 
