@@ -25,7 +25,7 @@ let currentLang = localStorage.getItem('app_lang') || 'it';
 const UI_TEXT = {
     it: {
         loading: "Caricamento...", error: "Errore",
-        home_title: "Five2Go", food_title: "Cibo & Sapori", outdoor_title: "Outdoor", services_title: "Servizi", maps_title: "Mappe & Cultura",
+        home_title: "5 Terre", food_title: "Cibo & Sapori", outdoor_title: "Outdoor", services_title: "Servizi", maps_title: "Mappe & Cultura",
         // Nav Bar
         nav_villages: "Borghi", nav_food: "Cibo", nav_outdoor: "Outdoor", nav_services: "Servizi",
         // Menu Sotto-header
@@ -316,7 +316,7 @@ function initPendingMaps() {
                         opacity: 0.8
                     }
                 }).on('loaded', function(e) {
-                    map.fitBounds(e.target.getBounds(), {
+                   map.fitBounds(e.target.getBounds(), {
         paddingTopLeft: [20, 20],
         paddingBottomRight: [20, 180] // <-- I 180px "alzano" il sentiero
     });
@@ -489,9 +489,9 @@ const sentieroRenderer = (s) => {
                 </div>
             </div>
 
-            <button class="btn-outline-details" onclick="openModal('product', ${JSON.stringify(s).replace(/'/g, "&apos;")})">
-                Dettagli Percorso
-            </button>
+            <button class="btn-outline-details" onclick='openModal("trail", ${JSON.stringify(s).replace(/'/g, "&apos;")})'>
+    Dettagli Percorso
+</button>
         </div>
     </div>`;
 };
@@ -627,6 +627,7 @@ async function openModal(type, payload) {
     modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
 
     let contentHtml = '';
+
     if (type === 'village') {
         const bigImg = getSmartUrl(payload, '', 1000);
         const { data } = await supabaseClient.from('Cinque_Terre').select('*').eq('Paesi', payload).single();
@@ -636,8 +637,8 @@ async function openModal(type, payload) {
     else if (type === 'product') {
         const nome = dbCol(payload, 'Prodotti') || dbCol(payload, 'Nome');
         const desc = dbCol(payload, 'Descrizione');
-        const ideale = dbCol(payload, 'Ideale per') || dbCol(payload, 'IdealePer');
-        const bigImg = getSmartUrl(payload.Prodotti || payload.Nome, 'prodotti', 800);
+        const ideale = dbCol(payload, 'Ideale per') || dbCol(payload, 'Ideale per');
+        const bigImg = getSmartUrl(payload.Prodotti || payload.Nome, 'Prodotti', 800);
         contentHtml = `<img src="${bigImg}" style="width:100%; border-radius:12px; height:200px; object-fit:cover;" onerror="this.style.display='none'"><h2>${nome}</h2><p>${desc || ''}</p><hr><p><strong>${t('ideal_for')}:</strong> ${ideale || ''}</p>`;
     }
     else if (type === 'transport') {
@@ -645,7 +646,56 @@ async function openModal(type, payload) {
         const desc = dbCol(payload, 'Descrizione');
         contentHtml = `<h2>${nome}</h2><p>${desc || ''}</p><div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">${payload["Link"] ? `<a href="${payload["Link"]}" target="_blank" class="btn-yellow" style="text-align:center;">${t('btn_website')}</a>` : ''}${payload["Link_2"] ? `<a href="${payload["Link_2"]}" target="_blank" class="btn-yellow" style="text-align:center;">${t('btn_hours')}</a>` : ''}</div>`;
     }
-    else if (type === 'attrazione') {
+    /* --- NUOVO BLOCCO PER I SENTIERI --- */
+    else if (type === 'trail') {
+        const titolo = dbCol(payload, 'Paesi');
+        const aiuto = dbCol(payload, 'Tag aiuto') || '--';
+        const dist = payload.Distanza || '--';
+        const dura = payload.Durata || '--';
+        const tag = dbCol(payload, 'Extra') || 'Sentiero';
+        const desc = dbCol(payload, 'Descrizione') || '';
+
+        contentHtml = `
+            <div style="padding: 20px 0;">
+                <h2 style="text-align: center; margin-bottom: 25px; font-family: 'Fascinate Inline', cursive; font-size: 1.8rem; color: var(--primary-dark);">
+                    ${titolo}
+                </h2>
+                
+                <div style="display: flex; justify-content: space-between; padding: 0 30px; margin-bottom: 20px;">
+                    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                        <span style="font-size: 0.7rem; text-transform: uppercase; color: #999; font-weight: 800; letter-spacing: 0.5px;">Info</span>
+                        <span style="font-weight: 700; color: #444; font-size: 1rem;">${aiuto}</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                        <span style="font-size: 0.7rem; text-transform: uppercase; color: #999; font-weight: 800; letter-spacing: 0.5px;">Distanza</span>
+                        <span style="font-weight: 700; color: #444; font-size: 1rem;">${dist}</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; padding: 0 30px; margin-bottom: 25px;">
+                    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                        <span style="font-size: 0.7rem; text-transform: uppercase; color: #999; font-weight: 800; letter-spacing: 0.5px;">Segnavia</span>
+                        <span style="font-weight: 700; color: var(--accent-col); font-size: 1rem;">${tag}</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                        <span style="font-size: 0.7rem; text-transform: uppercase; color: #999; font-weight: 800; letter-spacing: 0.5px;">Tempo Stimato</span>
+                        <span style="font-weight: 700; color: #444; font-size: 1rem;">${dura}</span>
+                    </div>
+                </div>
+
+                <div style="margin: 0 30px; height: 1px; background: #eee;"></div>
+
+               <div style="padding: 25px 30px;">
+    <p style="line-height: 1.7; color: #666; text-align: center; font-size: 0.95rem; font-family: 'Inter', sans-serif;">
+        ${desc}
+    </p>
+</div>
+                </div>
+            </div>
+        `;
+    }
+    /* ------------------------------------ */
+    else if (type === 'Attrazione') {
         const titolo = dbCol(payload, 'Attrazioni');
         const paese = dbCol(payload, 'Paese'); 
         const desc = dbCol(payload, 'Descrizione');
@@ -658,7 +708,6 @@ async function openModal(type, payload) {
     }
     modal.innerHTML = `<div class="modal-content"><span class="close-modal" onclick="this.parentElement.parentElement.remove()">×</span>${contentHtml}</div>`;
 }
-
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
     // 1. Prepara la struttura HTML vuota
     container.innerHTML = `<div class="filter-bar" id="dynamic-filters"></div><div class="list-container animate-fade" id="dynamic-list"></div>`;
