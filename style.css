@@ -32,7 +32,7 @@
 
 body {
     font-family: 'LATO'; /* Leggibilità massima per il corpo */
-    background-color: #c6faea;
+    background-color:var(--glass-blur);
     color: var(--text-main);
     line-height: 1.6;
     touch-action: pan-x pan-y;
@@ -134,7 +134,7 @@ main, #app-content {
 #bottom-nav, #nav-bar {
     position: fixed; bottom: 20px; left: 20px; right: 20px; /* Staccata dai bordi */
     width: auto; height: 70px;
-    background-color: #34cbbc;
+    background-color: var(--surface);
     border-radius: 25px; /* A pillola */
     display: flex; justify-content: space-evenly; align-items: center;
     z-index: 1000;
