@@ -452,21 +452,15 @@ const sentieroRenderer = (s) => {
     const safePaesi = paesi.replace(/'/g, "\\'");
     const safeDesc = desc ? desc.replace(/'/g, "\\'") : '';
     
-    // Gestione GPX
+    // --- GESTIONE MAPPA (Non toccare, funziona) ---
     const gpxUrl = s.Gpxlink || s.gpxlink;
-    // Genera un ID univoco casuale per la mappa
     const uniqueMapId = `map-trail-${Math.random().toString(36).substr(2, 9)}`;
-
-    // SE C'È IL GPX, LO METTIAMO IN CODA PER ESSERE DISEGNATO DOPO
-    if (gpxUrl) {
-        window.mapsToInit.push({ id: uniqueMapId, gpx: gpxUrl });
-    }
-
-    // HTML Placeholder per la mappa (o messaggio se manca)
+    if (gpxUrl) { window.mapsToInit.push({ id: uniqueMapId, gpx: gpxUrl }); }
     const mapHtml = gpxUrl 
         ? `<div id="${uniqueMapId}" class="sentiero-map-area"></div>`
         : `<div class="sentiero-map-area" style="display:flex;align-items:center;justify-content:center;color:#999;">NO MAP DATA</div>`;
 
+    // --- RENDER ---
     return `
     <div class="card-sentiero">
         
@@ -475,65 +469,20 @@ const sentieroRenderer = (s) => {
         <div class="sentiero-body" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
             
             <div class="sentiero-header-row">
-                <span style="font-weight:700; color:#2A9D8F;">📏 ${s.Distanza || '--'}</span>
-                <span style="font-weight:700; color:#E76F51;">⏱ ${s.Durata || '--'}</span>
+                <div class="sentiero-stat-left">📏 ${s.Distanza || '--'}</div>
+                
+                <div class="badge-center">${label || 'TRACK'}</div>
+
+                <div class="sentiero-stat-right">⏱ ${s.Durata || '--'}</div>
             </div>
 
-            <div class="sentiero-extra">${label}</div>
-            <h4 class="sentiero-title">${paesi}</h4>
+            <h4 class="sentiero-title" style="margin-top:10px;">${paesi}</h4>
             <p class="difficolta">${diff || ''}</p>
 
             ${s.Pedaggio ? `<a href="${s.Pedaggio}" target="_blank" class="btn-toll-full" style="margin-top:15px; width:100%; display:block; background:#FFF3E0; color:#E67E22; padding:10px; border-radius:50px; text-decoration:none; font-weight:bold;">🎫 ${t('btn_toll')}</a>` : ''}
         </div>
     </div>`;
 };
-
-const spiaggiaRenderer = (s) => {
-    const nome = dbCol(s, 'Nome');
-    const desc = dbCol(s, 'Descrizione');
-    const paesi = dbCol(s, 'Paesi');
-    const safeNome = nome.replace(/'/g, "\\'");
-    const safeDesc = desc ? desc.replace(/'/g, "\\'") : '';
-
-    return `
-    <div class="card-spiaggia">
-        <div class="spiaggia-header">
-            <div class="spiaggia-title">${nome}</div>
-            <span style="font-size:1.2rem;"></span>
-        </div>
-        <div class="spiaggia-location">📍 ${paesi}</div>
-        <div class="spiaggia-footer">
-             <button class="btn-azure" onclick="simpleAlert('${safeNome}', '${safeDesc}')">${t('btn_info')}</button>
-             ${s.Maps ? `<a href="${s.Maps}" target="_blank" class="btn-azure">${t('btn_map')}</a>` : ''}
-        </div>
-    </div>`;
-};
-
-const ristoranteRenderer = (r) => {
-    const nome = dbCol(r, 'Nome');
-    const tipo = dbCol(r, 'Tipo') || 'Ristorante';
-    const paesi = dbCol(r, 'Paesi');
-    const fullAddress = `${r.Indirizzo}, ${r.Paesi}`;
-    const mapLink = `http://googleusercontent.com/maps.google.com/?q=${encodeURIComponent(fullAddress)}`;
-    const safeObj = JSON.stringify(r).replace(/'/g, "'");
-
-    return `
-    <div class="card-list-item" onclick='openModal("restaurant", ${safeObj})'>
-        <div class="item-info">
-            <div class="item-header-row">
-                <div class="item-title">${nome}</div>
-                <div class="item-tag">${tipo}</div>
-            </div>
-            <div class="item-subtitle">📍 ${paesi}</div>
-            <div class="card-actions">
-                ${r.Telefono ? `<a href="tel:${r.Telefono}" class="action-btn btn-phone" onclick="event.stopPropagation()"><span>📞</span> ${t('btn_call')}</a>` : ''}
-                ${r.Indirizzo ? `<a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()"><span>🗺️</span> ${t('btn_map')}</a>` : ''}
-            </div>
-        </div>
-        <div class="item-arrow" style="display:none !important;">➜</div>
-    </div>`;
-};
-
 const farmaciaRenderer = (f) => {
     const nome = dbCol(f, 'Nome');
     const paesi = dbCol(f, 'Paesi');

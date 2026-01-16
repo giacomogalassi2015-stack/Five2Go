@@ -262,73 +262,76 @@ main, #app-content {
     background: rgba(255,255,255,0.4); 
 }
 
-/* --- FILTRI (SUB-NAV & CHIPS) --- */
-.sub-nav-bar, .filter-bar {
-    display: flex; overflow-x: auto; 
-    padding: 10px 20px 20px 20px; /* Spazio extra sotto per l'ombra */
-    gap: 12px;
-    background: transparent; 
-    -ms-overflow-style: none; scrollbar-width: none;
-    
-    /* MAGIA: Maschera che sfuma il contenuto ai lati (Fade Out) */
-    mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
-}
-.sub-nav-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar { display: none; }
-.sub-nav-bar { border-bottom: none; }
+/* ============================================================
+   FIX DEFINITIVO: FORMA PULSANTI E DISTANZE
+   ============================================================ */
 
-/* Pillole Filtri "Galleggianti" */
+/* 1. ESTETICA CONDIVISA (Forma e Dimensione) */
+/* Questo ridà la forma a pillola grande e leggibile a ENTRAMBI */
 .sub-nav-item, .filter-chip {
-    padding: 10px 22px; /* Più larghi = più facili da cliccare */
+    padding: 10px 24px; /* Aumentato: li rende più grandi e "cicciotti" */
     border-radius: 50px; 
-    white-space: nowrap; flex-shrink: 0;
+    white-space: nowrap; 
+    flex-shrink: 0; /* Impedisce che si schiaccino se lo schermo è piccolo */
     
-    /* Stato Inattivo: Pulito */
     border: none; 
     background: white; 
     color: var(--text-light); 
     
-    font-size: 0.9rem; font-weight: 700; letter-spacing: 0.3px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* Ombra leggera */
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    font-size: 0.95rem; /* Testo leggermente più grande */
+    font-weight: 700; 
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08); /* Ombra un po' più visibile */
+    transition: all 0.2s ease;
 }
 
-/* Stato Attivo: Esplosione Turchese */
+/* Stato Attivo */
 .sub-nav-item.active-sub, .filter-chip.active-filter {
     background-color: var(--primary-col); 
     color: white; 
-    /* L'ombra diventa colorata (Glow) */
+    transform: translateY(-2px);
     box-shadow: 0 8px 20px -5px rgba(42, 157, 143, 0.5); 
-    transform: translateY(-2px) scale(1.02); /* Si solleva leggermente */
 }
 
-/* --- PAGINAZIONE (Cerchi Perfetti) --- */
-.pagination-container { 
-    display: flex; justify-content: center; gap: 15px; 
-    margin: 30px 0; padding: 10px; 
-}
-
-.page-btn {
-    width: 48px; height: 48px; /* Quadrato perfetto per fare il cerchio */
-    display: flex; align-items: center; justify-content: center;
+/* ============================================================
+   2. BARRA PULSANTI GRANDI (Prodotti / Ristoranti)
+   ============================================================ */
+.sub-nav-bar {
+    display: flex; 
+    justify-content: center; /* CENTRATI */
+    align-items: center;
     
-    background: white; 
-    border: none; 
-    border-radius: 50%; /* Cerchio */
+    /* DISTANZE VERTICALI (Il fix per "troppo vicina") */
+    margin-top: 10px;    /* Stacca dalla fascia in alto */
+    margin-bottom: 10px; /* Stacca dai filtri o dalle schede sotto */
+    padding: 0;          /* Rimuove padding inutile */
     
-    font-size: 1rem; font-weight: 800; color: var(--primary-dark); 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Ombra morbida */
-    transition: transform 0.2s ease;
+    gap: 12px;           /* Distanza tra i due pulsanti */
+    
+    width: 100%;
+    background: transparent;
+    overflow: visible;   /* Niente scroll, devono stare fermi */
+    mask-image: none;    /* Niente sfumatura */
 }
 
-.page-btn.active { 
-    background-color: var(--primary-col); color: white; 
-    transform: scale(1.15); /* Il numero attivo è più grande */
-    box-shadow: 0 8px 20px rgba(42, 157, 143, 0.4); /* Glow Turchese */
+/* ============================================================
+   3. BARRA FILTRI PICCOLI (Riomaggiore, Manarola...)
+   ============================================================ */
+.filter-bar {
+    display: flex; 
+    justify-content: flex-start; /* Parte da sinistra */
+    overflow-x: auto; /* Scroll orizzontale attivo */
+    
+    gap: 10px;
+    padding: 0 20px 20px 20px; /* Spazio ai lati e sotto per l'ombra */
+    
+    /* Sfumatura laterale per indicare che si può scrollare */
+    mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+    
+    -ms-overflow-style: none; scrollbar-width: none;
 }
-
-.page-btn:active { transform: scale(0.9); }
-
+.filter-bar::-webkit-scrollbar { display: none; }
 /* ============================================================
    4. COMPONENTI SPECIFICI (Card & Liste Premium)
    Miglioramenti: Design immersivo, Curve 24px, Micro-interazioni
@@ -530,15 +533,28 @@ main, #app-content {
     align-items: center;
     text-align: center;
 }
-
-/* Stili Testo mantenendo i tuoi font */
+/* Riga Statistiche: Ora gestisce 3 elementi (Sinistra - Centro - Destra) */
 .sentiero-header-row {
-    display: flex; justify-content: space-between; width: 100%;
+    display: flex; 
+    justify-content: space-between; /* Questo fa la magia: separa i 3 elementi */
+    align-items: center; /* Li allinea verticalmente al centro */
+    width: 100%;
     margin-bottom: 15px;
-    border-bottom: 2px dashed #eee; /* Il tratteggio che volevi */
+    border-bottom: 2px dashed #eee;
     padding-bottom: 10px;
 }
-
+/* Stile per l'Extra quando è nel mezzo (Pillola Arancione) */
+.badge-center {
+    background-color: #FFF3E0;
+    color: #E67E22;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
 /* --- EXTRA (L'etichetta arancione sopra) --- */
 .sentiero-extra {
     font-family: 'Arial', sans-serif; /* O il font che preferisci */
