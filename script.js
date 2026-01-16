@@ -252,9 +252,10 @@ async function switchView(view, el) {
         } 
         else if (view === 'cibo') {
             renderSubMenu([
-                { label: t('menu_prod'), table: "Prodotti" },
-                { label: t('menu_rest'), table: "Ristoranti" }
-            ], 'Prodotti');
+                { label: t('menu_rest'), table: "Ristoranti" },
+                { label: t('menu_prod'), table: "Prodotti" }
+                
+            ], 'Ristoranti');
         }
         else if (view === 'outdoor') {
             renderSubMenu([
@@ -504,13 +505,13 @@ const ristoranteRenderer = (r) => {
         <div class="item-info">
             <div class="item-header-row">
                 <div class="item-title">${nome}</div>
-                <div class="item-tag">${paesi}</div>
+                
             </div>
             <div class="item-subtitle">📍 ${r.Indirizzo || ''}</div>
             
             <div class="card-actions">
-                ${r.Numero ? `
-                    <a href="tel:${r.Numero}" class="action-btn btn-phone" onclick="event.stopPropagation()">
+                ${r.Telefono ? `
+                    <a href="tel:${r.Telefono}" class="action-btn btn-phone" onclick="event.stopPropagation()">
                         <span>📞</span> ${t('btn_call')}
                     </a>` : ''}
                 <a href="${mapLink}" target="_blank" class="action-btn btn-map" onclick="event.stopPropagation()">

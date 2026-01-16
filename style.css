@@ -43,7 +43,7 @@ body {
 
 /* Titoli in Font Montserrat per carattere */
  .card-title-overlay {
-    font-family: 'Kranky'; 
+    font-family: 'C'; 
     font-weight: 400; 
     
     /* Colore: Kranky sta benissimo con il tuo Blu Notte o anche con il Corallo */
@@ -81,16 +81,16 @@ header, #app-header {
 /* Titolo Centrato Assoluto */
 #view-title { 
     /* Trucco per centrare perfettamente un elemento in un contenitore relativo */
-    position: absolute;
+position: absolute;
     left: 50%;
     transform: translateX(-50%);
     
-    font-family: 'Playfair Display';
-    font-size: 1.8rem; /* Leggermente ridotto per sicurezza */
-    font-weight: 800; 
-    color: var(--primary-dark);
-    text-transform: uppercase; /* Più elegante quando centrato */
-    letter-spacing: 1px;
+    /* MODIFICA QUI */
+    font-family: 'Ultra', serif;
+    font-size: 1.5rem;
+    color: var(--primary-col); /* Usiamo il Turchese per un look fresco */
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+    /* ------------- */
     margin: 0;
     
     white-space: nowrap; /* Evita che vada a capo */
@@ -99,12 +99,13 @@ header, #app-header {
 }
 #view-title::first-letter { text-transform: uppercase; }
 #view-title::first-letter {
-    font-size: 1.4em; /* Il 40% più grande del resto del testo */
-    font-weight: 800; /* Molto grassetto */
+    font-size: 1.2em; /* Il 40% più grande del resto del testo */
+    font-weight: 600; /* Molto grassetto */
     
     /* Opzionale: se vuoi che la prima lettera abbia il colore "Corallo" */
     /* color: var(--accent-col); */ 
 }
+
 /* Contenitore Destra (Lingua + Share) */
 .header-actions {
     display: flex;
