@@ -498,7 +498,6 @@ const sentieroRenderer = (s) => {
     const distanza = s.Distanza || '--';
     const durata = s.Durata || '--';
     const extra = dbCol(s, 'Extra') || 'Sentiero';
-    
     const gpxUrl = s.Gpxlink || s.gpxlink;
 
     const uniqueMapId = `map-trail-${Math.random().toString(36).substr(2, 9)}`;
@@ -557,7 +556,7 @@ const ristoranteRenderer = (r) => {
         margin-bottom: 20px; 
         box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
         overflow: hidden; 
-        font-family: Roboto Slab;
+        font-family: Roboto;
         border: 1px solid #eee;">
         
         <div onclick="openModal('restaurant', '${safeObj}')" style="padding: 20px; cursor: pointer;">
@@ -628,7 +627,7 @@ const spiaggiaRenderer = (s) => {
     <div class="card-spiaggia" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
         <div class="spiaggia-header">
             <div class="spiaggia-location">📍 ${paesi}</div>
-          
+            <span>🏖️</span>
         </div>
         
         <div class="item-title" style="font-size: 1.3rem; margin: 10px 0;">${nome}</div>
