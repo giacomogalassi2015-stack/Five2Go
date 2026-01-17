@@ -1,25 +1,28 @@
+console.log("✅ 3. app.js caricato");
+
 const content = document.getElementById('app-content');
 const viewTitle = document.getElementById('view-title');
 
-// --- LINGUA & NAV BAR ---
+// --- 1. SETUP LINGUA & HEADER ---
 function setupLanguageSelector() {
     const header = document.querySelector('header');
     
-    // PULIZIA VECCHI ELEMENTI
+    // Pulizia
     const oldActions = header.querySelector('.header-actions');
     if (oldActions) oldActions.remove();
     const oldShare = header.querySelector('.header-share-left');
     if (oldShare) oldShare.remove();
     header.querySelectorAll('.material-icons').forEach(i => i.remove());
 
-    // --- SELETTORE LINGUA ---
+    // Selettore Lingua
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'header-actions'; 
     actionsContainer.id = 'header-btn-lang'; 
     Object.assign(actionsContainer.style, { position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', zIndex: '20' });
 
-    const currFlag = AVAILABLE_LANGS.find(l => l.code === currentLang).flag;
-    const currCode = currentLang.toUpperCase();
+    // window.AVAILABLE_LANGS viene da data-logic.js
+    const currFlag = window.AVAILABLE_LANGS.find(l => l.code === window.currentLang).flag;
+    const currCode = window.currentLang.toUpperCase();
 
     const langSelector = document.createElement('div');
     langSelector.className = 'lang-selector';
@@ -28,20 +31,20 @@ function setupLanguageSelector() {
             <span class="lang-flag">${currFlag}</span> ${currCode} ▾
         </button>
         <div class="lang-dropdown" id="lang-dropdown" style="left: 0; right: auto;">
-            ${AVAILABLE_LANGS.map(l => `
-                <button class="lang-opt ${l.code === currentLang ? 'active' : ''}" onclick="changeLanguage('${l.code}')">
+            ${window.AVAILABLE_LANGS.map(l => `
+                <button class="lang-opt ${l.code === window.currentLang ? 'active' : ''}" onclick="changeLanguage('${l.code}')">
                     <span class="lang-flag">${l.flag}</span> ${l.label}
                 </button>
             `).join('')}
         </div>`;
     actionsContainer.appendChild(langSelector);
 
-    // --- BOTTONE SHARE ---
+    // Bottone Share
     const shareBtn = document.createElement('span');
     shareBtn.className = 'material-icons header-share-right'; 
     shareBtn.id = 'header-btn-share'; 
     shareBtn.innerText = 'share'; 
-    shareBtn.onclick = shareApp;
+    shareBtn.onclick = window.shareApp; // Usa la funzione globale
     Object.assign(shareBtn.style, { position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', color: '#000000', cursor: 'pointer', fontSize: '26px', zIndex: '20' });
 
     header.appendChild(actionsContainer);
@@ -51,18 +54,21 @@ function setupLanguageSelector() {
 function updateNavBar() {
     const labels = document.querySelectorAll('.nav-label');
     if (labels.length >= 4) {
-        labels[0].innerText = t('nav_villages');
-        labels[1].innerText = t('nav_food');
-        labels[2].innerText = t('nav_outdoor');
-        labels[3].innerText = t('nav_services');
+        labels[0].innerText = window.t('nav_villages');
+        labels[1].innerText = window.t('nav_food');
+        labels[2].innerText = window.t('nav_outdoor');
+        labels[3].innerText = window.t('nav_services');
     }
 }
 
-function changeLanguage(langCode) {
-    currentLang = langCode;
+// Funzione Globale per cambiare lingua
+window.changeLanguage = function(langCode) {
+    window.currentLang = langCode;
     localStorage.setItem('app_lang', langCode);
     setupLanguageSelector(); 
     updateNavBar(); 
+    
+    // Ricarica la vista corrente
     const activeNav = document.querySelector('.nav-item.active');
     if(activeNav) {
         const onclickAttr = activeNav.getAttribute('onclick');
@@ -72,20 +78,29 @@ function changeLanguage(langCode) {
     } else {
         switchView('home');
     }
-}
+};
+
+window.toggleLangDropdown = function(event) {
+    event.stopPropagation();
+    const dd = document.getElementById('lang-dropdown');
+    if(dd) dd.classList.toggle('show');
+};
 
 window.addEventListener('click', () => {
     const dd = document.getElementById('lang-dropdown');
     if(dd) dd.classList.remove('show');
 });
 
-// --- NAVIGAZIONE PRINCIPALE ---
-async function switchView(view, el) {
+
+// --- 2. NAVIGAZIONE PRINCIPALE ---
+window.switchView = async function(view, el) {
     if (!content) return;
+    
+    // Aggiorna menu in basso
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     if (el) el.classList.add('active');
     
-    // Gestione Header
+    // Gestione Header (mostra icone solo in Home)
     const shareBtn = document.getElementById('header-btn-share');
     const langBtn = document.getElementById('header-btn-lang');
     if (shareBtn && langBtn) {
@@ -93,38 +108,45 @@ async function switchView(view, el) {
         langBtn.style.display = (view === 'home') ? 'block' : 'none';
     }
 
-    content.innerHTML = `<div class="loader">${t('loading')}</div>`;
+    content.innerHTML = `<div class="loader">${window.t('loading')}</div>`;
 
+    // Aggiorna Titolo
     const titleMap = { 'home': 'home_title', 'cibo': 'food_title', 'outdoor': 'outdoor_title', 'servizi': 'services_title', 'mappe_monumenti': 'maps_title' };
-    if(titleMap[view]) viewTitle.innerText = t(titleMap[view]);
+    if(titleMap[view] && viewTitle) viewTitle.innerText = window.t(titleMap[view]);
 
     try {
         if (view === 'home') await renderHome();
-        else if (view === 'cibo') renderSubMenu([{ label: t('menu_rest'), table: "Ristoranti" }, { label: t('menu_prod'), table: "Prodotti" }], 'Ristoranti');
-        else if (view === 'outdoor') renderSubMenu([{ label: t('menu_trail'), table: "Sentieri" }, { label: t('menu_beach'), table: "Spiagge" }], 'Sentieri');
-        else if (view === 'servizi') renderSubMenu([{ label: t('menu_trans'), table: "Trasporti" }, { label: t('menu_num'), table: "Numeri_utili" }, { label: t('menu_pharm'), table: "Farmacie" }], 'Trasporti');
-        else if (view === 'mappe_monumenti') renderSubMenu([{ label: t('menu_map'), table: "Attrazioni" }, { label: t('menu_monu'), table: "Mappe" }], 'Attrazioni');
+        else if (view === 'cibo') renderSubMenu([{ label: window.t('menu_rest'), table: "Ristoranti" }, { label: window.t('menu_prod'), table: "Prodotti" }], 'Ristoranti');
+        else if (view === 'outdoor') renderSubMenu([{ label: window.t('menu_trail'), table: "Sentieri" }, { label: window.t('menu_beach'), table: "Spiagge" }], 'Sentieri');
+        else if (view === 'servizi') renderSubMenu([{ label: window.t('menu_trans'), table: "Trasporti" }, { label: window.t('menu_num'), table: "Numeri_utili" }, { label: window.t('menu_pharm'), table: "Farmacie" }], 'Trasporti');
+        else if (view === 'mappe_monumenti') renderSubMenu([{ label: window.t('menu_map'), table: "Attrazioni" }, { label: window.t('menu_monu'), table: "Mappe" }], 'Attrazioni');
     } catch (err) {
         console.error(err);
-        content.innerHTML = `<div class="error-msg">${t('error')}: ${err.message}</div>`;
+        content.innerHTML = `<div class="error-msg">${window.t('error')}: ${err.message}</div>`;
     }
-}
+};
 
 async function renderHome() {
-    const { data, error } = await supabaseClient.from('Cinque_Terre').select('*');
+    const { data, error } = await window.supabaseClient.from('Cinque_Terre').select('*');
     if (error) throw error;
+    
     let html = '<div class="grid-container animate-fade">';
     data.forEach(v => {
         const paeseName = v.Paesi; 
-        const imgUrl = getSmartUrl(paeseName, '', 800); 
+        const imgUrl = window.getSmartUrl(paeseName, '', 800); 
         const safeName = paeseName.replace(/'/g, "\\'");
+        // Nota: openModal è definita globalmente sotto
         html += `<div class="village-card" style="background-image: url('${imgUrl}')" onclick="openModal('village', '${safeName}')"><div class="card-title-overlay">${paeseName}</div></div>`;
     });
-    html += `<div class="village-card" style="background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')" onclick="switchView('mappe_monumenti', null)"><div class="card-title-overlay">${t('maps_title')}</div></div>`;
+    // Card Extra per Mappe
+    html += `<div class="village-card" style="background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')" onclick="switchView('mappe_monumenti', null)"><div class="card-title-overlay">${window.t('maps_title')}</div></div>`;
+    
     content.innerHTML = html + '</div>';
 }
 
+// --- 3. SOTTO-MENU E CARICAMENTO DATI ---
 function renderSubMenu(options, defaultTable) {
+    // Genera tab e bottone Filtra
     let menuHtml = `
     <div class="sub-nav-bar" style="display: flex; justify-content: space-between; align-items: center; padding-right: 15px;">
         <div class="sub-nav-tabs" style="display:flex; overflow-x: auto; white-space: nowrap;">
@@ -133,80 +155,105 @@ function renderSubMenu(options, defaultTable) {
         <button id="filter-toggle-btn" style="display: none; background: #f0f0f0; border: 1px solid #ccc; border-radius: 20px; padding: 5px 12px; font-size: 0.8rem; font-weight: bold; color: #333; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">FILTRA</button>
     </div>
     <div id="sub-content"></div>`;
+    
     content.innerHTML = menuHtml;
     const firstBtn = content.querySelector('.sub-nav-item');
     if (firstBtn) loadTableData(defaultTable, firstBtn);
 }
 
-// --- DATA LOADING & LOGICA FILTRI ---
-async function loadTableData(tableName, btnEl) {
+// Funzione globale per essere chiamata dall'HTML
+window.loadTableData = async function(tableName, btnEl) {
     const subContent = document.getElementById('sub-content');
     const filterBtn = document.getElementById('filter-toggle-btn');
     if (!subContent) return;
 
+    // Gestione visuale tab attivo
     document.querySelectorAll('.sub-nav-item').forEach(b => b.classList.remove('active-sub'));
     if (btnEl) btnEl.classList.add('active-sub');
     if(filterBtn) filterBtn.style.display = 'none';
 
-    subContent.innerHTML = `<div class="loader">${t('loading')}</div>`;
-    const { data, error } = await supabaseClient.from(tableName).select('*');
-    if (error) { subContent.innerHTML = `<p class="error-msg">${t('error')}: ${error.message}</p>`; return; }
+    subContent.innerHTML = `<div class="loader">${window.t('loading')}</div>`;
+    
+    const { data, error } = await window.supabaseClient.from(tableName).select('*');
+    if (error) { subContent.innerHTML = `<p class="error-msg">${window.t('error')}: ${error.message}</p>`; return; }
 
     let html = '<div class="list-container animate-fade">';
 
-    if (tableName === 'Sentieri') { renderGenericFilterableView(data, 'Difficolta', subContent, sentieroRenderer); return; }
-    else if (tableName === 'Spiagge') { renderGenericFilterableView(data, 'Paesi', subContent, spiaggiaRenderer); return; }
-    else if (tableName === 'Ristoranti') { renderGenericFilterableView(data, 'Paesi', subContent, ristoranteRenderer); return; }
-    else if (tableName === 'Farmacie') { renderGenericFilterableView(data, 'Paesi', subContent, farmaciaRenderer); return; } 
+    // ROUTING VERSO I RENDERER SPECIFICI (definiti in ui-renderers.js)
+    // Nota: window.ristoranteRenderer etc devono esistere in ui-renderers.js
+
+    if (tableName === 'Sentieri') { 
+        renderGenericFilterableView(data, 'Difficolta', subContent, window.sentieroRenderer); 
+        return; 
+    }
+    else if (tableName === 'Spiagge') { 
+        renderGenericFilterableView(data, 'Paesi', subContent, window.spiaggiaRenderer); 
+        return; 
+    }
+    else if (tableName === 'Ristoranti') { 
+        renderGenericFilterableView(data, 'Paesi', subContent, window.ristoranteRenderer); 
+        return; 
+    }
+    else if (tableName === 'Farmacie') { 
+        renderGenericFilterableView(data, 'Paesi', subContent, window.farmaciaRenderer); 
+        return; 
+    } 
     else if (tableName === 'Attrazioni') {
-        window.tempAttractionsData = data;
+        window.tempAttractionsData = data; // Salva per il modal
         data.forEach((item, index) => { item._tempIndex = index; });
-        renderGenericFilterableView(data, 'Paese', subContent, attrazioniRenderer);
+        renderGenericFilterableView(data, 'Paese', subContent, window.attrazioniRenderer);
         return;
     }
     else if (tableName === 'Numeri_utili') {
+        // Ordina per emergenza
         data.sort((a, b) => {
             const isEmergenzaA = a.Nome.includes('112') || a.Nome.toLowerCase().includes('emergenza');
             const isEmergenzaB = b.Nome.includes('112') || b.Nome.toLowerCase().includes('emergenza');
             return (isEmergenzaA === isEmergenzaB) ? 0 : isEmergenzaA ? -1 : 1;
         }); 
-        renderGenericFilterableView(data, 'Comune', subContent, numeriUtiliRenderer);
+        renderGenericFilterableView(data, 'Comune', subContent, window.numeriUtiliRenderer);
         return;
     };
 
+    // Render Standard (senza filtri complessi)
     if (tableName === 'Prodotti') {
         data.forEach(p => {
-            const titolo = dbCol(p, 'Prodotti') || dbCol(p, 'Nome'); 
-            const imgUrl = getSmartUrl(p.Prodotti || p.Nome, '', 400);
+            const titolo = window.dbCol(p, 'Prodotti') || window.dbCol(p, 'Nome'); 
+            const imgUrl = window.getSmartUrl(p.Prodotti || p.Nome, '', 400);
             const safeObj = JSON.stringify(p).replace(/'/g, "'");
             html += `<div class="card-product" onclick='openModal("product", ${safeObj})'><div class="prod-info"><div class="prod-title">${titolo}</div><div class="prod-arrow">➜</div></div><img src="${imgUrl}" class="prod-thumb" loading="lazy" onerror="this.style.display='none'"></div>`;
         });
     } 
     else if (tableName === 'Trasporti') {
-        window.tempTransportData = data;
+        window.tempTransportData = data; // Salva per il modal
         data.forEach((t, index) => {
-            const nomeDisplay = dbCol(t, 'Località') || dbCol(t, 'Mezzo');
-            const imgUrl = getSmartUrl(t.Località || t.Mezzo, '', 400);
+            const nomeDisplay = window.dbCol(t, 'Località') || window.dbCol(t, 'Mezzo');
+            const imgUrl = window.getSmartUrl(t.Località || t.Mezzo, '', 400);
             html += `<div class="card-product" onclick="openModal('transport', ${index})"><div class="prod-info"><div class="prod-title">${nomeDisplay}</div></div><img src="${imgUrl}" class="prod-thumb" loading="lazy" onerror="this.style.display='none'"></div>`;
         });
     }
     else if (tableName === 'Mappe') {
-        subContent.innerHTML = `<div class="map-container animate-fade"><iframe src="https://www.google.com/maps/d/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F&noprof=1" width="640" height="480"></iframe><div class="map-note">${t('map_loaded')}</div></div>`;
+        subContent.innerHTML = `<div class="map-container animate-fade"><iframe src="https://www.google.com/maps/d/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F&noprof=1" width="640" height="480"></iframe><div class="map-note">${window.t('map_loaded')}</div></div>`;
         return; 
     } 
+    
     subContent.innerHTML = html + '</div>';
-}
+};
 
+// --- LOGICA FILTRI ---
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
     container.innerHTML = `<div class="filter-bar animate-fade" id="dynamic-filters" style="display:none;"></div><div class="list-container animate-fade" id="dynamic-list"></div>`;
+    
     const filterBar = container.querySelector('#dynamic-filters');
     const listContainer = container.querySelector('#dynamic-list');
     const filterBtn = document.getElementById('filter-toggle-btn');
 
     if (filterBtn) {
         filterBtn.style.display = 'block'; 
+        // Clona per rimuovere vecchi listener
         const newBtn = filterBtn.cloneNode(true);
         filterBtn.parentNode.replaceChild(newBtn, filterBtn);
+        
         newBtn.onclick = () => {
             const isHidden = filterBar.style.display === 'none';
             filterBar.style.display = isHidden ? 'flex' : 'none';
@@ -214,11 +261,14 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
         };
     }
 
+    // Calcolo Tag Unici
     let rawValues = allData.map(item => item[filterKey] ? item[filterKey].trim() : null).filter(x => x);
     let tagsRaw = [...new Set(rawValues)];
+    
     const customOrder = ["Tutti", "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso", "Facile", "Media", "Difficile", "Turistico", "Escursionistico", "Esperto"];
     if (!tagsRaw.includes('Tutti')) tagsRaw.unshift('Tutti');
 
+    // Ordinamento Tag
     const uniqueTags = tagsRaw.sort((a, b) => {
         const indexA = customOrder.indexOf(a), indexB = customOrder.indexOf(b);
         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
@@ -227,16 +277,20 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
         return a.localeCompare(b);
     });
 
+    // Creazione Bottoni Filtro
     uniqueTags.forEach(tag => {
         const btn = document.createElement('button');
         btn.className = 'filter-chip';
         btn.innerText = tag;
         if (tag === 'Tutti') btn.classList.add('active-filter');
+        
         btn.onclick = () => {
             filterBar.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active-filter'));
             btn.classList.add('active-filter');
+            
             const filtered = tag === 'Tutti' ? allData : allData.filter(item => {
                 const valDB = item[filterKey] ? item[filterKey].trim() : '';
+                // Filtro speciale per numeri emergenza
                 return (valDB === tag) || (item.Nome && (item.Nome.includes('112') || item.Nome.toLowerCase().includes('emergenza')));
             });
             updateList(filtered);
@@ -245,17 +299,20 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
     });
 
     function updateList(items) {
-        if (!items || items.length === 0) { listContainer.innerHTML = `<p style="text-align:center; padding:20px; color:#999;">${t('no_results')}</p>`; return; }
+        if (!items || items.length === 0) { listContainer.innerHTML = `<p style="text-align:center; padding:20px; color:#999;">${window.t('no_results')}</p>`; return; }
+        // Usa il renderer passato come argomento
         listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
+        
+        // Inizializza mappe se presenti
         if (typeof initPendingMaps === 'function') setTimeout(() => initPendingMaps(), 100);
     }
+    
+    // Primo render: tutto
     updateList(allData);
 }
 
-// --- MODAL & UTILS ---
-function simpleAlert(titolo, testo) { alert(`${titolo}\n\n${testo}`); }
-
-async function openModal(type, payload) {
+// --- 4. GESTIONE MODALI E BUS ---
+window.openModal = async function(type, payload) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay animate-fade';
     document.body.appendChild(modal);
@@ -264,72 +321,81 @@ async function openModal(type, payload) {
     let contentHtml = '';
 
     if (type === 'village') {
-        const bigImg = getSmartUrl(payload, '', 1000);
-        const { data } = await supabaseClient.from('Cinque_Terre').select('*').eq('Paesi', payload).single();
-        const desc = data ? dbCol(data, 'Descrizione') : t('loading');
+        const bigImg = window.getSmartUrl(payload, '', 1000);
+        const { data } = await window.supabaseClient.from('Cinque_Terre').select('*').eq('Paesi', payload).single();
+        const desc = data ? window.dbCol(data, 'Descrizione') : window.t('loading');
         contentHtml = `<img src="${bigImg}" style="width:100%; border-radius:12px; height:220px; object-fit:cover;"><h2>${payload}</h2><p>${desc}</p>`;
     } 
     else if (type === 'product') {
-        const nome = dbCol(payload, 'Prodotti') || dbCol(payload, 'Nome');
-        const desc = dbCol(payload, 'Descrizione');
-        const ideale = dbCol(payload, 'Ideale per') || dbCol(payload, 'Ideale per');
-        const bigImg = getSmartUrl(payload.Prodotti || payload.Nome, 'Prodotti', 800);
-        contentHtml = `<img src="${bigImg}" style="width:100%; border-radius:12px; height:200px; object-fit:cover;" onerror="this.style.display='none'"><h2>${nome}</h2><p>${desc || ''}</p><hr><p><strong>${t('ideal_for')}:</strong> ${ideale || ''}</p>`;
+        const nome = window.dbCol(payload, 'Prodotti') || window.dbCol(payload, 'Nome');
+        const desc = window.dbCol(payload, 'Descrizione');
+        const ideale = window.dbCol(payload, 'Ideale per');
+        const bigImg = window.getSmartUrl(payload.Prodotti || payload.Nome, 'Prodotti', 800);
+        contentHtml = `<img src="${bigImg}" style="width:100%; border-radius:12px; height:200px; object-fit:cover;" onerror="this.style.display='none'"><h2>${nome}</h2><p>${desc || ''}</p><hr><p><strong>${window.t('ideal_for')}:</strong> ${ideale || ''}</p>`;
     }
+    // --- GESTIONE TRASPORTI & BUS ---
     else if (type === 'transport') {
         const item = window.tempTransportData[payload];
         if (!item) { console.error("Errore recupero trasporto"); return; }
-        const nome = dbCol(item, 'Località') || dbCol(item, 'Mezzo');
-        const desc = dbCol(item, 'Descrizione');
-        const linkSito = item.Link;
-        const linkOrari = item.Link_2;
-        contentHtml = `
-            <h2>${nome}</h2>
-            <p style="margin: 15px 0; line-height: 1.6;">${desc || ''}</p>
-            <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-                ${linkSito ? `<a href="${linkSito}" target="_blank" class="btn-yellow" style="text-align:center;">${t('btn_website')}</a>` : ''}
-                ${linkOrari ? `<a href="${linkOrari}" target="_blank" class="btn-yellow" style="text-align:center;">${t('btn_hours')}</a>` : ''}
-            </div>`;
+        
+        const nome = window.dbCol(item, 'Nome') || window.dbCol(item, 'Località') || window.dbCol(item, 'Mezzo') || 'Trasporto';
+        const desc = window.dbCol(item, 'Descrizione') || '';
+        
+        let customContent = '';
+
+        // SE È IL BUS -> ATTIVA IL MOTORE
+        if (nome.toLowerCase().includes('bus') || nome.toLowerCase().includes('autobus') || nome.toLowerCase().includes('atc')) {
+            const { data: fermate, error } = await window.supabaseClient.from('Fermate_bus').select('id_fermata, nome_fermata').order('nome_fermata');
+
+            if (fermate && !error) {
+                const options = fermate.map(f => `<option value="${f.id_fermata}">${f.nome_fermata}</option>`).join('');
+                customContent = `
+                <div class="bus-search-box animate-fade">
+                    <div class="bus-title"><span class="material-icons">directions_bus</span> Cerca Prossimo Bus</div>
+                    <div class="bus-inputs">
+                        <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">PARTENZA</label><select id="selPartenza" class="bus-select"><option value="" disabled selected>Seleziona...</option>${options}</select></div>
+                        <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">ARRIVO</label><select id="selArrivo" class="bus-select"><option value="" disabled selected>Seleziona...</option>${options}</select></div>
+                    </div>
+                    <button onclick="eseguiRicercaBus()" class="btn-yellow" style="width:100%; font-weight:bold;">TROVA ORARI</button>
+                    <div id="busResultsContainer" style="display:none; margin-top:20px;">
+                        <div id="nextBusCard" class="bus-result-main"></div>
+                        <div style="font-size:0.8rem; font-weight:bold; color:#666; margin-top:15px;">CORSE SUCCESSIVE:</div>
+                        <div id="otherBusList" class="bus-list-container"></div>
+                    </div>
+                </div>`;
+            } else {
+                customContent = `<p style="color:red;">Errore caricamento fermate.</p>`;
+            }
+        } else {
+            customContent = `<div style="text-align:center; padding:30px; background:#f9f9f9; border-radius:12px; margin-top:20px; color:#999;">Funzione in arrivo</div>`;
+        }
+
+        contentHtml = `<h2>${nome}</h2><p style="color:#666;">${desc}</p>${customContent}`;
     }
+    // ... Altri tipi (trail, attrazione) ...
     else if (type === 'trail') {
-        const titolo = dbCol(payload, 'Paesi');
-        const aiuto = dbCol(payload, 'Tag aiuto') || '--';
+        const titolo = window.dbCol(payload, 'Paesi');
         const dist = payload.Distanza || '--';
         const dura = payload.Durata || '--';
-        const tag = dbCol(payload, 'Extra') || 'Sentiero';
-        const desc = dbCol(payload, 'Descrizione') || '';
-        contentHtml = `
-            <div style="padding: 20px 0;">
-                <h2 style="text-align: center; margin-bottom: 25px; font-family: 'Roboto Slab', cursive; font-size: 1.8rem; color: var(--primary-dark);">${titolo}</h2>
-                <div style="display: flex; justify-content: space-between; padding: 0 30px; margin-bottom: 20px;">
-                    <div style="display: flex; flex-direction: column; align-items: flex-start;"><span style="font-size: 0.7rem; text-transform: uppercase; color: #999; font-weight: 800; letter-spacing: 0.5px;">Info</span><span style="font-weight: 700; color: #444; font-size: 1rem;">${aiuto}</span></div>
-                    <div style="display: flex; flex-direction: column; align-items: flex-end;"><span style="font-size: 0.7rem; text-transform: uppercase; color: #999; font-weight: 800; letter-spacing: 0.5px;">Distanza</span><span style="font-weight: 700; color: #444; font-size: 1rem;">${dist}</span></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 0 30px; margin-bottom: 25px;">
-                    <div style="display: flex; flex-direction: column; align-items: flex-start;"><span style="font-size: 0.7rem; text-transform: uppercase; color: #999; font-weight: 800; letter-spacing: 0.5px;">Segnavia</span><span style="font-weight: 700; color: var(--accent-col); font-size: 1rem;">${tag}</span></div>
-                    <div style="display: flex; flex-direction: column; align-items: flex-end;"><span style="font-size: 0.7rem; text-transform: uppercase; color: #999; font-weight: 800; letter-spacing: 0.5px;">Tempo Stimato</span><span style="font-weight: 700; color: #444; font-size: 1rem;">${dura}</span></div>
-                </div>
-                <div style="margin: 0 30px; height: 1px; background: #eee;"></div>
-                <div style="padding: 25px 30px;"><p style="line-height: 1.7; color: #666; text-align: center; font-size: 0.95rem; font-family: 'Roboto', sans-serif;">${desc}</p></div>
-            </div>`;
+        const desc = window.dbCol(payload, 'Descrizione') || '';
+        contentHtml = `<div style="padding:20px;"><h2 style="text-align:center;">${titolo}</h2><div style="display:flex; justify-content:space-between; margin:20px 0;"><div><strong>Distanza</strong><br>${dist}</div><div><strong>Tempo</strong><br>${dura}</div></div><p>${desc}</p></div>`;
     }
-    else if (type === 'Attrazione' || type === 'attrazione') {
-        let item = (window.tempAttractionsData && typeof payload === 'number') ? window.tempAttractionsData[payload] : null;
-        if (!item) { contentHtml = `<h2>Errore caricamento</h2><p>Impossibile recuperare i dettagli.</p>`; } 
-        else {
-            const titolo = dbCol(item, 'Attrazioni');
-            const paese = dbCol(item, 'Paese'); 
-            const desc = dbCol(item, 'Descrizione');
-            const curio = dbCol(item, 'Curiosità');
-            const diff = dbCol(item, 'Difficoltà Accesso') || 'Accessibile';
-            const mapLink = item["Icona MyMaps"];
-            contentHtml = `<h2>${titolo}</h2><div style="color:#666; margin-bottom:15px; font-weight:600;">📍 ${paese}</div><div style="display:flex; gap:10px; margin-bottom:15px;"><span class="meta-badge" style="background:#eee; padding:5px; border-radius:8px;">⏱ ${item["Tempo Visita (min)"] || '--'} ${t('visit_time')}</span><span class="meta-badge" style="background:#eee; padding:5px; border-radius:8px;">${diff}</span></div><p style="line-height:1.6;">${desc || ''}</p>${curio ? `<div class="curiosity-box" style="margin-top:20px; padding:15px; background:#f9f9f9; border-left:4px solid orange; border-radius: 4px;"><strong>💡 ${t('curiosity') || 'Curiosità'}:</strong><br>${curio}</div>` : ''}<div style="margin-top:20px;">${mapLink ? `<a href="${mapLink}" target="_blank" class="btn-yellow" style="display:block; text-align:center;">${t('btn_position')}</a>` : ''}</div>`;
-        }
+    else if (type === 'attrazione') {
+         // Logica già gestita sopra con tempAttractionsData
+         const item = (window.tempAttractionsData && typeof payload === 'number') ? window.tempAttractionsData[payload] : null;
+         if(item) {
+             const titolo = window.dbCol(item, 'Attrazioni');
+             const paese = window.dbCol(item, 'Paese');
+             contentHtml = `<h2>${titolo}</h2><p>📍 ${paese}</p><p>${window.dbCol(item, 'Descrizione')}</p>`;
+         }
     }
-    modal.innerHTML = `<div class="modal-content"><span class="close-modal" onclick="this.parentElement.parentElement.remove()">×</span>${contentHtml}</div>`;
-}
 
-function initPendingMaps() {
+    modal.innerHTML = `<div class="modal-content"><span class="close-modal" onclick="this.parentElement.parentElement.remove()">×</span>${contentHtml}</div>`;
+};
+
+
+// --- 5. INIZIALIZZAZIONE MAPPE ---
+window.initPendingMaps = function() {
     if (!window.mapsToInit || window.mapsToInit.length === 0) return;
     window.mapsToInit.forEach(mapData => {
         const element = document.getElementById(mapData.id);
@@ -346,9 +412,9 @@ function initPendingMaps() {
         }
     });
     window.mapsToInit = []; 
-}
+};
 
-// --- EVENT LISTENERS ---
+// --- 6. EVENT LISTENERS E AVVIO ---
 document.addEventListener('touchmove', function(event) { if (event.scale !== 1) event.preventDefault(); }, { passive: false });
 let lastTouchEnd = 0;
 document.addEventListener('touchend', function(event) {

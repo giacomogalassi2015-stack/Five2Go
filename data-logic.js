@@ -1,18 +1,23 @@
+console.log("✅ 1. data-logic.js caricato");
+
 // 1. CONFIGURAZIONE SUPABASE
 const SUPABASE_URL = 'https://ydrpicezcwtfwdqpihsb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkcnBpY2V6Y3d0ZndkcXBpaHNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNTQzMDAsImV4cCI6MjA4MzYzMDMwMH0.c89-gAZ8Pgp5Seq89BYRraTG-qqmP03LUCl1KqG9bOg';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- VARIABILI GLOBALI ---
-window.mapsToInit = [];
-window.tempTransportData = []; // Serve per i trasporti
-window.tempAttractionsData = []; // Serve per le attrazioni
+// RENDIAMO SUPABASE GLOBALE
+window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const CLOUDINARY_CLOUD_NAME = 'dkg0jfady'; 
 const CLOUDINARY_BASE_URL = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/`;
 
-// --- CONFIGURAZIONE LINGUA ---
-const AVAILABLE_LANGS = [
+// 2. VARIABILI GLOBALI
+window.mapsToInit = [];
+window.tempTransportData = [];
+window.tempAttractionsData = [];
+window.currentLang = localStorage.getItem('app_lang') || 'it';
+
+// 3. CONFIGURAZIONE LINGUE
+window.AVAILABLE_LANGS = [
     { code: 'it', label: 'Italiano', flag: '🇮🇹' },
     { code: 'en', label: 'English', flag: '🇬🇧' },
     { code: 'fr', label: 'Français', flag: '🇫🇷' },
@@ -21,9 +26,7 @@ const AVAILABLE_LANGS = [
     { code: 'zh', label: '中文', flag: '🇨🇳' }
 ];
 
-let currentLang = localStorage.getItem('app_lang') || 'it';
-
-// --- DIZIONARIO TESTI UI ---
+// 4. DIZIONARIO TESTI (Full Version)
 const UI_TEXT = {
     it: {
         loading: "Caricamento...", error: "Errore",
@@ -81,32 +84,29 @@ const UI_TEXT = {
     }
 };
 
-// --- HELPER FUNCTIONS ---
-function t(key) {
-    const langDict = UI_TEXT[currentLang] || UI_TEXT['it'];
+// 5. HELPER FUNCTIONS GLOBALI
+window.t = function(key) {
+    const langDict = UI_TEXT[window.currentLang] || UI_TEXT['it'];
     return langDict[key] || key;
-}
+};
 
-function dbCol(item, field) {
+window.dbCol = function(item, field) {
     if (!item) return '';
-    if (currentLang === 'it') return item[field]; 
-    const translatedField = `${field}_${currentLang}`; 
-    if (item[translatedField] && item[translatedField].trim() !== '') {
-        return item[translatedField];
-    }
-    return item[field];
-}
+    if (window.currentLang === 'it') return item[field]; 
+    const translatedField = `${field}_${window.currentLang}`; 
+    return (item[translatedField] && item[translatedField].trim() !== '') ? item[translatedField] : item[field];
+};
 
-function getSmartUrl(name, folder = '', width = 600) {
+window.getSmartUrl = function(name, folder = '', width = 600) {
     if (!name) return 'https://via.placeholder.com/600x400?text=No+Image';
     const safeName = encodeURIComponent(name.trim()); 
     const folderPath = folder ? `${folder}/` : '';
     return `${CLOUDINARY_BASE_URL}/w_${width},c_fill,f_auto,q_auto:good,fl_progressive/${folderPath}${safeName}`;
-}
+};
 
-async function shareApp() {
+window.shareApp = async function() {
     try {
         if (navigator.share) await navigator.share({ title: '5 Terre App', text: 'Guarda questa guida!', url: window.location.href });
         else { navigator.clipboard.writeText(window.location.href); alert("Link copiato!"); }
     } catch (err) { console.log("Errore:", err); }
-}
+};
