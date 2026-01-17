@@ -493,22 +493,38 @@ async function loadTableData(tableName, btnEl) {
 }
 
 const sentieroRenderer = (s) => {
-    // Recupero dati reali dal DB
-    const paese = dbCol(s, 'Paesi');
+    // 1. RECUPERO DATI (Ora includiamo 'Nome' per evitare l'errore!)
+    const nome = dbCol(s, 'Nome') || 'Sentiero'; // <--- QUESTO MANCAVA E BLOCCAVA TUTTO
+    const paese = dbCol(s, 'Paesi') || 'Percorso';
     const distanza = s.Distanza || '--';
     const durata = s.Durata || '--';
     const extra = dbCol(s, 'Extra') || 'Sentiero';
-    const gpxUrl = s.Gpxlink || s.gpxlink;
+    
+    // 2. CALCOLO DIMENSIONE DINAMICA (Ora funziona perché 'nome' esiste)
+    let titleSize = '1.3rem'; 
+    if (nome.length > 35) {
+        titleSize = '0.95rem'; 
+    } else if (nome.length > 20) {
+        titleSize = '1.1rem';
+    }
 
+    // 3. MAPPA GPX
+    const gpxUrl = s.Gpxlink || s.gpxlink;
     const uniqueMapId = `map-trail-${Math.random().toString(36).substr(2, 9)}`;
     if (gpxUrl) { window.mapsToInit.push({ id: uniqueMapId, gpx: gpxUrl }); }
+
+    // 4. FIX SICUREZZA PER IL CLICK
+    // Usiamo encodeURIComponent: protegge i dati e non blocca la pagina
+    const safeObj = encodeURIComponent(JSON.stringify(s));
 
     return `
     <div class="card-sentiero-modern">
         <div id="${uniqueMapId}" class="sentiero-map-bg"></div>
         
         <div class="sentiero-card-overlay">
-            <h2 class="sentiero-overlay-title">${paese}</h2>
+            
+            <h2 class="sentiero-overlay-title" style="font-size: ${titleSize}">
+                ${paese} </h2>
 
             <div class="sentiero-stats">
                 <div class="stat-pill">
@@ -525,9 +541,9 @@ const sentieroRenderer = (s) => {
                 </div>
             </div>
 
-            <button class="btn-outline-details" onclick='openModal("trail", ${JSON.stringify(s).replace(/'/g, "&apos;")})'>
-    Dettagli Percorso
-</button>
+            <button class="btn-outline-details" onclick="openModal('trail', '${safeObj}')">
+                Dettagli Percorso
+            </button>
         </div>
     </div>`;
 };
