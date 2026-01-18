@@ -366,7 +366,8 @@ window.openModal = async function(type, payload) {
         const bigImg = window.getSmartUrl(payload.Prodotti || payload.Nome, 'Prodotti', 800);
         contentHtml = `<img src="${bigImg}" style="width:100%; border-radius:12px; height:200px; object-fit:cover;" onerror="this.style.display='none'"><h2>${nome}</h2><p>${desc || ''}</p><hr><p><strong>${window.t('ideal_for')}:</strong> ${ideale || ''}</p>`;
     }
-   // --- GESTIONE TRASPORTI (Corretto) ---
+    
+  // --- GESTIONE TRASPORTI ---
     else if (type === 'transport') {
         const item = window.tempTransportData[payload];
         if (!item) { console.error("Errore recupero trasporto"); return; }
@@ -374,13 +375,22 @@ window.openModal = async function(type, payload) {
         const nome = window.dbCol(item, 'Nome') || window.dbCol(item, 'Località') || window.dbCol(item, 'Mezzo') || 'Trasporto';
         const desc = window.dbCol(item, 'Descrizione') || '';
         
+        // 1. RECUPERO DATI DAL DB (Nuove colonne)
+        const infoSms = window.dbCol(item, 'Info_SMS');
+        const infoApp = window.dbCol(item, 'Info_App');
+        const infoAvvisi = window.dbCol(item, 'Info_Avvisi');
+        
+        // Verifica se c'è almeno un'info da mostrare
+        const hasTicketInfo = infoSms || infoApp || infoAvvisi;
+
         let customContent = '';
 
-        // SE È IL BUS -> ATTIVA IL MOTORE COMPLETO
-        if (nome.toLowerCase().includes('bus') || nome.toLowerCase().includes('autobus') || nome.toLowerCase().includes('atc')) {
-            // CORREZIONE QUI: Usiamo i nomi esatti delle colonne ("ID" e "NOME_FERMATA")
-            // Nota: Se su Supabase sono minuscole, usa 'id, nome_fermata'. Se Maiuscole, usa 'ID, NOME_FERMATA'.
-            // Provo con la versione più probabile basata sui tuoi CSV precedenti:
+        // SE È IL BUS -> CARICA ANCHE IL MOTORE DI RICERCA
+        // Nota: Il controllo sul nome serve per mostrare la ricerca orari, 
+        // mentre le info biglietti dipendono solo se hai riempito le colonne nel DB.
+        const isBus = nome.toLowerCase().includes('bus') || nome.toLowerCase().includes('autobus') || nome.toLowerCase().includes('atc');
+
+        if (isBus) {
             const { data: fermate, error } = await window.supabaseClient
                 .from('Fermate_bus')
                 .select('ID, NOME_FERMATA') 
@@ -390,14 +400,43 @@ window.openModal = async function(type, payload) {
                 const now = new Date();
                 const todayISO = now.toISOString().split('T')[0];
                 const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-
-                // CORREZIONE QUI: f.ID e f.NOME_FERMATA (devono coincidere con la select sopra)
                 const options = fermate.map(f => `<option value="${f.ID}">${f.NOME_FERMATA}</option>`).join('');
                 
+                // --- SEZIONE BIGLIETTI DINAMICA ---
+                let ticketSection = '';
+                if (hasTicketInfo) {
+                    ticketSection = `
+                    <button onclick="toggleTicketInfo()" style="width:100%; margin-bottom:15px; background:#e0f7fa; color:#006064; border:1px solid #b2ebf2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        🎟️ COME ACQUISTARE IL BIGLIETTO ▾
+                    </button>
+
+                    <div id="ticket-info-box" style="display:none; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px; font-size:0.9rem; color:#333; line-height:1.5;">
+                        
+                        ${infoSms ? `
+                        <p style="margin-bottom:10px;"><strong>📱 SMS</strong><br>
+                        ${infoSms}</p>` : ''}
+                        
+                        ${infoSms && infoApp ? `<hr style="border:0; border-top:1px solid #eee; margin:10px 0;">` : ''}
+                        
+                        ${infoApp ? `
+                        <p style="margin-bottom:10px;"><strong>📲 APP</strong><br>
+                        ${infoApp}</p>` : ''}
+                        
+                        ${infoAvvisi ? `
+                        <div style="background:#fff3cd; color:#856404; padding:10px; border-radius:6px; font-size:0.85rem; border:1px solid #ffeeba; margin-top:10px;">
+                            <strong>⚠️ ATTENZIONE:</strong> ${infoAvvisi}
+                        </div>` : ''}
+                        
+                    </div>`;
+                }
+                // ----------------------------------
+
                 customContent = `
                 <div class="bus-search-box animate-fade">
                     <div class="bus-title"><span class="material-icons">directions_bus</span> Pianifica Viaggio</div>
                     
+                    ${ticketSection}
+
                     <div class="bus-inputs">
                         <div style="flex:1;">
                             <label style="font-size:0.7rem; color:#666; font-weight:bold;">PARTENZA</label>
@@ -429,11 +468,23 @@ window.openModal = async function(type, payload) {
                     </div>
                 </div>`;
             } else {
-                console.error("Errore Supabase:", error); // Logga l'errore per vederlo
-                customContent = `<p style="color:red;">Errore caricamento fermate: ${error ? error.message : 'Sconosciuto'}</p>`;
+                console.error("Errore Supabase:", error);
+                customContent = `<p style="color:red;">Errore caricamento fermate.</p>`;
             }
         } else {
-            customContent = `<div style="text-align:center; padding:30px; background:#f9f9f9; border-radius:12px; margin-top:20px; color:#999;">Funzione in arrivo</div>`;
+            // Caso NON Bus (es. Treno, Traghetto)
+            // Se nel DB hai messo info biglietti anche per loro, appariranno qui!
+            if (hasTicketInfo) {
+                 customContent = `
+                 <button onclick="toggleTicketInfo()" style="width:100%; margin-top:15px; background:#e0f7fa; color:#006064; border:1px solid #b2ebf2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">
+                    🎟️ INFO BIGLIETTI
+                 </button>
+                 <div id="ticket-info-box" style="display:none; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-top:10px;">
+                    ${infoSms ? `<p><strong>SMS:</strong> ${infoSms}</p>` : ''}
+                    ${infoApp ? `<p><strong>APP:</strong> ${infoApp}</p>` : ''}
+                    ${infoAvvisi ? `<p style="color:#856404; background:#fff3cd; padding:5px;">${infoAvvisi}</p>` : ''}
+                 </div>`;
+            }
         }
 
         contentHtml = `<h2>${nome}</h2><p style="color:#666;">${desc}</p>${customContent}`;
@@ -676,3 +727,11 @@ function renderSimpleList(tableName) {
     // Riutilizza la tua funzione esistente per caricare i dati
     window.loadTableData(tableName, null);
 }
+// Funzione per mostrare/nascondere info biglietti bus
+window.toggleTicketInfo = function() {
+    const box = document.getElementById('ticket-info-box');
+    if (box) {
+        const isHidden = box.style.display === 'none';
+        box.style.display = isHidden ? 'block' : 'none';
+    }
+};
