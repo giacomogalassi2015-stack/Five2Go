@@ -363,7 +363,7 @@ sub-nav-bar {
 }
 
 .village-card {
-    height: 240px; /* Più slanciata per dare spazio alla foto */
+    height: 200px; /* Più slanciata per dare spazio alla foto */
     position: relative; 
     overflow: hidden;
     background-size: cover; 
