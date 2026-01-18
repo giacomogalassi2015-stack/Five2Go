@@ -263,52 +263,85 @@ main, #app-content {
 }
 
 /* ============================================================
-   SWIPE ORIZZONTALE (FIX DEFINITIVO V3)
+   FIX SWIPE & GRAFICA (Versione Corretta)
    ============================================================ */
 
-/* 1. ABILITIAMO LO SCROLL SUL VERO CONTENITORE */
-.sub-nav-tabs, .filter-bar {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important; /* Impedisce di andare a capo */
-    
-    /* Questo è il comando che attiva lo swipe */
-    overflow-x: auto !important; 
-    
-    /* Assicura che i bottoni stiano a sinistra */
-    justify-content: flex-start !important;
-    
-    /* Gestione larghezza: fondamentale per lo scroll */
-    width: 100% !important;
-    
-    /* Inerzia su iPhone */
-    -webkit-overflow-scrolling: touch; 
-    
-    /* Nascondi scrollbar brutte */
-    -ms-overflow-style: none; 
-    scrollbar-width: none;
-    
-    padding-bottom: 5px; /* Spazio per non tagliare l'ombra */
-    gap: 12px !important;
-}
-
-/* 2. GESTIONE SPAZIO CON IL TASTO FILTRA */
-/* La barra superiore (.sub-nav-tabs) è dentro un contenitore che ha anche il tasto Filtra.
-   Dobbiamo dire alla lista di occupare tutto lo spazio ma non rompere il layout. */
+/* 1. GESTIONE SWIPE (La lista dei bottoni sopra) */
 .sub-nav-tabs {
-    flex: 1 !important; /* Occupa tutto lo spazio disponibile */
-    min-width: 0 !important; /* Trucco CSS: permette a un figlio flex di scorrere */
-    padding-right: 10px; /* Spazio prima del tasto filtra */
+    /* Questi comandi sbloccano lo swipe */
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    
+    /* TRUCCO FONDAMENTALE: Dice alla lista di adattarsi allo spazio
+       lasciato libero dal bottone "Filtra", permettendo lo scroll */
+    flex: 1 !important; 
+    min-width: 0 !important; 
+    
+    /* Spaziatura */
+    gap: 12px !important;
+    padding-bottom: 5px; /* Per l'ombra */
+    padding-right: 15px; /* Spazio prima del tasto filtra */
+    
+    /* Nascondi scrollbar */
+    -ms-overflow-style: none; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* 3. I BOTTONI NON DEVONO RESTRINGERSI */
-.sub-nav-item, .filter-chip {
-    flex: 0 0 auto !important; /* Non ti restringere mai! */
-    width: auto !important;
+/* 2. BARRA FILTRI (Quella che appare e scompare) */
+.filter-bar {
+    /* Qui NON mettiamo display:flex !important, 
+       altrimenti il bottone non riesce più a nasconderla/mostrarla.
+       Lasciamo gestire la visibilità al Javascript. */
+       
+    overflow-x: auto !important; /* Anche questa deve swipare */
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    padding: 5px 20px 10px 20px !important;
+    
+    -ms-overflow-style: none; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* Nasconde scrollbar su Chrome */
+/* Nascondi barre scorrimento */
 .sub-nav-tabs::-webkit-scrollbar, .filter-bar::-webkit-scrollbar { display: none; }
+
+
+/* 3. RIPRISTINO DIMENSIONI E COLORI (Come ti piacevano) */
+
+/* I Bottoni non devono mai schiacciarsi */
+.sub-nav-item, .filter-chip {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    border: none;
+    background: white; 
+    color: #636E72; /* Grigio elegante */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* Tasti SOPRA (Grandi e Cicciotti) */
+.sub-nav-item {
+    padding: 12px 24px !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    border-radius: 50px;
+}
+
+/* Tasti FILTRO SOTTO (Piccoli e Compatti) */
+.filter-chip {
+    padding: 7px 14px !important;
+    font-size: 0.80rem !important;
+    font-weight: 600 !important;
+    border-radius: 50px;
+}
+
+/* Stato ATTIVO (Colore e Ombra) */
+.sub-nav-item.active-sub, .filter-chip.active-filter {
+    background-color: #2A9D8F !important; /* Il tuo Turchese */
+    color: white !important;
+    box-shadow: 0 8px 20px -5px rgba(42, 157, 143, 0.5) !important;
+    transform: translateY(-2px);
+}
 /* ============================================================
    4. COMPONENTI SPECIFICI (Card & Liste Premium)
    Miglioramenti: Design immersivo, Curve 24px, Micro-interazioni
