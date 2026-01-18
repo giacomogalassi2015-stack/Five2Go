@@ -490,4 +490,70 @@ document.addEventListener('DOMContentLoaded', () => {
     setupLanguageSelector(); 
     updateNavBar(); 
     switchView('home');      
-});
+});/* ==============================================
+   AGGIUNTA: SWIPE MANUALE (GRAB & DRAG)
+   ============================================== */
+function activateSwipe() {
+    // Cerchiamo la lista dei bottoni
+    const slider = document.querySelector('.sub-nav-tabs');
+    
+    // Se non esiste ancora (magari la pagina sta caricando), riproviamo tra poco
+    if(!slider) {
+        setTimeout(activateSwipe, 500);
+        return;
+    }
+
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    // FORZATURA STILE VIA JS (Così vince su tutto)
+    slider.style.display = 'flex';
+    slider.style.overflowX = 'auto'; // Lasciamo auto per il mobile nativo
+    slider.style.flexWrap = 'nowrap';
+    slider.style.cursor = 'grab';
+    slider.style.justifyContent = 'flex-start'; // Allinea a sinistra
+
+    // Blocchiamo il restringimento dei bottoni
+    Array.from(slider.children).forEach(child => {
+        child.style.flexShrink = '0';
+    });
+
+    // --- EVENTI MOUSE (PC) ---
+    slider.addEventListener('mousedown', (e) => {
+        isDown = true;
+        slider.style.cursor = 'grabbing';
+        startX = e.pageX - slider.offsetLeft;
+        scrollLeft = slider.scrollLeft;
+    });
+
+    slider.addEventListener('mouseleave', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+    });
+
+    slider.addEventListener('mouseup', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+    });
+
+    slider.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - slider.offsetLeft;
+        const walk = (x - startX) * 2; // Velocità scroll
+        slider.scrollLeft = scrollLeft - walk;
+    });
+}
+
+// Avvia la funzione ogni volta che cambia la vista (perché i bottoni vengono ricreati)
+// Modifica alla funzione loadTableData esistente per rilanciare lo swipe? 
+// No, usiamo un trucco: controlliamo ciclicamente se ci sono bottoni nuovi.
+setInterval(() => {
+    const slider = document.querySelector('.sub-nav-tabs');
+    // Se il slider esiste ma non ha ancora l'attributo "data-swipe-active"
+    if(slider && !slider.hasAttribute('data-swipe-active')) {
+        slider.setAttribute('data-swipe-active', 'true');
+        activateSwipe();
+    }
+}, 1000);

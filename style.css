@@ -263,83 +263,62 @@ main, #app-content {
 }
 
 /* ============================================================
-   FIX SWIPE & GRAFICA (Versione Corretta)
+   STILE PULITO (Lo swipe è gestito da JS)
    ============================================================ */
 
-/* 1. GESTIONE SWIPE (La lista dei bottoni sopra) */
-.sub-nav-tabs {
-    /* Questi comandi sbloccano lo swipe */
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    
-    /* TRUCCO FONDAMENTALE: Dice alla lista di adattarsi allo spazio
-       lasciato libero dal bottone "Filtra", permettendo lo scroll */
-    flex: 1 !important; 
-    min-width: 0 !important; 
-    
-    /* Spaziatura */
-    gap: 12px !important;
-    padding-bottom: 5px; /* Per l'ombra */
-    padding-right: 15px; /* Spazio prima del tasto filtra */
-    
-    /* Nascondi scrollbar */
-    -ms-overflow-style: none; scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+/* Rimuove solo la barra di scorrimento visiva, lasciando lo scroll */
+.sub-nav-tabs, .filter-bar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+.sub-nav-tabs::-webkit-scrollbar, .filter-bar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
 }
 
-/* 2. BARRA FILTRI (Quella che appare e scompare) */
+/* Spaziature generali per la barra filtri (quella che appare/scompare) */
 .filter-bar {
-    /* Qui NON mettiamo display:flex !important, 
-       altrimenti il bottone non riesce più a nasconderla/mostrarla.
-       Lasciamo gestire la visibilità al Javascript. */
-       
-    overflow-x: auto !important; /* Anche questa deve swipare */
-    flex-wrap: nowrap !important;
-    gap: 10px !important;
-    padding: 5px 20px 10px 20px !important;
-    
-    -ms-overflow-style: none; scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+    display: flex; /* Questa la gestisce CSS */
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 10px;
+    padding: 5px 20px 10px 20px;
 }
 
-/* Nascondi barre scorrimento */
-.sub-nav-tabs::-webkit-scrollbar, .filter-bar::-webkit-scrollbar { display: none; }
+/* --- DESIGN DEI BOTTONI --- */
 
-
-/* 3. RIPRISTINO DIMENSIONI E COLORI (Come ti piacevano) */
-
-/* I Bottoni non devono mai schiacciarsi */
+/* Base comune */
 .sub-nav-item, .filter-chip {
-    flex: 0 0 auto !important;
-    width: auto !important;
     border: none;
     background: white; 
-    color: #636E72; /* Grigio elegante */
+    color: #636E72;
     box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    white-space: nowrap; /* Testo su una riga */
+    transition: transform 0.2s, background 0.2s;
 }
 
-/* Tasti SOPRA (Grandi e Cicciotti) */
+/* 1. Tasti SOPRA (Categorie) - GRANDI */
 .sub-nav-item {
-    padding: 12px 24px !important;
-    font-size: 0.95rem !important;
-    font-weight: 700 !important;
+    padding: 12px 24px;      /* Grandi */
+    font-size: 0.95rem;      /* Testo leggibile */
+    font-weight: 700;        /* Grassetto */
     border-radius: 50px;
+    margin-right: 10px;      /* Spazio tra loro */
 }
 
-/* Tasti FILTRO SOTTO (Piccoli e Compatti) */
+/* 2. Tasti SOTTO (Filtri) - PICCOLI */
 .filter-chip {
-    padding: 7px 14px !important;
-    font-size: 0.80rem !important;
-    font-weight: 600 !important;
+    padding: 7px 14px;       /* Compatti */
+    font-size: 0.80rem;      /* Testo piccolo */
+    font-weight: 600;
     border-radius: 50px;
+    flex: 0 0 auto;          /* Non schiacciarti */
 }
 
-/* Stato ATTIVO (Colore e Ombra) */
+/* Stato ATTIVO (Turchese) */
 .sub-nav-item.active-sub, .filter-chip.active-filter {
-    background-color: #2A9D8F !important; /* Il tuo Turchese */
-    color: white !important;
-    box-shadow: 0 8px 20px -5px rgba(42, 157, 143, 0.5) !important;
+    background-color: #2A9D8F;
+    color: white;
+    box-shadow: 0 8px 20px -5px rgba(42, 157, 143, 0.5);
     transform: translateY(-2px);
 }
 /* ============================================================
