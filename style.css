@@ -363,7 +363,7 @@ sub-nav-bar {
 }
 
 .village-card {
-    height: 170px; /* Più slanciata per dare spazio alla foto */
+    height: 240px; /* Più slanciata per dare spazio alla foto */
     position: relative; 
     overflow: hidden;
     background-size: cover; 
@@ -1087,4 +1087,23 @@ sub-nav-bar {
 input[type="date"], input[type="time"] {
     display: block;
     min-height: 45px; /* Altezza dito */
+}/* ============================================================
+   RIMOZIONE FASCIA SUPERIORE (Full Screen Mode)
+   ============================================================ */
+
+/* 1. Nascondiamo la barra, il titolo e i bottoni */
+header, #app-header {
+    display: none !important;
+}
+
+/* 2. Sistemiamo il corpo della pagina */
+body {
+    /* Togliamo lo spazio vuoto in alto che serviva per la barra */
+    padding-top: 0 !important;
+}
+
+/* 3. Diamo un po' di respiro ai contenuti in alto */
+/* Altrimenti la prima card si appiccica al bordo del telefono */
+main, #app-content {
+    margin-top: 25px !important; 
 }
