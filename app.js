@@ -373,7 +373,7 @@ window.openModal = async function(type, payload) {
         if (!item) { console.error("Errore recupero trasporto"); return; }
         
         const nome = window.dbCol(item, 'Nome') || window.dbCol(item, 'Località') || window.dbCol(item, 'Mezzo') || 'Trasporto';
-        // const desc = window.dbCol(item, 'Descrizione') || ''; // NON SERVE PIÙ
+        const desc = window.dbCol(item, 'Descrizione') || '';
         
         // 1. RECUPERO DATI DAL DB
         const infoSms = window.dbCol(item, 'Info_SMS');
@@ -464,7 +464,7 @@ window.openModal = async function(type, payload) {
             }
         } 
         else {
-            // === CASO NON BUS ===
+            // === CASO NON BUS (TRENI, TRAGHETTI, ECC.) ===
             if (hasTicketInfo) {
                  customContent = `
                  <button onclick="toggleTicketInfo()" style="width:100%; margin-top:15px; background:#e0f7fa; color:#006064; border:1px solid #b2ebf2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">
@@ -480,11 +480,7 @@ window.openModal = async function(type, payload) {
             }
         }
 
-        // *** MODIFICA EFFETTUATA QUI SOTTO ***
-        // Ho rimosso <p>${desc}</p>. Se vuoi rimuovere anche il titolo, togli <h2>${nome}</h2>
-        contentHtml = `<h2>${nome}</h2>${customContent}`;
-        
-        modal.innerHTML = `<div class="modal-content"><span class="close-modal" onclick="this.parentElement.parentElement.remove()">×</span>${contentHtml}</div>`;
+        contentHtml = `<h2>${nome}</h2><p style="color:#666;">${desc}</p>${customContent}`;
     }
     // ... Altri tipi (trail, attrazione) ...
     else if (type === 'trail') {
