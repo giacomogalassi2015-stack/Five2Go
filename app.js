@@ -145,21 +145,20 @@ async function renderHome() {
 }
 
 function renderSubMenu(options, defaultTable) {
-    // Genera tab e bottone Filtra
-    // ARMA FINE DI MONDO: Stili inline forzati con !important per vincere su qualsiasi CSS esterno
+    // Genera Tab stile "Text Only" - Pulito e Minimale
     let menuHtml = `
-    <div class="sub-nav-bar" style="display: flex !important; width: 100% !important; align-items: center !important; padding-right: 10px !important; margin-bottom: 10px !important; overflow: hidden !important;">
+    <div class="sub-nav-bar" style="display: flex !important; width: 100% !important; align-items: center !important; padding-right: 10px !important; margin-bottom: 5px !important; border-bottom: 1px solid rgba(0,0,0,0.05);">
         
-        <div class="sub-nav-tabs" style="display: flex !important; flex-wrap: nowrap !important; overflow-x: auto !important; flex: 1 !important; min-width: 0 !important; gap: 10px !important; padding-bottom: 5px !important; -webkit-overflow-scrolling: touch !important; scrollbar-width: none !important;">
+        <div class="sub-nav-tabs" style="display: flex !important; flex-wrap: nowrap !important; overflow-x: auto !important; flex: 1 !important; min-width: 0 !important; gap: 15px !important; padding-bottom: 0 !important; -webkit-overflow-scrolling: touch !important; scrollbar-width: none !important;">
             ${options.map(opt => `
-                <button class="sub-nav-item" onclick="loadTableData('${opt.table}', this)" style="flex: 0 0 auto !important; white-space: nowrap !important;">
+                <button class="sub-nav-item" onclick="loadTableData('${opt.table}', this)" style="flex: 0 0 auto !important; white-space: nowrap !important; background: transparent !important; box-shadow: none !important; border: none !important;">
                     ${opt.label}
                 </button>
             `).join('')}
         </div>
 
-        <button id="filter-toggle-btn" style="display: none; margin-left: 10px; flex-shrink: 0 !important; background: #f0f0f0; border: none; border-radius: 50px; padding: 8px 16px; font-size: 0.8rem; font-weight: bold; color: #333; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: nowrap;">
-            FILTRA ⚡
+        <button id="filter-toggle-btn" style="display: none; margin-left: 10px; flex-shrink: 0 !important; background: #f0f0f0; border: none; border-radius: 50px; padding: 8px 12px; font-size: 0.75rem; font-weight: bold; color: #333; cursor: pointer; white-space: nowrap;">
+            ⚡
         </button>
 
     </div>

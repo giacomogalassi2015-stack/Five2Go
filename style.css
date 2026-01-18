@@ -279,44 +279,66 @@ main, #app-content {
     padding: 5px 20px 10px 20px;
 }
 
-/* --- ESTETICA BOTTONI (Solo colori e dimensioni) --- */
+/* ============================================================
+   STILE TAB MODERN (Solo Testo + Linea + Posizione)
+   ============================================================ */
 
-/* Base Comune */
-.sub-nav-item, .filter-chip {
-    border: none;
-    background: white; 
-    color: #636E72;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    white-space: nowrap; /* Testo su una riga */
-    transition: transform 0.2s, background 0.2s;
+/* 1. POSIZIONAMENTO IN ALTO (Aria dal bordo telefono) */
+/* Questo spinge i menu più in basso, staccandoli dalla notch/isola dinamica */
+.sub-nav-bar {
+    padding-top: 15px !important; /* Spazio sopra i testi */
+    padding-bottom: 0 !important;
+    align-items: flex-end !important; /* Allinea il testo in basso vicino alla linea */
+    min-height: 60px; /* Altezza minima per centrare visivamente */
 }
 
-/* 1. Tasti SOPRA (Categorie) - GRANDI */
+/* 2. STILE TESTO PULITO */
 .sub-nav-item {
-    /* Il JS gestisce il posizionamento, qui diamo solo la forma */
-    padding: 12px 24px;      
-    font-size: 0.95rem;      
-    font-weight: 700;        
-    border-radius: 50px;
-    /* Niente margin-right qui, usiamo il gap del contenitore */
+    padding: 10px 5px !important; /* Meno spazio laterale, più pulito */
+    position: relative;           /* Serve per la linea */
+    
+    font-size: 1rem !important;   /* Testo un po' più grande */
+    font-weight: 600 !important;
+    color: #B2BEC3 !important;    /* Grigio chiaro inattivo */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;  /* Niente curve */
+    transition: color 0.3s ease;
 }
 
-/* 2. Tasti SOTTO (Filtri) - PICCOLI */
-.filter-chip {
-    padding: 7px 14px;       
-    font-size: 0.80rem;      
-    font-weight: 600;
-    border-radius: 50px;
-    flex: 0 0 auto;          
+/* 3. LA LINEA SOTTO (Animata) */
+.sub-nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: var(--primary-col); /* Turchese */
+    
+    transform: scaleX(0); /* Inizialmente invisibile */
+    transform-origin: center;
+    transition: transform 0.3s ease;
+    border-radius: 3px 3px 0 0;
 }
 
-/* Stato ATTIVO (Turchese) */
-.sub-nav-item.active-sub, .filter-chip.active-filter {
-    background-color: #2A9D8F;
-    color: white;
-    box-shadow: 0 8px 20px -5px rgba(42, 157, 143, 0.5);
-    transform: translateY(-2px);
+/* 4. STATO ATTIVO (Selezionato) */
+.sub-nav-item.active-sub {
+    color: var(--primary-col) !important;
+    font-weight: 800 !important;
+    transform: none !important;
 }
+
+/* Mostra la linea quando attivo */
+.sub-nav-item.active-sub::after {
+    transform: scaleX(0.8); /* Linea larga l'80% del testo */
+}
+
+/* Nasconde scrollbar brutte */
+.sub-nav-tabs::-webkit-scrollbar { display: none; }
 /* ============================================================
    4. COMPONENTI SPECIFICI (Card & Liste Premium)
    Miglioramenti: Design immersivo, Curve 24px, Micro-interazioni
