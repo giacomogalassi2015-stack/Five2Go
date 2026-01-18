@@ -118,7 +118,7 @@ window.switchView = async function(view, el) {
         if (view === 'home') await renderHome();
         else if (view === 'cibo') renderSubMenu([{ label: window.t('menu_rest'), table: "Ristoranti" }, { label: window.t('menu_prod'), table: "Prodotti" }], 'Ristoranti');
         else if (view === 'outdoor') renderSubMenu([{ label: window.t('menu_trail'), table: "Sentieri" }, { label: window.t('menu_beach'), table: "Spiagge" }], 'Sentieri');
-        else if (view === 'servizi') renderSubMenu([{ label: window.t('menu_trans'), table: "Trasporti" }, { label: window.t('menu_num'), table: "Numeri_utili" }, { label: window.t('menu_pharm'), table: "Farmacie" }], 'Trasporti');
+        else if (view === 'servizi') await renderServicesGrid();
         else if (view === 'mappe_monumenti') renderSubMenu([{ label: window.t('menu_map'), table: "Attrazioni" }, { label: window.t('menu_monu'), table: "Mappe" }], 'Attrazioni');
     } catch (err) {
         console.error(err);
@@ -222,15 +222,41 @@ window.loadTableData = async function(tableName, btnEl) {
         return;
     };
 
-    // Render Standard (senza filtri complessi)
+ // ... codice precedente ...
+
     if (tableName === 'Prodotti') {
+        // 1. Apriamo il contenitore GRIGLIA (come nei Borghi)
+        html = '<div class="grid-container animate-fade">'; 
+
         data.forEach(p => {
+            // Recuperiamo Titolo e Immagine
             const titolo = window.dbCol(p, 'Prodotti') || window.dbCol(p, 'Nome'); 
-            const imgUrl = window.getSmartUrl(p.Prodotti || p.Nome, '', 400);
-            const safeObj = JSON.stringify(p).replace(/'/g, "'");
-            html += `<div class="card-product" onclick='openModal("product", ${safeObj})'><div class="prod-info"><div class="prod-title">${titolo}</div><div class="prod-arrow">➜</div></div><img src="${imgUrl}" class="prod-thumb" loading="lazy" onerror="this.style.display='none'"></div>`;
+            
+            // NOTA: Ho aumentato la qualità a 600/800 perché ora l'immagine è uno sfondo grande
+            const imgUrl = window.getSmartUrl(p.Prodotti || p.Nome, '', 800); 
+            
+            // Prepariamo l'oggetto per il click (lasciamo la logica del modal prodotto)
+            // Attenzione agli apici nel JSON per evitare errori
+            const safeObj = JSON.stringify(p).replace(/'/g, "\\'"); 
+
+            // 2. Usiamo la classe "village-card" invece di "card-product"
+            html += `
+            <div class="village-card" 
+                 style="background-image: url('${imgUrl}')" 
+                 onclick='openModal("product", ${safeObj})'>
+                
+                <div class="card-title-overlay">
+                    ${titolo}
+                </div>
+            
+            </div>`;
         });
-    } 
+
+        // 3. Chiudiamo il contenitore
+        html += '</div>';
+    }
+
+    // ... codice successivo ...
     else if (tableName === 'Trasporti') {
         window.tempTransportData = data; // Salva per il modal
         data.forEach((t, index) => {
@@ -584,4 +610,69 @@ function animateTransition(direction, callback) {
             }, 10);
         }, 50);
     }, 150);
+}/* ============================================================
+   NUOVA GRIGLIA SERVIZI (Misto: Trasporti DB + Card Statiche)
+   ============================================================ */
+async function renderServicesGrid() {
+    // 1. Scarichiamo i Trasporti dal DB
+    const { data, error } = await window.supabaseClient.from('Trasporti').select('*');
+    if (error) throw error;
+
+    // Salviamo i dati per far funzionare il modal (fondamentale!)
+    window.tempTransportData = data;
+
+    let html = '<div class="grid-container animate-fade">';
+
+    // A. GENERAZIONE CARD TRASPORTI (Dinamiche dal DB)
+    data.forEach((t, index) => {
+        // Usa colonna 'Mezzo' come richiesto, oppure 'Località' come fallback
+        const titolo = t.Mezzo || t.Località || 'Trasporto'; 
+        
+        // Immagine intelligente basata sul nome del mezzo
+        const imgUrl = window.getSmartUrl(titolo, 'Trasporti', 600);
+        
+        // Apre il modal esistente dei trasporti
+        html += `
+        <div class="village-card" 
+             style="background-image: url('${imgUrl}')" 
+             onclick="openModal('transport', ${index})">
+            <div class="card-title-overlay">${titolo}</div>
+        </div>`;
+    });
+
+    // B. CARD STATICHE (Numeri Utili & Farmacie)
+    // Qui puoi cambiare le immagini URL con quelle che preferisci
+    
+    // Card NUMERI UTILI
+    html += `
+    <div class="village-card" 
+         style="background-image: url('https://images.unsplash.com/photo-1596524430623-ad560a5e8424?auto=format&fit=crop&w=600&q=80')" 
+         onclick="renderSimpleList('Numeri_utili')">
+        <div class="card-title-overlay">${window.t('menu_num') || 'Numeri Utili'}</div>
+    </div>`;
+
+    // Card FARMACIE
+    html += `
+    <div class="village-card" 
+         style="background-image: url('https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&w=600&q=80')" 
+         onclick="renderSimpleList('Farmacie')">
+        <div class="card-title-overlay">${window.t('menu_pharm') || 'Farmacie'}</div>
+    </div>`;
+
+    content.innerHTML = html + '</div>';
+}
+
+/* Funzione Helper per aprire le liste senza Tabs (es. cliccando su Farmacie) */
+function renderSimpleList(tableName) {
+    // Crea un contenitore pulito con un titolo e il pulsante "Indietro"
+    content.innerHTML = `
+        <div style="padding: 10px 0; display:flex; align-items:center; gap:10px;">
+            <button onclick="renderServicesGrid()" class="btn-back" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">⬅</button>
+            <h2 style="margin:0;">${tableName.replace('_', ' ')}</h2>
+        </div>
+        <div id="sub-content"></div>
+    `;
+    
+    // Riutilizza la tua funzione esistente per caricare i dati
+    window.loadTableData(tableName, null);
 }
