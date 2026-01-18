@@ -500,56 +500,89 @@ document.addEventListener('DOMContentLoaded', () => {
     switchView('home');      
 });
 /* ============================================================
-   SWIPE TRA LE SCHEDE (Cambio Tab con il dito)
+   SWIPE TRA LE PAGINE (Cambio Tab automatico)
    ============================================================ */
 
-const minSwipeDistance = 50; // Distanza minima in pixel per attivare lo swipe
+const minSwipeDistance = 60; // Sensibilità (più alto = devi strisciare di più)
 let touchStartX = 0;
 let touchEndX = 0;
+let touchStartY = 0;
+let touchEndY = 0;
 
-// Ascoltiamo i tocchi su tutto il contenuto principale
-document.getElementById('app-content').addEventListener('touchstart', e => {
+const contentArea = document.getElementById('app-content');
+
+// 1. Inizio tocco
+contentArea.addEventListener('touchstart', e => {
     touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
 }, {passive: true});
 
-document.getElementById('app-content').addEventListener('touchend', e => {
+// 2. Fine tocco
+contentArea.addEventListener('touchend', e => {
     touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
     handlePageSwipe();
 }, {passive: true});
 
 function handlePageSwipe() {
-    // 1. Controlliamo se esistono le Tab (i bottoni superiori)
-    const tabs = document.querySelectorAll('.sub-nav-item');
-    if (tabs.length === 0) return; // Se non ci sono tab, non fare nulla
+    // Calcoliamo quanto ti sei mosso in orizzontale e verticale
+    const xDiff = touchEndX - touchStartX;
+    const yDiff = touchEndY - touchStartY;
 
-    // 2. Troviamo quale tab è attiva ora
+    // Se l'utente sta scorrendo in giù (scroll pagina), ignoriamo lo swipe laterale
+    if (Math.abs(yDiff) > Math.abs(xDiff)) return;
+
+    // Se il movimento è troppo corto, ignoriamo
+    if (Math.abs(xDiff) < minSwipeDistance) return;
+
+    // Troviamo i bottoni (Tab) attivi
+    const tabs = document.querySelectorAll('.sub-nav-item');
+    if (tabs.length === 0) return;
+
+    // Troviamo quale è attivo ora
     let activeIndex = -1;
     tabs.forEach((tab, index) => {
-        if (tab.classList.contains('active-sub')) {
-            activeIndex = index;
-        }
+        if (tab.classList.contains('active-sub')) activeIndex = index;
     });
 
-    if (activeIndex === -1) return; // Nessuna tab attiva trovata
+    if (activeIndex === -1) return;
 
-    // 3. Calcoliamo la direzione dello swipe
-    const distance = touchEndX - touchStartX;
-
-    if (Math.abs(distance) < minSwipeDistance) return; // Movimento troppo piccolo, ignoralo
-
-    if (distance < 0) {
-        // SWIPE VERSO SINISTRA (Voglio andare al PROSSIMO tab)
-        // Es: Da Ristoranti -> Prodotti
+    // LOGICA CAMBIO PAGINA
+    if (xDiff < 0) {
+        // Swipe Sinistra (Next)
         if (activeIndex < tabs.length - 1) {
-            tabs[activeIndex + 1].click(); // Clicca il prossimo bottone
+            animateTransition('left', () => tabs[activeIndex + 1].click());
         }
-    } 
-    
-    if (distance > 0) {
-        // SWIPE VERSO DESTRA (Voglio andare al tab PRECEDENTE)
-        // Es: Da Prodotti -> Ristoranti
+    } else {
+        // Swipe Destra (Prev)
         if (activeIndex > 0) {
-            tabs[activeIndex - 1].click(); // Clicca il bottone precedente
+            animateTransition('right', () => tabs[activeIndex - 1].click());
         }
     }
+}
+
+// Piccolo effetto visivo (Opzionale, ma carino)
+function animateTransition(direction, callback) {
+    const container = document.getElementById('sub-content');
+    if(!container) { callback(); return; }
+
+    // Dissolvenza veloce prima di cambiare
+    container.style.transition = 'transform 0.15s, opacity 0.15s';
+    container.style.opacity = '0';
+    container.style.transform = direction === 'left' ? 'translateX(-20px)' : 'translateX(20px)';
+
+    setTimeout(() => {
+        callback(); // Carica i nuovi dati
+        // Reset posizione per la nuova pagina
+        setTimeout(() => {
+            container.style.transition = 'none';
+            container.style.transform = direction === 'left' ? 'translateX(20px)' : 'translateX(-20px)';
+            
+            setTimeout(() => {
+                container.style.transition = 'transform 0.15s, opacity 0.15s';
+                container.style.opacity = '1';
+                container.style.transform = 'translateX(0)';
+            }, 10);
+        }, 50);
+    }, 150);
 }
