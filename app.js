@@ -367,15 +367,15 @@ window.openModal = async function(type, payload) {
         contentHtml = `<img src="${bigImg}" style="width:100%; border-radius:12px; height:200px; object-fit:cover;" onerror="this.style.display='none'"><h2>${nome}</h2><p>${desc || ''}</p><hr><p><strong>${window.t('ideal_for')}:</strong> ${ideale || ''}</p>`;
     }
     
-  // --- GESTIONE TRASPORTI ---
+// --- GESTIONE TRASPORTI ---
     else if (type === 'transport') {
         const item = window.tempTransportData[payload];
         if (!item) { console.error("Errore recupero trasporto"); return; }
         
         const nome = window.dbCol(item, 'Nome') || window.dbCol(item, 'Località') || window.dbCol(item, 'Mezzo') || 'Trasporto';
-        const desc = window.dbCol(item, 'Descrizione') || '';
+        // const desc = window.dbCol(item, 'Descrizione') || ''; // NON SERVE PIÙ
         
-        // 1. RECUPERO DATI DAL DB (Nuove colonne)
+        // 1. RECUPERO DATI DAL DB
         const infoSms = window.dbCol(item, 'Info_SMS');
         const infoApp = window.dbCol(item, 'Info_App');
         const infoAvvisi = window.dbCol(item, 'Info_Avvisi');
@@ -385,15 +385,14 @@ window.openModal = async function(type, payload) {
 
         let customContent = '';
 
-        // SE È IL BUS -> CARICA ANCHE IL MOTORE DI RICERCA
-        // Nota: Il controllo sul nome serve per mostrare la ricerca orari, 
-        // mentre le info biglietti dipendono solo se hai riempito le colonne nel DB.
+        // Controlliamo se è un BUS
         const isBus = nome.toLowerCase().includes('bus') || nome.toLowerCase().includes('autobus') || nome.toLowerCase().includes('atc');
 
         if (isBus) {
+            // === LOGICA PER I BUS (Mappa + Ricerca) ===
             const { data: fermate, error } = await window.supabaseClient
                 .from('Fermate_bus')
-                .select('ID, NOME_FERMATA') 
+                .select('ID, NOME_FERMATA, LAT, LONG') 
                 .order('NOME_FERMATA', { ascending: true });
 
             if (fermate && !error) {
@@ -402,38 +401,26 @@ window.openModal = async function(type, payload) {
                 const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
                 const options = fermate.map(f => `<option value="${f.ID}">${f.NOME_FERMATA}</option>`).join('');
                 
-                // --- SEZIONE BIGLIETTI DINAMICA ---
+                // Sezione Biglietti per il Bus
                 let ticketSection = '';
                 if (hasTicketInfo) {
                     ticketSection = `
                     <button onclick="toggleTicketInfo()" style="width:100%; margin-bottom:15px; background:#e0f7fa; color:#006064; border:1px solid #b2ebf2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
                         🎟️ COME ACQUISTARE IL BIGLIETTO ▾
                     </button>
-
                     <div id="ticket-info-box" style="display:none; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px; font-size:0.9rem; color:#333; line-height:1.5;">
-                        
-                        ${infoSms ? `
-                        <p style="margin-bottom:10px;"><strong>📱 SMS</strong><br>
-                        ${infoSms}</p>` : ''}
-                        
+                        ${infoSms ? `<p style="margin-bottom:10px;"><strong>📱 SMS</strong><br>${infoSms}</p>` : ''}
                         ${infoSms && infoApp ? `<hr style="border:0; border-top:1px solid #eee; margin:10px 0;">` : ''}
-                        
-                        ${infoApp ? `
-                        <p style="margin-bottom:10px;"><strong>📲 APP</strong><br>
-                        ${infoApp}</p>` : ''}
-                        
-                        ${infoAvvisi ? `
-                        <div style="background:#fff3cd; color:#856404; padding:10px; border-radius:6px; font-size:0.85rem; border:1px solid #ffeeba; margin-top:10px;">
-                            <strong>⚠️ ATTENZIONE:</strong> ${infoAvvisi}
-                        </div>` : ''}
-                        
+                        ${infoApp ? `<p style="margin-bottom:10px;"><strong>📲 APP</strong><br>${infoApp}</p>` : ''}
+                        ${infoAvvisi ? `<div style="background:#fff3cd; color:#856404; padding:10px; border-radius:6px; font-size:0.85rem; border:1px solid #ffeeba; margin-top:10px;"><strong>⚠️ ATTENZIONE:</strong> ${infoAvvisi}</div>` : ''}
                     </div>`;
                 }
-                // ----------------------------------
 
                 customContent = `
                 <div class="bus-search-box animate-fade">
                     <div class="bus-title"><span class="material-icons">directions_bus</span> Pianifica Viaggio</div>
+                    
+                    <div id="bus-map" style="height: 280px; width: 100%; border-radius: 12px; margin-bottom: 20px; z-index: 1;"></div>
                     
                     ${ticketSection}
 
@@ -467,13 +454,17 @@ window.openModal = async function(type, payload) {
                         <div id="otherBusList" class="bus-list-container"></div>
                     </div>
                 </div>`;
+
+                // Inizializza Mappa
+                setTimeout(() => { initBusMap(fermate); }, 300);
+
             } else {
                 console.error("Errore Supabase:", error);
                 customContent = `<p style="color:red;">Errore caricamento fermate.</p>`;
             }
-        } else {
-            // Caso NON Bus (es. Treno, Traghetto)
-            // Se nel DB hai messo info biglietti anche per loro, appariranno qui!
+        } 
+        else {
+            // === CASO NON BUS ===
             if (hasTicketInfo) {
                  customContent = `
                  <button onclick="toggleTicketInfo()" style="width:100%; margin-top:15px; background:#e0f7fa; color:#006064; border:1px solid #b2ebf2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">
@@ -484,10 +475,16 @@ window.openModal = async function(type, payload) {
                     ${infoApp ? `<p><strong>APP:</strong> ${infoApp}</p>` : ''}
                     ${infoAvvisi ? `<p style="color:#856404; background:#fff3cd; padding:5px;">${infoAvvisi}</p>` : ''}
                  </div>`;
+            } else {
+                customContent = `<div style="text-align:center; padding:30px; background:#f9f9f9; border-radius:12px; margin-top:20px; color:#999;">Funzione in arrivo</div>`;
             }
         }
 
-        contentHtml = `<h2>${nome}</h2><p style="color:#666;">${desc}</p>${customContent}`;
+        // *** MODIFICA EFFETTUATA QUI SOTTO ***
+        // Ho rimosso <p>${desc}</p>. Se vuoi rimuovere anche il titolo, togli <h2>${nome}</h2>
+        contentHtml = `<h2>${nome}</h2>${customContent}`;
+        
+        modal.innerHTML = `<div class="modal-content"><span class="close-modal" onclick="this.parentElement.parentElement.remove()">×</span>${contentHtml}</div>`;
     }
     // ... Altri tipi (trail, attrazione) ...
     else if (type === 'trail') {
@@ -733,5 +730,74 @@ window.toggleTicketInfo = function() {
     if (box) {
         const isHidden = box.style.display === 'none';
         box.style.display = isHidden ? 'block' : 'none';
+    }
+};// --- FUNZIONE CHE CREA LA MAPPA BUS ---
+window.initBusMap = function(fermate) {
+    // Coordinate centrali (Cinque Terre indicative)
+    const startLat = 44.12; 
+    const startLong = 9.70;
+    
+    // Controlla se esiste il div e se la mappa non è già inizializzata
+    const mapContainer = document.getElementById('bus-map');
+    if (!mapContainer) return;
+
+    // Crea la mappa
+    const map = L.map('bus-map').setView([startLat, startLong], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 18
+    }).addTo(map);
+
+    // Gruppo per adattare lo zoom ai marker
+    const markersGroup = new L.FeatureGroup();
+
+    fermate.forEach(f => {
+        // Salta se mancano coordinate
+        if (!f.LAT || !f.LONG) return;
+
+        // Crea icona personalizzata (opzionale, qui standard)
+        const marker = L.marker([f.LAT, f.LONG]).addTo(map);
+        
+        // Contenuto del Popup con i due bottoni
+        const popupContent = `
+            <div style="text-align:center; min-width:150px;">
+                <h3 style="margin:0 0 10px 0; font-size:1rem;">${f.NOME_FERMATA}</h3>
+                <div style="display:flex; gap:5px; justify-content:center;">
+                    <button onclick="setBusStop('selPartenza', '${f.ID}')" 
+                            style="background:#4CAF50; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;">
+                        Partenza
+                    </button>
+                    <button onclick="setBusStop('selArrivo', '${f.ID}')" 
+                            style="background:#F44336; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;">
+                        Arrivo
+                    </button>
+                </div>
+            </div>
+        `;
+
+        marker.bindPopup(popupContent);
+        markersGroup.addLayer(marker);
+    });
+
+    map.addLayer(markersGroup);
+    
+    // Adatta lo zoom per vedere tutte le fermate
+    if (markersGroup.getLayers().length > 0) {
+        map.fitBounds(markersGroup.getBounds(), { padding: [30, 30] });
+    }
+    
+    // Fix rendering Leaflet dentro modali
+    setTimeout(() => { map.invalidateSize(); }, 200);
+};
+
+// --- FUNZIONE CHE IMPOSTA LA SELECT QUANDO CLICCHI SULLA MAPPA ---
+window.setBusStop = function(selectId, value) {
+    const select = document.getElementById(selectId);
+    if (select) {
+        select.value = value;
+        // Effetto visivo di conferma
+        select.style.backgroundColor = "#fff3cd"; 
+        setTimeout(() => select.style.backgroundColor = "white", 500);
     }
 };
