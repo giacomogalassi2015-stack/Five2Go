@@ -355,3 +355,74 @@ window.initPendingMaps = function() {
     });
     window.mapsToInit = []; 
 };
+
+// --- FUNZIONE CHE CREA LA MAPPA BUS ---
+window.initBusMap = function(fermate) {
+    // Coordinate centrali (Cinque Terre indicative)
+    const startLat = 44.12; 
+    const startLong = 9.70;
+    
+    // Controlla se esiste il div e se la mappa non è già inizializzata
+    const mapContainer = document.getElementById('bus-map');
+    if (!mapContainer) return;
+
+    // Crea la mappa
+    const map = L.map('bus-map').setView([startLat, startLong], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 18
+    }).addTo(map);
+
+    // Gruppo per adattare lo zoom ai marker
+    const markersGroup = new L.FeatureGroup();
+
+    fermate.forEach(f => {
+        // Salta se mancano coordinate
+        if (!f.LAT || !f.LONG) return;
+
+        // Crea icona personalizzata (opzionale, qui standard)
+        const marker = L.marker([f.LAT, f.LONG]).addTo(map);
+        
+        // Contenuto del Popup con i due bottoni
+        const popupContent = `
+            <div style="text-align:center; min-width:150px;">
+                <h3 style="margin:0 0 10px 0; font-size:1rem;">${f.NOME_FERMATA}</h3>
+                <div style="display:flex; gap:5px; justify-content:center;">
+                    <button onclick="setBusStop('selPartenza', '${f.ID}')" 
+                            style="background:#4CAF50; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;">
+                        Partenza
+                    </button>
+                    <button onclick="setBusStop('selArrivo', '${f.ID}')" 
+                            style="background:#F44336; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;">
+                        Arrivo
+                    </button>
+                </div>
+            </div>
+        `;
+
+        marker.bindPopup(popupContent);
+        markersGroup.addLayer(marker);
+    });
+
+    map.addLayer(markersGroup);
+    
+    // Adatta lo zoom per vedere tutte le fermate
+    if (markersGroup.getLayers().length > 0) {
+        map.fitBounds(markersGroup.getBounds(), { padding: [30, 30] });
+    }
+    
+    // Fix rendering Leaflet dentro modali
+    setTimeout(() => { map.invalidateSize(); }, 200);
+};
+
+// --- FUNZIONE CHE IMPOSTA LA SELECT QUANDO CLICCHI SULLA MAPPA ---
+window.setBusStop = function(selectId, value) {
+    const select = document.getElementById(selectId);
+    if (select) {
+        select.value = value;
+        // Effetto visivo di conferma
+        select.style.backgroundColor = "#fff3cd"; 
+        setTimeout(() => select.style.backgroundColor = "white", 500);
+    }
+};
