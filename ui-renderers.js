@@ -1,27 +1,43 @@
 console.log("✅ 2. ui-renderers.js caricato");
 
-// RENDERER SENTIERO
+// ui-renderers.js
+// ui-renderers.js
+
 window.sentieroRenderer = (s) => {
     const paese = window.dbCol(s, 'Paesi');
     const distanza = s.Distanza || '--';
     const durata = s.Durata || '--';
     const extra = window.dbCol(s, 'Extra') || 'Sentiero';
-    const gpxUrl = s.Gpxlink || s.gpxlink;
+    const gpxUrl = s.Gpxlink || s.gpxlink; // Link al file del percorso
 
+    // ID per la mappa piccola nella card
     const uniqueMapId = `map-trail-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Inizializza la mappa piccola
     if (gpxUrl) { window.mapsToInit.push({ id: uniqueMapId, gpx: gpxUrl }); }
 
+    // Codifica sicura per il pulsante dettagli
+    const safeObj = encodeURIComponent(JSON.stringify(s));
+
     return `
-    <div class="card-sentiero-modern">
-        <div id="${uniqueMapId}" class="sentiero-map-bg"></div>
+    <div class="card-sentiero-modern animate-fade">
+        
+        <div id="${uniqueMapId}" 
+             class="sentiero-map-bg" 
+             style="cursor: pointer;"
+             onclick="openModal('map', '${gpxUrl}')">
+        </div>
+        
         <div class="sentiero-card-overlay">
             <h2 class="sentiero-overlay-title">${paese}</h2>
+            
             <div class="sentiero-stats">
                 <div class="stat-pill"><span class="stat-icon">📏</span><span class="stat-val">${distanza}</span></div>
                 <div class="stat-pill"><span class="stat-icon">🕒</span><span class="stat-val">${durata}</span></div>
                 <div class="stat-pill"><span class="stat-icon">🏷️</span><span class="stat-val">${extra}</span></div>
             </div>
-            <button class="btn-outline-details" onclick='openModal("trail", ${JSON.stringify(s).replace(/'/g, "'")})'>
+            
+            <button class="btn-outline-details" onclick="openModal('trail', '${safeObj}')">
                 Dettagli Percorso
             </button>
         </div>
@@ -317,15 +333,20 @@ window.openModal = async function(type, payload) {
     
     // ... Altri tipi (trail, attrazione) ...
    else if (type === 'trail') {
-        const titolo = window.dbCol(payload, 'Paesi');
-        const dist = payload.Distanza || '--';
-        const dura = payload.Durata || '--';
-        const desc = window.dbCol(payload, 'Descrizione') || '';
-        
-        // Recuperiamo i nuovi dati (Usa dbCol se sono campi traducibili, altrimenti payload.Campo)
-        const tag = window.dbCol(payload, 'Tag') || '--'; 
-        const extra = window.dbCol(payload, 'Extra') || '--';
+        // 1. DECODIFICA (Fondamentale: trasforma il testo criptato in oggetto)
+        const p = JSON.parse(decodeURIComponent(payload));
 
+        // 2. RECUPERO DATI (Nota: usiamo 'p' invece di 'payload')
+        const titolo = window.dbCol(p, 'Paesi');
+        const dist = p.Distanza || '--';
+        const dura = p.Durata || '--';
+        const desc = window.dbCol(p, 'Descrizione') || '';
+        
+        // Recuperiamo i nuovi dati
+        const tag = window.dbCol(p, 'Tag') || '--'; 
+        const extra = window.dbCol(p, 'Extra') || '--';
+
+        // 3. GENERAZIONE HTML (Il tuo layout grafico)
         contentHtml = `
         <div style="padding:20px;">
             <h2 style="text-align:center; margin-bottom:20px;">${titolo}</h2>
@@ -360,6 +381,72 @@ window.openModal = async function(type, payload) {
 
             <p style="line-height:1.6; color:#333;">${desc}</p>
         </div>`;
+    
+    }
+    // app.js -> dentro openModal
+
+    else if (type === 'map') {
+        const gpxUrl = payload;
+        const bigMapId = `big-map-${Date.now()}`;
+        
+        // 1. CREIAMO L'HTML DEL CONTENITORE
+        contentHtml = `
+            <div style="height: 500px; width: 100%; border-radius: 12px; overflow: hidden; background: #eee;">
+                <div id="${bigMapId}" style="height: 100%; width: 100%;"></div>
+            </div>
+            <p style="text-align:center; color:#666; margin-top:10px; font-size:0.9rem;">
+                💡 Usa due dita per muoverti sulla mappa
+            </p>
+        `;
+
+        // 2. INIZIALIZZIAMO LA MAPPA DOPO UN PO' (Timeout)
+        // Aumentiamo il tempo a 400ms per essere sicuri che il modale sia aperto
+        setTimeout(() => {
+            const mapContainer = document.getElementById(bigMapId);
+            
+            // Verifichiamo che il contenitore esista e che Leaflet (L) sia caricato
+            if (mapContainer && window.L) {
+                console.log("🗺️ Inizializzazione Mappa Grande in corso...");
+
+                // A. Creiamo la mappa
+                const map = L.map(bigMapId).setView([44.12, 9.70], 12); // Coordinate centrali 5 Terre
+
+                // B. Aggiungiamo i tasselli (OpenStreetMap)
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                // C. Se c'è il percorso GPX, proviamo a caricarlo
+                if (gpxUrl && typeof omnivore !== 'undefined') {
+                    const runLayer = omnivore.gpx(gpxUrl, null, L.geoJson(null, {
+                        style: { color: '#ff5722', weight: 5, opacity: 0.8 }
+                    }))
+                    .on('ready', function() {
+                        map.fitBounds(runLayer.getBounds()); // Centra la mappa sul percorso
+                    })
+                    .addTo(map);
+                } else if (gpxUrl && window.L.GPX) {
+                    // Fallback se usi il plugin leaflet-gpx invece di omnivore
+                    new L.GPX(gpxUrl, {
+                        async: true,
+                        marker_options: {
+                            startIconUrl: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
+                            endIconUrl: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
+                            shadowUrl: null
+                        }
+                    }).on('loaded', function(e) {
+                        map.fitBounds(e.target.getBounds());
+                    }).addTo(map);
+                }
+
+                // D. TRUCCO FONDAMENTALE: Forza il ricalcolo delle dimensioni
+                // Questo risolve il problema della mappa grigia
+                setTimeout(() => { map.invalidateSize(); }, 100);
+            
+            } else {
+                console.error("❌ Errore: Contenitore mappa non trovato o Leaflet mancante.");
+            }
+        }, 400); // Ritardo per aspettare l'apertura del modale
     }
     else if (type === 'restaurant') {
         const item = JSON.parse(decodeURIComponent(payload)); // Decodifica l'oggetto passato dal renderer
