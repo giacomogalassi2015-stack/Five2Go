@@ -205,7 +205,7 @@ main, #app-content {
 .welcome-card {
     width: 100%;
     /* Riduciamo il valore sottratto dato che l'header non c'è più */
-    height: calc(100vh - 100px); 
+    height: calc(100vh - 120px); 
     min-height: 500px;
     /* ... resto del codice ... */
     
