@@ -266,7 +266,7 @@ window.openModal = async function(type, payload) {
 
                 customContent = `
                 <div class="bus-search-box animate-fade">
-                    <div class="bus-title"><span class="material-icons">directions_bus</span> Pianifica Viaggio</div>
+                    <div class="bus-title" style="margin-bottom: 5px><span class="material-icons">directions_bus</span> Pianifica Viaggio</div>
                     
                     <div id="bus-map" style="height: 280px; width: 100%; border-radius: 12px; margin-bottom: 20px; z-index: 1;"></div>
                     
