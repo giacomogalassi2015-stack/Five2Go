@@ -431,8 +431,16 @@ async function renderServicesGrid() {
         const imgUrl = window.getSmartUrl(titolo, '', 600);
         html += `<div class="village-card" style="background-image: url('${imgUrl}')" onclick="openModal('transport', ${index})"><div class="card-title-overlay">${titolo}</div></div>`;
     });
-    html += `<div class="village-card" style="background-image: url('${imgUrl}')"  onclick="renderSimpleList('Numeri_utili')"><div class="card-title-overlay">${window.t('menu_num') || 'Numeri Utili'}</div></div>`;
-    html += `<div class="village-card" style="background-image: url('${imgUrl}')"  onclick="renderSimpleList('Farmacie')"><div class="card-title-overlay">${window.t('menu_pharm') || 'Farmacie'}</div></div>`;
+    // 2. Card statiche (Numeri Utili e Farmacie)
+    // Definiamo manualmente i nomi delle immagini che vogliamo cercare su Cloudinary
+    // Assicurati di avere immagini chiamate "numeri_utili" (o "telefono") e "farmacia" nel tuo Cloudinary
+    const urlNumeri = window.getSmartUrl('Numeri Utili', '', 600); 
+    const urlFarmacie = window.getSmartUrl('Farmacie', '', 600);
+
+    html += `<div class="village-card" style="background-image: url('${urlNumeri}')"  onclick="renderSimpleList('Numeri_utili')"><div class="card-title-overlay">${window.t('menu_num') || 'Numeri Utili'}</div></div>`;
+    
+    html += `<div class="village-card" style="background-image: url('${urlFarmacie}')"  onclick="renderSimpleList('Farmacie')"><div class="card-title-overlay">${window.t('menu_pharm') || 'Farmacie'}</div></div>`;
+    
     content.innerHTML = html + '</div>';
 }
 function renderSimpleList(tableName) {
