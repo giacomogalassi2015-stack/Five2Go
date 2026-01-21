@@ -383,9 +383,9 @@ main, #app-content {
 .grid-container { 
     display: grid; 
     grid-template-columns: 1fr 1fr; 
-    gap: 12px; 
+    gap: 2px; 
     /* Modifica questa riga: 10px sopra, 0 destra, 140px sotto, 0 sinistra */
-    padding: 10px 0 140px 0; 
+    padding: 10px 0 10px 0; 
 }
 .village-card { height: 180px; position: relative; overflow: hidden; background-size: cover; background-position: center; border: none; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); margin-bottom: 0 !important; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .village-card:active { transform: scale(0.96); }
