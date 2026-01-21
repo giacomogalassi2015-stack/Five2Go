@@ -215,239 +215,245 @@ window.openModal = async function(type, payload) {
             </div>
         `;
     }
-    // --- GESTIONE TRASPORTI ---
-    else if (type === 'transport') {
-        const item = window.tempTransportData[payload];
-        if (!item) { console.error("Errore recupero trasporto"); return; }
-        
-        const nome = window.dbCol(item, 'Nome') || window.dbCol(item, 'Località') || window.dbCol(item, 'Mezzo') || 'Trasporto';
-        const desc = window.dbCol(item, 'Descrizione') || '';
-        
-        // 1. RECUPERO DATI DAL DB
-        const infoSms = window.dbCol(item, 'Info_SMS');
-        const infoApp = window.dbCol(item, 'Info_App');
-        const infoAvvisi = window.dbCol(item, 'Info_Avvisi');
-        
-        // Verifica se c'è almeno un'info da mostrare
-        const hasTicketInfo = infoSms || infoApp || infoAvvisi;
+  // --- GESTIONE TRASPORTI ---
+if (type === 'transport') {
+    const item = window.tempTransportData[payload];
+    if (!item) { console.error("Errore recupero trasporto"); return; }
+    
+    const nome = window.dbCol(item, 'Nome') || window.dbCol(item, 'Località') || window.dbCol(item, 'Mezzo') || 'Trasporto';
+    const desc = window.dbCol(item, 'Descrizione') || '';
+    
+    // Info Generiche
+    const infoSms = window.dbCol(item, 'Info_SMS');
+    const infoApp = window.dbCol(item, 'Info_App');
+    const infoAvvisi = window.dbCol(item, 'Info_Avvisi');
+    const hasTicketInfo = infoSms || infoApp || infoAvvisi;
 
-        let customContent = '';
+    // 1. RICONOSCIMENTO TIPO
+    const isBus = nome.toLowerCase().includes('bus') || nome.toLowerCase().includes('autobus') || nome.toLowerCase().includes('atc');
+    // Riconosce se è un treno
+    const isTrain = nome.toLowerCase().includes('tren') || nome.toLowerCase().includes('ferrovi') || nome.toLowerCase().includes('stazione');
 
-        // Controlliamo se è un BUS
-        const isBus = nome.toLowerCase().includes('bus') || nome.toLowerCase().includes('autobus') || nome.toLowerCase().includes('atc');
+    // === CASO A: È UN BUS ===
+    if (isBus) {
+        const { data: fermate, error } = await window.supabaseClient
+            .from('Fermate_bus')
+            .select('ID, NOME_FERMATA, LAT, LONG') 
+            .order('NOME_FERMATA', { ascending: true });
 
-        if (isBus) {
-            // === LOGICA PER I BUS (Mappa + Ricerca) ===
-            const { data: fermate, error } = await window.supabaseClient
-                .from('Fermate_bus')
-                .select('ID, NOME_FERMATA, LAT, LONG') 
-                .order('NOME_FERMATA', { ascending: true });
-
-            if (fermate && !error) {
-                const now = new Date();
-                const todayISO = now.toISOString().split('T')[0];
-                const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-                const options = fermate.map(f => `<option value="${f.ID}">${f.NOME_FERMATA}</option>`).join('');
-                
-                // Sezione Biglietti per il Bus
-                let ticketSection = '';
-                if (hasTicketInfo) {
-                    ticketSection = `
-                    <button onclick="toggleTicketInfo()" style="width:100%; margin-bottom:15px; background:#e0f7fa; color:#006064; border:1px solid #b2ebf2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                        🎟️ COME ACQUISTARE IL BIGLIETTO ▾
-                    </button>
-                    <div id="ticket-info-box" style="display:none; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px; font-size:0.9rem; color:#333; line-height:1.5;">
-                        ${infoSms ? `<p style="margin-bottom:10px;"><strong>📱 SMS</strong><br>${infoSms}</p>` : ''}
-                        ${infoSms && infoApp ? `<hr style="border:0; border-top:1px solid #eee; margin:10px 0;">` : ''}
-                        ${infoApp ? `<p style="margin-bottom:10px;"><strong>📲 APP</strong><br>${infoApp}</p>` : ''}
-                        ${infoAvvisi ? `<div style="background:#fff3cd; color:#856404; padding:10px; border-radius:6px; font-size:0.85rem; border:1px solid #ffeeba; margin-top:10px;"><strong>⚠️ ATTENZIONE:</strong> ${infoAvvisi}</div>` : ''}
-                    </div>`;
-                }
-
-                customContent = `
-                <div class="bus-search-box animate-fade">
-                    <div class="bus-title" style="margin-bottom: 5px><span class="material-icons">directions_bus</span> Pianifica Viaggio</div>
-                    
-                    <div id="bus-map" style="height: 280px; width: 100%; border-radius: 12px; margin-bottom: 20px; z-index: 1;"></div>
-                    
-                    ${ticketSection}
-
-                    <div class="bus-inputs">
-                        <div style="flex:1;">
-                            <label style="font-size:0.7rem; color:#666; font-weight:bold;">PARTENZA</label>
-                            <select id="selPartenza" class="bus-select"><option value="" disabled selected>Seleziona...</option>${options}</select>
-                        </div>
-                        <div style="flex:1;">
-                            <label style="font-size:0.7rem; color:#666; font-weight:bold;">ARRIVO</label>
-                            <select id="selArrivo" class="bus-select"><option value="" disabled selected>Seleziona...</option>${options}</select>
-                        </div>
-                    </div>
-
-                    <div class="bus-inputs">
-                        <div style="flex:1;">
-                            <label style="font-size:0.7rem; color:#666; font-weight:bold;">DATA VIAGGIO</label>
-                            <input type="date" id="selData" class="bus-select" value="${todayISO}">
-                        </div>
-                        <div style="flex:1;">
-                            <label style="font-size:0.7rem; color:#666; font-weight:bold;">ORARIO</label>
-                            <input type="time" id="selOra" class="bus-select" value="${nowTime}">
-                        </div>
-                    </div>
-
-                    <button onclick="eseguiRicercaBus()" class="btn-yellow" style="width:100%; font-weight:bold; margin-top:5px;">TROVA ORARI</button>
-                    
-                    <div id="busResultsContainer" style="display:none; margin-top:20px;">
-                        <div id="nextBusCard" class="bus-result-main"></div>
-                        <div style="font-size:0.8rem; font-weight:bold; color:#666; margin-top:15px;">CORSE SUCCESSIVE:</div>
-                        <div id="otherBusList" class="bus-list-container"></div>
-                    </div>
-                </div>`;
-
-                // Inizializza Mappa
-                setTimeout(() => { initBusMap(fermate); }, 300);
-
-            } else {
-                console.error("Errore Supabase:", error);
-                customContent = `<p style="color:red;">Errore caricamento fermate.</p>`;
-            }
-        } 
-        else {
-            // === CASO NON BUS (TRENI, TRAGHETTI, ECC.) ===
+        if (fermate && !error) {
+            const now = new Date();
+            const todayISO = now.toISOString().split('T')[0];
+            const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            const options = fermate.map(f => `<option value="${f.ID}">${f.NOME_FERMATA}</option>`).join('');
+            
+            let ticketSection = '';
             if (hasTicketInfo) {
-                 customContent = `
-                 <button onclick="toggleTicketInfo()" style="width:100%; margin-top:15px; background:#e0f7fa; color:#006064; border:1px solid #b2ebf2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">
-                    🎟️ INFO BIGLIETTI
-                 </button>
-                 <div id="ticket-info-box" style="display:none; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-top:10px;">
-                    ${infoSms ? `<p><strong>SMS:</strong> ${infoSms}</p>` : ''}
-                    ${infoApp ? `<p><strong>APP:</strong> ${infoApp}</p>` : ''}
-                    ${infoAvvisi ? `<p style="color:#856404; background:#fff3cd; padding:5px;">${infoAvvisi}</p>` : ''}
-                 </div>`;
-            } else {
-                customContent = `<div style="text-align:center; padding:30px; background:#f9f9f9; border-radius:12px; margin-top:20px; color:#999;">Funzione in arrivo</div>`;
+                ticketSection = `
+                <button onclick="toggleTicketInfo()" style="width:100%; margin-bottom:15px; background:#e0f7fa; color:#006064; border:1px solid #b2ebf2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    🎟️ COME ACQUISTARE IL BIGLIETTO ▾
+                </button>
+                <div id="ticket-info-box" style="display:none; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px; font-size:0.9rem; color:#333; line-height:1.5;">
+                    ${infoSms ? `<p style="margin-bottom:10px;"><strong>📱 SMS</strong><br>${infoSms}</p>` : ''}
+                    ${infoApp ? `<p style="margin-bottom:10px;"><strong>📲 APP</strong><br>${infoApp}</p>` : ''}
+                    ${infoAvvisi ? `<div style="background:#fff3cd; color:#856404; padding:10px; border-radius:6px; font-size:0.85rem; border:1px solid #ffeeba; margin-top:10px;"><strong>⚠️ ATTENZIONE:</strong> ${infoAvvisi}</div>` : ''}
+                </div>`;
             }
-        }
 
+            customContent = `
+            <div class="bus-search-box animate-fade">
+                <div class="bus-title" style="margin-bottom: 0px; padding-bottom: 5px;">
+                    <span class="material-icons">directions_bus</span> Pianifica Viaggio
+                </div>
+                <div id="bus-map" style="margin-top: 0px; height: 280px; width: 100%; border-radius: 12px; margin-bottom: 20px; z-index: 1;"></div>
+                ${ticketSection}
+                <div class="bus-inputs">
+                    <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">PARTENZA</label><select id="selPartenza" class="bus-select"><option value="" disabled selected>Seleziona...</option>${options}</select></div>
+                    <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">ARRIVO</label><select id="selArrivo" class="bus-select"><option value="" disabled selected>Seleziona...</option>${options}</select></div>
+                </div>
+                <div class="bus-inputs">
+                    <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">DATA VIAGGIO</label><input type="date" id="selData" class="bus-select" value="${todayISO}"></div>
+                    <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">ORARIO</label><input type="time" id="selOra" class="bus-select" value="${nowTime}"></div>
+                </div>
+                <button onclick="eseguiRicercaBus()" class="btn-yellow" style="width:100%; font-weight:bold; margin-top:5px;">TROVA ORARI</button>
+                <div id="busResultsContainer" style="display:none; margin-top:20px;"><div id="nextBusCard" class="bus-result-main"></div><div style="font-size:0.8rem; font-weight:bold; color:#666; margin-top:15px;">CORSE SUCCESSIVE:</div><div id="otherBusList" class="bus-list-container"></div></div>
+            </div>`;
+            setTimeout(() => { initBusMap(fermate); }, 300);
+        } else {
+            customContent = `<p style="color:red;">Errore caricamento fermate.</p>`;
+        }
+    } 
+
+    else if (isTrain) {
+        const LINK_OMIO = "https://omio.sjv.io/c/6902975/861892/7385/"; 
+        
+        customContent = `
+        <div class="bus-search-box animate-fade" style="margin: -20px; padding: 20px;">
+            
+            <div class="bus-title" style="margin-bottom: 0px; padding-bottom: 15px; padding-top: 5px;">
+                <span class="material-icons" style="background: linear-gradient(135deg, #FF5252, #D32F2F) !important; box-shadow: 0 4px 6px rgba(211, 47, 47, 0.25) !important; color: white !important; padding: 8px; border-radius: 12px;">train</span> 
+                Treni & Orari
+            </div>
+            
+            <p style="color:#666; font-size:0.95rem; margin-bottom: 25px; line-height: 1.6; padding: 0 5px;">
+                Spostarsi in treno è il modo più rapido per visitare le Cinque Terre. 
+                Controlla gli orari in tempo reale e acquista i biglietti.
+            </p>
+            
+            <a href="${LINK_OMIO}" target="_blank" style="text-decoration: none;">
+                <button class="btn-yellow" style="background: linear-gradient(135deg, #FF5252 0%, #D32F2F 100%) !important; box-shadow: 0 10px 25px -5px rgba(211, 47, 47, 0.4) !important; color: white !important;">
+                    <span class="material-icons" style="margin-right: 10px;">search</span>
+                    COMPRA BIGLIETTI E CONSULTA ORARI
+                </button>
+            </a>
+            
+            <div style="text-align: center; margin-top: 15px; font-size: 0.75rem; color: #aaa; line-height: 1.4;">
+                Powered by <strong>Omio</strong><br>
+                <span style="font-size: 0.65rem;">*Link affiliato: acquistando sostieni Five2Go senza costi extra.</span>
+            </div>
+
+        </div>`;
+    }
+
+    // === CASO C: ALTRO (Traghetti, Ascensori, ecc.) ===
+    else {
+        if (hasTicketInfo) {
+             customContent = `
+             <button onclick="toggleTicketInfo()" style="width:100%; margin-top:15px; background:#e0f7fa; color:#006064; border:1px solid #b2ebf2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">
+                🎟️ INFO BIGLIETTI
+             </button>
+             <div id="ticket-info-box" style="display:none; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-top:10px;">
+                ${infoSms ? `<p><strong>SMS:</strong> ${infoSms}</p>` : ''}
+                ${infoApp ? `<p><strong>APP:</strong> ${infoApp}</p>` : ''}
+                ${infoAvvisi ? `<p style="color:#856404; background:#fff3cd; padding:5px;">${infoAvvisi}</p>` : ''}
+             </div>`;
+        } else {
+            customContent = `<div style="text-align:center; padding:30px; background:#f9f9f9; border-radius:12px; margin-top:20px; color:#999;">Funzione in arrivo</div>`;
+        }
+    }
+
+    // Se è Treno o Bus usiamo solo customContent (che ha già il titolo dentro), altrimenti titolo + desc + content
+    if (isBus || isTrain) {
+        contentHtml = customContent;
+    } else {
         contentHtml = `<h2>${nome}</h2><p style="color:#666;">${desc}</p>${customContent}`;
     }
+}
+
+// ... (segue il codice per 'map' etc.) ...
+// === GESTIONE MAPPE ===
+else if (type === 'map') {
+    const gpxUrl = payload;
+    const bigMapId = `big-map-${Date.now()}`;
     
-    // ... Altri tipi (trail, attrazione) ...
-   else if (type === 'trail') {
-        // 1. DECODIFICA (Fondamentale: trasforma il testo criptato in oggetto)
-        const p = JSON.parse(decodeURIComponent(payload));
+    // 1. CREIAMO L'HTML DEL CONTENITORE
+    contentHtml = `
+        <div style="height: 500px; width: 100%; border-radius: 12px; overflow: hidden; background: #eee;">
+            <div id="${bigMapId}" style="height: 100%; width: 100%;"></div>
+        </div>
+        <p style="text-align:center; color:#666; margin-top:10px; font-size:0.9rem;">
+            💡 Usa due dita per muoverti sulla mappa
+        </p>
+    `;
 
-        // 2. RECUPERO DATI (Nota: usiamo 'p' invece di 'payload')
-        const titolo = window.dbCol(p, 'Paesi');
-        const dist = p.Distanza || '--';
-        const dura = p.Durata || '--';
-        const desc = window.dbCol(p, 'Descrizione') || '';
+    // 2. INIZIALIZZIAMO LA MAPPA DOPO UN PO' (Timeout)
+    setTimeout(() => {
+        const mapContainer = document.getElementById(bigMapId);
         
-        // Recuperiamo i nuovi dati
-        const tag = window.dbCol(p, 'Tag') || '--'; 
-        const extra = window.dbCol(p, 'Extra') || '--';
+        if (mapContainer && window.L) {
+            console.log("🗺️ Inizializzazione Mappa Grande in corso...");
 
-        // 3. GENERAZIONE HTML (Il tuo layout grafico)
-        contentHtml = `
-        <div style="padding:20px;">
-            <h2 style="text-align:center; margin-bottom:20px;">${titolo}</h2>
-            
-            <div style="display:flex; justify-content:space-between; text-align:center; gap:15px; margin-bottom:25px;">
-                
-                <div style="flex:1; background:#f9f9f9; padding:15px 10px; border-radius:12px;">
-                    <div style="margin-bottom:15px;">
-                        <div style="font-size:1.5rem;">📏</div>
-                        <strong>Distanza</strong><br>
-                        ${dist}
-                    </div>
-                    <div style="border-top:1px solid #e0e0e0; padding-top:10px;">
-                        <strong>Tag</strong><br>
-                        <span style="color:#666; font-size:0.9rem;">${tag}</span>
-                    </div>
-                </div>
+            // A. Creiamo la mappa
+            const map = L.map(bigMapId).setView([44.12, 9.70], 12); 
 
-                <div style="flex:1; background:#f9f9f9; padding:15px 10px; border-radius:12px;">
-                    <div style="margin-bottom:15px;">
-                        <div style="font-size:1.5rem;">⏱️</div>
-                        <strong>Tempo</strong><br>
-                        ${dura}
-                    </div>
-                    <div style="border-top:1px solid #e0e0e0; padding-top:10px;">
-                        <strong>Extra</strong><br>
-                        <span style="color:#666; font-size:0.9rem;">${extra}</span>
-                    </div>
-                </div>
+            // B. Aggiungiamo i tasselli (OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
 
-            </div>
-
-            <p style="line-height:1.6; color:#333;">${desc}</p>
-        </div>`;
-    
-    }
-    // app.js -> dentro openModal
-
-    else if (type === 'map') {
-        const gpxUrl = payload;
-        const bigMapId = `big-map-${Date.now()}`;
-        
-        // 1. CREIAMO L'HTML DEL CONTENITORE
-        contentHtml = `
-            <div style="height: 500px; width: 100%; border-radius: 12px; overflow: hidden; background: #eee;">
-                <div id="${bigMapId}" style="height: 100%; width: 100%;"></div>
-            </div>
-            <p style="text-align:center; color:#666; margin-top:10px; font-size:0.9rem;">
-                💡 Usa due dita per muoverti sulla mappa
-            </p>
-        `;
-
-        // 2. INIZIALIZZIAMO LA MAPPA DOPO UN PO' (Timeout)
-        // Aumentiamo il tempo a 400ms per essere sicuri che il modale sia aperto
-        setTimeout(() => {
-            const mapContainer = document.getElementById(bigMapId);
-            
-            // Verifichiamo che il contenitore esista e che Leaflet (L) sia caricato
-            if (mapContainer && window.L) {
-                console.log("🗺️ Inizializzazione Mappa Grande in corso...");
-
-                // A. Creiamo la mappa
-                const map = L.map(bigMapId).setView([44.12, 9.70], 12); // Coordinate centrali 5 Terre
-
-                // B. Aggiungiamo i tasselli (OpenStreetMap)
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
+            // C. Se c'è il percorso GPX, proviamo a caricarlo
+            if (gpxUrl && typeof omnivore !== 'undefined') {
+                const runLayer = omnivore.gpx(gpxUrl, null, L.geoJson(null, {
+                    style: { color: '#ff5722', weight: 5, opacity: 0.8 }
+                }))
+                .on('ready', function() {
+                    map.fitBounds(runLayer.getBounds()); 
+                })
+                .addTo(map);
+            } else if (gpxUrl && window.L.GPX) {
+                new L.GPX(gpxUrl, {
+                    async: true,
+                    marker_options: {
+                        startIconUrl: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
+                        endIconUrl: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
+                        shadowUrl: null
+                    }
+                }).on('loaded', function(e) {
+                    map.fitBounds(e.target.getBounds());
                 }).addTo(map);
-
-                // C. Se c'è il percorso GPX, proviamo a caricarlo
-                if (gpxUrl && typeof omnivore !== 'undefined') {
-                    const runLayer = omnivore.gpx(gpxUrl, null, L.geoJson(null, {
-                        style: { color: '#ff5722', weight: 5, opacity: 0.8 }
-                    }))
-                    .on('ready', function() {
-                        map.fitBounds(runLayer.getBounds()); // Centra la mappa sul percorso
-                    })
-                    .addTo(map);
-                } else if (gpxUrl && window.L.GPX) {
-                    // Fallback se usi il plugin leaflet-gpx invece di omnivore
-                    new L.GPX(gpxUrl, {
-                        async: true,
-                        marker_options: {
-                            startIconUrl: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
-                            endIconUrl: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
-                            shadowUrl: null
-                        }
-                    }).on('loaded', function(e) {
-                        map.fitBounds(e.target.getBounds());
-                    }).addTo(map);
-                }
-
-                // D. TRUCCO FONDAMENTALE: Forza il ricalcolo delle dimensioni
-                // Questo risolve il problema della mappa grigia
-                setTimeout(() => { map.invalidateSize(); }, 100);
-            
-            } else {
-                console.error("❌ Errore: Contenitore mappa non trovato o Leaflet mancante.");
             }
-        }, 400); // Ritardo per aspettare l'apertura del modale
-    }
+
+            // D. TRUCCO FONDAMENTALE: Forza il ricalcolo delle dimensioni
+            setTimeout(() => { map.invalidateSize(); }, 100);
+        
+        } else {
+            console.error("❌ Errore: Contenitore mappa non trovato o Leaflet mancante.");
+        }
+    }, 400); 
+}
+
+// === GESTIONE SENTIERI (TRAIL) ===
+else if (type === 'trail') {
+    // 1. DECODIFICA
+    const p = JSON.parse(decodeURIComponent(payload));
+
+    // 2. RECUPERO DATI
+    const titolo = window.dbCol(p, 'Paesi');
+    const dist = p.Distanza || '--';
+    const dura = p.Durata || '--';
+    const desc = window.dbCol(p, 'Descrizione') || '';
+    
+    // Recuperiamo i nuovi dati
+    const tag = window.dbCol(p, 'Tag') || '--'; 
+    const extra = window.dbCol(p, 'Extra') || '--';
+
+    // 3. GENERAZIONE HTML
+    contentHtml = `
+    <div style="padding:20px;">
+        <h2 style="text-align:center; margin-bottom:20px;">${titolo}</h2>
+        
+        <div style="display:flex; justify-content:space-between; text-align:center; gap:15px; margin-bottom:25px;">
+            
+            <div style="flex:1; background:#f9f9f9; padding:15px 10px; border-radius:12px;">
+                <div style="margin-bottom:15px;">
+                    <div style="font-size:1.5rem;">📏</div>
+                    <strong>Distanza</strong><br>
+                    ${dist}
+                </div>
+                <div style="border-top:1px solid #e0e0e0; padding-top:10px;">
+                    <strong>Tag</strong><br>
+                    <span style="color:#666; font-size:0.9rem;">${tag}</span>
+                </div>
+            </div>
+
+            <div style="flex:1; background:#f9f9f9; padding:15px 10px; border-radius:12px;">
+                <div style="margin-bottom:15px;">
+                    <div style="font-size:1.5rem;">⏱️</div>
+                    <strong>Tempo</strong><br>
+                    ${dura}
+                </div>
+                <div style="border-top:1px solid #e0e0e0; padding-top:10px;">
+                    <strong>Extra</strong><br>
+                    <span style="color:#666; font-size:0.9rem;">${extra}</span>
+                </div>
+            </div>
+
+        </div>
+
+        <p style="line-height:1.6; color:#333;">${desc}</p>
+    </div>`;
+}
+
     else if (type === 'restaurant') {
         const item = JSON.parse(decodeURIComponent(payload)); // Decodifica l'oggetto passato dal renderer
         const nome = window.dbCol(item, 'Nome');

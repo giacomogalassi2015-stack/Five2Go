@@ -451,25 +451,239 @@ main, #app-content {
 .badge-time { background-color: #E3F2FD; color: #1565C0; } 
 .card-list-item.monument-mode { border-left: none; border-bottom: 3px solid #9C27B0; }
 .prod-arrow, .item-arrow { display: none !important; }
-.bus-search-box { background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #f0f0f0; margin-top: 15px; }
-.bus-title { font-size: 1.1rem; font-weight: 800; color: #2c3e50; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
-.bus-title .material-icons { color: #FFC107; background: #FFF8E1; padding: 6px; border-radius: 50%; font-size: 1.2rem; }
-.bus-inputs { display: flex; gap: 12px; margin-bottom: 15px; }
-.bus-inputs label { display: block; margin-bottom: 4px; font-size: 0.7rem; font-weight: 700; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.5px; }
-.bus-select { width: 100%; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 12px; padding: 12px; font-size: 0.95rem; font-weight: 600; color: #37474f; outline: none; transition: all 0.2s ease; -webkit-appearance: none; appearance: none; }
-.bus-select:focus { border-color: #FFC107; background: #fff; box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2); }
-.btn-yellow { background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%); color: #3e2723; border: none; padding: 14px; border-radius: 14px; font-size: 1rem; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4); transition: transform 0.1s ease, box-shadow 0.2s ease; display: flex; justify-content: center; align-items: center; }
-.btn-yellow:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3); }
-.bus-result-main { background: #E3F2FD; border: 1px solid #BBDEFB; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.bus-time-big { font-size: 3rem; font-weight: 900; color: #1565C0; line-height: 1; margin: 8px 0; font-family: 'Roboto', sans-serif; letter-spacing: -2px; }
-.bus-list-container { background: #fafafa; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
-.bus-list-item { padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; transition: background 0.2s; }
-.bus-list-item:last-child { border-bottom: none; }
-.bus-list-item:hover { background: #fff; }
-.spin { animation: spin 1s linear infinite; color: #FFC107; }
+/* --- CONTAINER PRINCIPALE (La Scheda) --- */
+.bus-search-box {
+    background: #ffffff;
+    border-radius: 24px; /* Curve più morbide */
+    padding: 24px;
+    /* Ombra profonda e diffusa per effetto "galleggiamento" */
+    box-shadow: 0 20px 40px -5px rgba(0,0,0,0.1), 0 10px 15px -3px rgba(0,0,0,0.05);
+    border: 1px solid rgba(255,255,255,0.5);
+    margin-top: 5px; /* Attaccato alla mappa */
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- TITOLO (Autobus ATC) --- */
+.bus-title {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #1a202c; /* Nero morbido */
+    margin-bottom: 0px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    letter-spacing: -0.5px;
+    padding-bottom: 15px;
+}
+
+/* L'icona del titolo */
+.bus-title .material-icons {
+    color: #fff;
+    background: linear-gradient(135deg, #FFC107, #FF9800); /* Gradiente sull'icona */
+    padding: 8px;
+    border-radius: 12px;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 6px rgba(255, 152, 0, 0.25);
+}
+
+/* --- CAMPI DI INPUT E SELECT --- */
+.bus-inputs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.bus-inputs label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #718096; /* Grigio freddo */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.bus-select {
+    width: 100%;
+    background: #F7FAFC; /* Grigio chiarissimo */
+    border: 2px solid transparent; /* Bordo invisibile di base */
+    border-radius: 16px; /* Molto arrotondato */
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2D3748;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Rimuove stile default iOS */
+    -webkit-appearance: none;
+    appearance: none;
+    /* Aggiunge una freccetta custom (opzionale, ma sta bene) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23A0AEC0'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+.bus-select:focus {
+    background: #ffffff;
+    border-color: #FFC107;
+    box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.15); /* alone giallo */
+    transform: translateY(-1px);
+}
+
+/* Fix per input date/time che non supportano bene background-image */
+input[type="date"].bus-select, input[type="time"].bus-select {
+    background-image: none; 
+    min-height: 52px; /* Altezza comoda per il dito */
+}
+
+/* --- BOTTONE CERCA --- */
+.btn-yellow {
+    width: 100%;
+    background: linear-gradient(135deg, #FFC107 0%, #FF8F00 100%);
+    color: #422006; /* Marrone scuro per contrasto */
+    border: none;
+    padding: 16px;
+    border-radius: 18px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    /* Effetto Glow */
+    box-shadow: 0 10px 25px -5px rgba(255, 160, 0, 0.4);
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-yellow:active {
+    transform: scale(0.96);
+    box-shadow: 0 5px 10px -5px rgba(255, 160, 0, 0.4);
+}
+
+/* --- RISULTATO PRINCIPALE (Card Blu) --- */
+.bus-result-main {
+    /* Gradiente moderno Blu Oceano */
+    background: linear-gradient(135deg, #006064 0%, #0097A7 100%);
+    border: none;
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    margin-bottom: 25px;
+    color: white;
+    box-shadow: 0 15px 30px -5px rgba(0, 96, 100, 0.3);
+    position: relative;
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Titolo "Prossima Partenza" dentro la card */
+.bus-result-main div:first-child {
+    color: rgba(255,255,255, 0.8) !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px;
+}
+
+/* Orario Grande */
+.bus-time-big {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1;
+    margin: 10px 0;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    letter-spacing: -2px;
+}
+
+/* Info aggiuntive dentro la card */
+.bus-result-main div:last-child {
+    color: rgba(255,255,255, 0.9) !important;
+}
+
+/* --- LISTA ALTRE CORSE --- */
+.bus-list-container {
+    background: transparent;
+    border-radius: 0;
+    border: none;
+}
+
+.bus-list-item {
+    padding: 15px 20px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 12px; /* Ogni riga è una "pillola" */
+    border: 1px solid transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #4a5568;
+    transition: all 0.2s;
+}
+
+.bus-list-item:hover {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    transform: translateX(5px); /* Si sposta leggermente a destra */
+}
+
+/* --- ANIMAZIONI --- */
+.spin {
+    animation: spin 1s linear infinite;
+    color: #fff; /* Spinner bianco su sfondo blu */
+}
+
 @keyframes spin { 100% { transform: rotate(360deg); } }
-@keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
-input[type="date"], input[type="time"] { display: block; min-height: 45px; }
-header {
-    display: none !important;
+@keyframes popIn { 
+    0% { opacity: 0; transform: scale(0.9) translateY(20px); } 
+    100% { opacity: 1; transform: scale(1) translateY(0); } 
+}
+
+/* Nasconde l'header come richiesto */
+header { display: none !important; }
+/* ============================================================
+   AGGIUNTE PER I TRENI (ROSSO)
+   ============================================================ */
+
+/* 1. BOTTONE ROSSO (Per i Treni) */
+.btn-red {
+    width: 100%;
+    /* Gradiente Rosso Intenso */
+    background: linear-gradient(135deg, #FF5252 0%, #D32F2F 100%);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 18px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    /* Ombra Rossa */
+    box-shadow: 0 10px 25px -5px rgba(211, 47, 47, 0.4);
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-red:active {
+    transform: scale(0.96);
+    box-shadow: 0 5px 10px -5px rgba(211, 47, 47, 0.4);
+}
+
+/* 2. ICONA ROSSA DEL TITOLO */
+/* Usiamo !important per assicurarci che sovrascriva il giallo */
+.bus-title .icon-red {
+    background: linear-gradient(135deg, #FF5252, #D32F2F) !important;
+    box-shadow: 0 4px 6px rgba(211, 47, 47, 0.25) !important;
+    color: white !important;
 }
