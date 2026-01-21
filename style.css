@@ -1,29 +1,29 @@
 /* ============================================================
-   1. SETUP, VARIABILI & FONTS (Tema: "Summer Coast")
+   1. SETUP, VARIABILI & FONTS 
    ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800&family=Ultra&family=Inter:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800&family=Kranky&family=Inter:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Roboto:wght@400;700&display=swap');
 
 :root {
 
-    /* Palette: Ispirata alla costa ligure/mediterranea */
-    --primary-col: #2A9D8F; /* Turchese Profondo (Mare) */
-    --primary-dark: #264653; /* Blu Notte (Testi/Contrasti) */
-    --accent-col:  #E76F51; /* Corallo (Tramonto/Focus) */
-    --accent-soft: #F4A261; /* Sabbia Dorata (Secondario) */
+    /* Palette */
+    --primary-col: #2A9D8F; 
+    --primary-dark: #264653; 
+    --accent-col:  #E76F51; 
+    --accent-soft: #F4A261; 
     
-    --bg-body:     #FDFCF8; /* Bianco Sporco/Sabbia chiarissima (Meno stancante del bianco) */
-    --surface:     #FFFFFF; /* Bianco puro per le card */
+    --bg-body:     #FDFCF8; 
+    --surface:     #FFFFFF; 
     
     --text-main:   #2D3436; 
     --text-light:  #636E72;
 
     /* Dimensioni & Spaziature */
-    --nav-height:  75px; /* Più alta per il pollice */
-    --card-radius: 20px; /* Curve morbide */
+    --nav-height:  75px; 
+    --card-radius: 20px; 
     
     /* Effetti */
-    --shadow-soft: 0 10px 30px -10px rgba(42, 157, 143, 0.15); /* Ombra colorata leggera */
+    --shadow-soft: 0 10px 30px -10px rgba(42, 157, 143, 0.15); 
     --glass-bg:    rgba(255, 255, 255, 0.85);
     --glass-blur:  blur(12px);
 }
@@ -31,31 +31,27 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 body {
-    font-family: 'Roboto'; /* Leggibilità massima per il corpo */
+    font-family: 'Roboto'; 
     background-color:var(--glass-blur);
     color: var(--text-main);
     line-height: 1.6;
     touch-action: pan-x pan-y;
     overflow-x: hidden;
     height: 100%; width: 100%;
-    padding-bottom: calc(var(--nav-height) + 30px); /* Spazio extra per la nav galleggiante */
+    padding-bottom: calc(var(--nav-height) + 30px); 
 }
 
 /* Titoli in Font Montserrat per carattere */
  .card-title-overlay {
     font-family: 'Roboto Slab'; 
     font-weight: 400; 
-    
-    /* Colore: Kranky sta benissimo con il tuo Blu Notte o anche con il Corallo */
     color: var(--primary-dark);
-    
-    font-size: 1.6rem; /* Deve essere grande! */
+    font-size: 1.6rem; 
     line-height: 1.1;
-    
 }
 
 /* ============================================================
-   HEADER & NAVIGAZIONE (Update: Layout a tutta larghezza)
+   HEADER & NAVIGAZIONE (Layout Standard per TUTTE le pagine)
    ============================================================ */
 
 header, #app-header {
@@ -64,7 +60,6 @@ header, #app-header {
     -webkit-backdrop-filter: var(--glass-blur);
     height: 65px;
     
-    /* MODIFICA FONDAMENTALE: Spinge gli elementi agli estremi */
     display: flex; 
     justify-content: space-between; 
     align-items: center;
@@ -73,55 +68,27 @@ header, #app-header {
     border-bottom: 1px solid rgba(0,0,0,0.05);
     transition: all 0.3s ease;
     
-    /* Padding laterale per non toccare la cornice del telefono */
     padding: 0 20px; 
-    width: 100%; /* Occupa tutto lo schermo */
+    width: 100%; 
 }
 
 /* Titolo Centrato Assoluto */
 #view-title { 
-    /* Trucco per centrare perfettamente un elemento in un contenitore relativo */
-position: absolute;
+    position: absolute;
     left: 50%;
     transform: translateX(-50%);
     
     font-family: 'Ultra', serif;
     font-size: 1.5rem;
-    color: var(--primary-col); /* Usiamo il Turchese per un look fresco */
+    color: var(--primary-col); 
     text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
-    /* ------------- */
     margin: 0;
     
-    white-space: nowrap; /* Evita che vada a capo */
+    white-space: nowrap; 
     text-align: center;
-    z-index: 1; /* Sta sotto i menu se si aprono */
+    z-index: 1; 
 }
-#view-title::first-letter { text-transform: uppercase; }
-#view-title::first-letter {
-    font-size: 1.2em; /* Il 40% più grande del resto del testo */
-    font-weight: 600; /* Molto grassetto */
-    
-    /* Opzionale: se vuoi che la prima lettera abbia il colore "Corallo" */
-    /* color: var(--accent-col); */ 
-}
-
-/* Contenitore Destra (Lingua + Share) */
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 15px; /* Spazio tra bandierina e icona share */
-}
-
-/* Bottone Share (Ricreato) */
-.header-share-btn {
-    font-size: 26px !important; /* Dimensione icona */
-    color: var(--accent-col); /* Colore Corallo */
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform 0.2s;
-}
-.header-share-btn:active { transform: scale(0.9); }
-
+#view-title::first-letter { text-transform: uppercase; font-size: 1.2em; font-weight: 600; }
 
 /* Main Content */
 main, #app-content { 
@@ -130,15 +97,15 @@ main, #app-content {
     padding: 5px 20px; 
 }
 
-/* Bottom Navigation: Galleggiante e stile App Nativa */
+/* Bottom Navigation */
 #bottom-nav, #nav-bar {
-    position: fixed; bottom: 20px; left: 20px; right: 20px; /* Staccata dai bordi */
+    position: fixed; bottom: 20px; left: 20px; right: 20px; 
     width: auto; height: 70px;
     background-color: var(--surface);
-    border-radius: 25px; /* A pillola */
+    border-radius: 25px; 
     display: flex; justify-content: space-evenly; align-items: center;
     z-index: 1000;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1); /* Ombra profonda per staccarla dal fondo */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
     border: 1px solid rgba(255,255,255,0.5);
 }
 
@@ -150,7 +117,6 @@ main, #app-content {
     position: relative;
 }
 
-/* Indicatore attivo: Un pallino colorato sotto o cambio colore */
 .nav-item.active { 
     color: var(--primary-col); 
     transform: translateY(-2px);
@@ -168,7 +134,7 @@ main, #app-content {
     letter-spacing: 0.8px; 
 }
 
-/* Loading Spinner personalizzato */
+/* Loading Spinner */
 .loading-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
 .loader {
     font-weight: 600; color: var(--primary-col); letter-spacing: 1px;
@@ -177,677 +143,165 @@ main, #app-content {
 }
 
 /* ============================================================
-   3. CLASSI CONDIVISE (Stile "Summer Coast")
-   Coerenza con Fase 1: Ombre colorate, Font Montserrat, Niente bordi.
+   3. CLASSI CONDIVISE 
    ============================================================ */
 
-/* --- A. STILE BASE DELLE CARD (Premium & Clean) --- 
-   Si applica a tutte le liste */
 .card-list-item, .card-product, .card-sentiero, 
 .card-spiaggia, .card-transport, .card-pharmacy, .village-card {
     background-color: var(--surface) !important;
-    border-radius: var(--card-radius); /* 20px come da variabili */
-    box-shadow: var(--shadow-soft); /* Ombra turchese leggerissima */
-    margin-bottom: 20px; /* Più respiro tra le card */
+    border-radius: var(--card-radius); 
+    box-shadow: var(--shadow-soft); 
+    margin-bottom: 20px; 
     cursor: pointer;
     transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.25s ease;
-    border: none; /* RIMOSSO il bordo grigio per pulizia */
-    position: relative; /* Per gestire eventuali badge sovrapposti */
-    overflow: hidden; /* Mantiene le immagini dentro le curve */
+    border: none; 
+    position: relative; 
+    overflow: hidden; 
 }
 
-/* --- B. EFFETTI DI PRESSIONE (Feedback Tattile) --- */
 .card-list-item:active, .card-product:active, .card-sentiero:active, 
-.card-spiaggia:active, .village-card:active, 
-.icon-btn:active, .page-btn:active, .action-btn:active, .filter-chip:active {
-    transform: scale(0.97); /* Effetto "premuto" morbido */
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05); /* L'ombra si riduce quando premi */
+.card-spiaggia:active, .village-card:active {
+    transform: scale(0.97); 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
 }
-.icon-btn:active { opacity: 0.7; }
 
-/* --- C. TIPOGRAFIA TITOLI CARD (Montserrat) --- */
 .item-title, .prod-title, .spiaggia-title, .transport-title, .pharmacy-name {
-    font-family: 'Roboto Slab', sans-serif; /* Coerenza con Header */
+    font-family: 'Roboto Slab', sans-serif; 
     font-weight: 700;
-    color: var(--primary-dark); /* Blu notte elegante */
+    color: var(--primary-dark); 
     font-size: 1.15rem;
     line-height: 1.3;
     margin-bottom: 4px;
 }
 
-/* --- D. TIPOGRAFIA SOTTOTITOLI/INFO (Nunito) --- */
 .item-subtitle, .spiaggia-location, .transport-desc, .pharmacy-address {
     font-family: 'Roboto Slab', sans-serif;
     font-size: 0.9rem;
     color: var(--text-light);
-    font-weight: 600; /* Leggermente più marcato per leggibilità al sole */
-    display: flex; align-items: center; gap: 4px; /* Per eventuali icone */
+    font-weight: 600; 
+    display: flex; align-items: center; gap: 4px; 
 }
 
-/* --- E. BASE DEI BOTTONI (Action & Chips) - Stile Pillola --- */
 .action-btn, .btn-sentiero-small, .btn-azure, .btn-pharmacy-call, .filter-chip {
     display: inline-flex; align-items: center; justify-content: center;
     font-family: 'Roboto', sans-serif;
     font-weight: 600; 
     text-decoration: none; 
-    border-radius: 50px; /* Forme completamente arrotondate (Pillola) */
+    border-radius: 50px; 
     cursor: pointer; 
     transition: all 0.2s ease;
     letter-spacing: 0.3px;
-    border: none; /* Rimosso border default */
-}
-
-
-/* ============================================================
-   4. COMPONENTI SPECIFICI (Restyling Premium)
-   Miglioramenti: Scroll sfumato, Paginazione circolare, Glass effect
-   ============================================================ */
-
-/* --- HEADER BOTTONI (Piccoli cerchi di vetro) --- */
-.icon-btn {
-    background: rgba(255,255,255,0.2); /* Trasparenza */
-    backdrop-filter: blur(4px); /* Sfocatura sfondo (Glass) */
-    -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(255,255,255,0.3); /* Bordo sottile di luce */
-    
-    color: white; 
-    width: 40px; height: 40px; /* Dimensione fissa per cerchio perfetto */
-    border-radius: 50%; 
-    
-    display: flex; align-items: center; justify-content: center;
-    transition: transform 0.2s ease, background 0.3s;
-}
-.icon-btn:active { 
-    transform: scale(0.9); 
-    background: rgba(255,255,255,0.4); 
-}
-/* ============================================================
-   STILE PULITO (Il layout è gestito da JS)
-   ============================================================ */
-
-/* Nasconde solo la barra di scorrimento visiva (brutta), lasciando lo scroll attivo */
-.sub-nav-tabs::-webkit-scrollbar, .filter-bar::-webkit-scrollbar { display: none; }
-.sub-nav-tabs, .filter-bar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* REGOLE PER LA BARRA FILTRI (Quella che appare sotto) */
-/* Questa non è gestita dal JS "Arma Fine di Mondo", quindi le serve il layout CSS */
-.filter-bar {
-    display: flex;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    gap: 10px;
-    padding: 5px 20px 10px 20px;
-}
-
-/* ============================================================
-   STILE TAB MODERN (Solo Testo + Linea + Posizione)
-   ============================================================ */
-
-/* 1. POSIZIONAMENTO IN ALTO (Aria dal bordo telefono) */
-/* Questo spinge i menu più in basso, staccandoli dalla notch/isola dinamica */
-.sub-nav-bar {
-    padding-top: 15px !important; /* Spazio sopra i testi */
-    padding-bottom: 0 !important;
-    align-items: flex-end !important; /* Allinea il testo in basso vicino alla linea */
-    min-height: 60px; /* Altezza minima per centrare visivamente */
-}
-
-/* 2. STILE TESTO PULITO */
-.sub-nav-item {
-    padding: 10px 5px !important; /* Meno spazio laterale, più pulito */
-    position: relative;           /* Serve per la linea */
-    
-    font-size: 1rem !important;   /* Testo un po' più grande */
-    font-weight: 600 !important;
-    color: #B2BEC3 !important;    /* Grigio chiaro inattivo */
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    
-    background: transparent !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;  /* Niente curve */
-    transition: color 0.3s ease;
-}
-
-/* 3. LA LINEA SOTTO (Animata) */
-.sub-nav-item::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background-color: var(--primary-col); /* Turchese */
-    
-    transform: scaleX(0); /* Inizialmente invisibile */
-    transform-origin: center;
-    transition: transform 0.3s ease;
-    border-radius: 3px 3px 0 0;
-}
-
-/* 4. STATO ATTIVO (Selezionato) */
-.sub-nav-item.active-sub {
-    color: var(--primary-col) !important;
-    font-weight: 800 !important;
-    transform: none !important;
-}
-
-/* Mostra la linea quando attivo */
-.sub-nav-item.active-sub::after {
-    transform: scaleX(0.8); /* Linea larga l'80% del testo */
-}
-
-/* Nasconde scrollbar brutte */
-.sub-nav-tabs::-webkit-scrollbar { display: none; }
-/* ============================================================
-   4. COMPONENTI SPECIFICI (Card & Liste Premium)
-   Miglioramenti: Design immersivo, Curve 24px, Micro-interazioni
-   ============================================================ */
-
-/* --- A. CARD BORGHI (HOME) - Stile "Cartolina" --- */
-.grid-container { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 12px; /* Spazio bilanciato */
-    padding: 10px 0; 
-}
-
-.village-card {
-    height: 180px; /* Più slanciata per dare spazio alla foto */
-    position: relative; 
-    overflow: hidden;
-    background-size: cover; 
-    background-position: center; 
-    
-    border: none;
-    border-radius: 24px; /* Curve moderne stile iOS */
-    
-    /* Ombra profonda per staccare dallo sfondo */
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); 
-    
-    /* Reset margini per la griglia */
-    margin-bottom: 0 !important; 
-    
-    /* Animazione elastica al tocco */
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* Effetto pressione */
-.village-card:active { transform: scale(0.96); }
-
-/* Overlay Titolo: Gradiente migliorato per leggibilità */
-.card-title-overlay {
-    position: absolute; bottom: 0; width: 100%; height: 60%;
-    /* Sfumatura dal nero trasparente al trasparente totale */
-    background: linear-gradient(to top, rgba(38, 70, 83, 0.9) 0%, transparent 100%);
-    
-    display: flex; align-items: flex-end; /* Testo in basso */
-    padding: 15px;
-    
-    color: white; 
-    font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px;
-    text-shadow: 0 2px 5px rgba(0,0,0,0.3);
-}
-
-/* --- B. CARD RISTORANTI & GENERICHE (Clean Design) --- */
-.card-list-item {
-    display: flex; justify-content: space-between; align-items: center; 
-    gap: 15px; 
-    padding: 22px; /* Più spazio interno = più eleganza */
-    border-left: none !important; /* Pulizia totale */
-}
-
-.item-info { flex: 1; min-width: 0; }
-.item-header-row { 
-    display: flex; justify-content: space-between; align-items: flex-start; 
-    gap: 10px; margin-bottom: 6px; 
-}
-
-/* Tags (Ristorante/Comune) - Stile "Etichetta Premium" */
-.item-tag {
-    font-size: 0.65rem; 
-    font-weight: 700; 
-    text-transform: uppercase; letter-spacing: 0.5px;
-    
-    background-color: var(--accent-soft); /* Color Sabbia Dorata */
-    color: white;
-    
-    padding: 6px 12px; 
-    border-radius: 12px; /* Curve morbide */
-    /* Ombra dorata sotto l'etichetta */
-    box-shadow: 0 4px 10px -2px rgba(244, 162, 97, 0.5); 
-}
-
-/* --- C. CARD PRODOTTI (Food Blog Style) --- */
-.card-product {
-    display: flex; flex-direction: column; overflow: hidden; 
-    border: none;
-    border-radius: 24px; /* Coerenza con i Borghi */
-    
-    /* Ombra "Galleggiante" più alta */
-    box-shadow: 0 15px 35px -10px rgba(0,0,0,0.15); 
-    transform: translateZ(0); /* Ottimizzazione rendering */
-}
-
-.prod-thumb { 
-    width: 100%; 
-    height: 230px; /* Foto molto grande e impattante */
-    object-fit: cover; 
-    background-color: #eee; 
-    transition: transform 0.5s ease; /* Transizione lenta per lo zoom */
-}
-
-/* Effetto Zoom sulla foto quando premi la card */
-.card-product:active .prod-thumb { transform: scale(1.05); }
-
-.prod-info { 
-    padding: 22px; 
-    background: white;
-    position: relative;
-}/* --- CARD: SENTIERI (Outdoor) & SPIAGGE (Mare) --- */
-/* Layout interni: Pulizia assoluta */
- .card-spiaggia { 
-    padding: 22px 25px; /* Spaziatura interna generosa */
-    border-left: none; /* Rimosso vecchio stile */
-    position: relative;
-}
-
-/* --- HEADER SENTIERI (Stile Tecnico/Outdoor) --- */
-.sentiero-header { 
-    display: flex; justify-content: space-between; align-items: center;
-    color: var(--accent-col); /* Corallo */
-    font-family: 'Roboto', sans-serif;
-    font-size: 0.85rem; font-weight: 800; 
-    text-transform: uppercase; letter-spacing: 1px;
-    margin-bottom: 12px;
-}
-
-/* --- HEADER SPIAGGE (Stile Relax) --- */
-.spiaggia-header { 
-    display: flex; justify-content: space-between; align-items: flex-start; 
-    margin-bottom: 8px; 
-}
-/* Emoji grande per impatto visivo immediato */
-.spiaggia-header span { font-size: 1.6rem; margin-left: 10px; }
-
-/* Location: Badge grigio chiaro elegante */
-.spiaggia-location {
-    display: inline-flex; align-items: center;
-    background-color: #F8F9FA; 
-    padding: 4px 10px; border-radius: 8px;
-    font-size: 0.85rem; color: var(--text-light); font-weight: 700;
-}
-
-/* --- FOOTER (Separatore "Ticket") --- */
-.sentiero-footer, .spiaggia-footer {
-    display: flex; 
-    margin-top: 18px; padding-top: 15px; 
-    /* Linea tratteggiata più elegante e sottile */
-    border-top: 2px dashed rgba(0,0,0,0.06); 
-}
-.sentiero-footer { justify-content: space-between; align-items: center; }
-.spiaggia-footer { gap: 12px; }
-
-/* --- BOTTONI SPECIFICI (Pillole Soft) --- */
-
-/* Sentieri: Sfondo Arancio/Corallo Chiaro */
-.btn-sentiero-small { 
-    padding: 10px 18px; /* Più spazio per il dito */
-    font-size: 0.75rem; font-weight: 800; text-transform: uppercase; 
-    color: var(--accent-col); 
-    background-color: #FFF3E0; /* Corallo pastello */
-    border-radius: 50px; /* Pillola */
-    border: none;
-    letter-spacing: 0.5px;
-    transition: transform 0.2s;
-}
-.btn-sentiero-small:active { 
-    background-color: var(--accent-col); color: white; 
-    transform: scale(0.95);
-}
-
-/* --- FIX: DESIGN PROPORZIONATO CARD-ON-MAP --- */
-
-.card-sentiero-modern {
-    position: relative;
-    width: 100%;
-    height: 420px; /* Aumentato leggermente per dare aria alla mappa */
-    border-radius: 24px;
-    overflow: hidden;
-    margin-bottom: 25px;
-    background: #f0f0f0;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-}
-
-.sentiero-map-bg {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 1;
-}
-
-/* La Scheda Bianca: Più compatta e proporzionata */
-.sentiero-card-overlay {
-    position: absolute;
-    bottom: 12px; /* Margine dal fondo mappa */
-    left: 12px;   /* Margine laterale */
-    right: 12px;  /* Margine laterale */
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 18px 15px; /* Meno padding verticale */
-    z-index: 2;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    text-align: center;
-}
-
-/* Titolo: Rigorosamente su una riga */
-.sentiero-overlay-title {
-    font-family: 'Roboto Slab', cursive;
-    font-size: 1.25rem;
-    color: #222;
-    margin: 0 0 12px 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 0 5px;
-}
-
-/* Statistiche: Pillole più piccole e orizzontali */
-.sentiero-stats {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-bottom: 18px;
-    flex-wrap: nowrap; /* Impedisce di andare a capo */
-}
-
-.stat-pill {
-    background: #FFF9F2; /* Color crema leggerissimo */
-    padding: 5px 10px;
-    border-radius: 50px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    border: 1px solid rgba(231, 111, 81, 0.1);
-}
-
-.stat-icon { font-size: 0.9rem; }
-
-.stat-label { 
-    font-size: 0.7rem; 
-    text-transform: uppercase; 
-    color: #888; 
-    font-weight: 700;
-}
-
-.stat-val { 
-    font-size: 0.8rem; 
-    font-weight: 700; 
-    color: #444; 
-}
-
-/* Bottone Dettagli: Più sottile e moderno */
-.btn-outline-details {
-    display: inline-block;
-    width: 80%; /* Non tocca i bordi della scheda bianca */
-    padding: 8px 0;
-    background: transparent;
-    border: 1.5px solid #444;
-    border-radius: 50px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #444;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-}
-/* Spiagge: Sfondo Turchese Chiaro */
-.btn-azure { 
-    padding: 10px 18px; 
-    font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
-    background-color: #E0F2F1; 
-    color: #00897B; /* Turchese scuro per leggibilità */
-    border-radius: 50px; /* Pillola */
-    border: none;
-    letter-spacing: 0.5px;
-    transition: transform 0.2s;
-}
-.btn-azure:active { 
-    background-color: #00897B; color: white; 
-    transform: scale(0.95); 
-}/* --- CARD: TRASPORTI & FARMACIE (Design "Service App") --- */
-.card-transport, .card-pharmacy { 
-    display: flex; align-items: center; 
-    padding: 18px; /* Spaziatura comoda */
-    border: none;
-    position: relative;
-    /* Per le farmacie, aggiungiamo un tocco di colore distintivo */
-    overflow: hidden; 
-}
-
-/* --- TRASPORTI: Stile "Icona iOS" --- */
-.transport-thumb { 
-    width: 72px; height: 72px; flex-shrink: 0; 
-    border-radius: 18px; /* Squircle (tra cerchio e quadrato) */
-    background-color: #ECEFF1; 
-    background-size: cover; background-position: center; 
-    margin-right: 20px; 
-    /* Ombra morbida sotto l'icona per staccarla */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08); 
-}
-
-.transport-info, .pharmacy-info { flex: 1; min-width: 0; }
-
-/* --- FARMACIE: Stile "Clean Medical" --- */
-.card-pharmacy { 
-    border-left: none; /* Via il bordo vecchio */
-    /* Sfumatura delicatissima verso il verde menta a destra */
-    background: linear-gradient(to right, white 60%, #F1F8E9 100%);
-}
-
-.pharmacy-icon { 
-    font-size: 2rem; margin-right: 20px; 
-    color: #2ECC71; /* Verde Salute */
-    
-    /* Cerchio bianco dietro l'icona per pulizia */
-    background: white; 
-    width: 52px; height: 52px; 
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.btn-pharmacy-call {
-    background-color: white; color: #27AE60; 
-    border: 1px solid #E8F5E9; /* Bordino sottile */
-    border-radius: 50px; 
-    padding: 8px 16px; font-size: 0.8rem; font-weight: 700; 
-    gap: 6px; display: inline-flex; align-items: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-/* ============================================================
-   5. BOTTONI AZIONE GENERALI (Chiama, Mappa)
-   Stile: Pillole "Chunky" (Facili da premere)
-   ============================================================ */
-.card-actions { 
-    display: flex; gap: 12px; 
-    margin-top: 15px; padding-top: 15px; 
-    /* Linea tratteggiata elegante */
-    border-top: 2px dashed rgba(0,0,0,0.06); 
-    width: 100%; 
-}
-
-.action-btn { 
-    flex: 1; 
-    padding: 12px 10px; /* Più alti per il tocco */
-    font-size: 0.85rem; 
-    gap: 8px; 
-    border-radius: 50px; /* Pillola completa */
     border: none; 
-    font-weight: 700;
-    font-family: 'Roboto', sans-serif;
-    
-    /* Transizioni fluide */
-    transition: transform 0.2s ease, filter 0.2s;
 }
 
-/* Colori specifici */
-.btn-phone { 
-    background-color: #E0F2F1; /* Verde Acqua */
-    color: #00695C; 
-}
-/* Effetto "Scurisci" al tocco invece di cambiare colore netto */
-.btn-phone:active { filter: brightness(0.95); transform: scale(0.97); }
-
-.btn-map { 
-    background-color: #E3F2FD; /* Azzurro Cielo */
-    color: #1565C0; 
-}
-.btn-map:active { filter: brightness(0.95); transform: scale(0.97); }
 
 /* ============================================================
-   6. MODALI (POPUP) - Effetto "Summer Glass"
-   ============================================================ */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    /* Sfondo Blu Notte semitrasparente */
-    background: rgba(38, 70, 83, 0.4); 
-    /* Effetto sfocatura (Vetro smerigliato) */
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    z-index: 2000;
-    display: flex; justify-content: center; align-items: center; padding: 20px;
-    opacity: 0; animation: fadeIn 0.3s forwards;
-}
-
-.modal-content {
-    background: var(--surface); 
-    padding: 0; /* Padding rimosso per far toccare le immagini ai bordi */
-    border-radius: 25px; /* Curve ampie */
-    width: 100%; max-width: 450px;
-    max-height: 85vh; overflow-y: auto; 
-    position: relative; 
-    /* Ombra profonda per staccarlo dallo sfondo sfocato */
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-/* Immagini dentro il modale (se presenti) vanno a filo */
-.modal-content img {
-    border-radius: 0; /* Rimuove raggio interno */
-    width: 100%; display: block;
-}
-
-/* Testi dentro il modale */
-.modal-content h2 { 
-    padding: 25px 25px 5px 25px; 
-    font-family: 'Roboto', sans-serif; 
-    color: var(--primary-dark);
-    font-size: 1.5rem;
-}
-.modal-content p { 
-    padding: 0 25px 25px 25px; 
-    color: var(--text-light); 
-    line-height: 1.7;
-}
-
-/* Bottone Chiudi Galleggiante */
-.close-modal { 
-    position: absolute; top: 15px; right: 15px; 
-    width: 40px; height: 40px;
-    background: white; 
-    color: var(--text-main);
-    border-radius: 50%; /* Cerchio perfetto */
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; border: none;
-    font-size: 1.5rem; font-weight: 300;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* Ombra per farlo galleggiare sopra la foto */
-    z-index: 10;
-}
-
-@keyframes fadeIn { to { opacity: 1; } }
-/* ============================================================
-   7. SEZIONE MAPPE E MONUMENTI (Refined)
+   8. NUOVA SCHERMATA BENVENUTO (Card Gigante)
    ============================================================ */
 
-/* Mappa con bordo "Cartolina" */
-.map-container {
+/* Non è più full screen fixed, ma una card che riempie lo spazio disponibile */
+.welcome-card {
     width: 100%;
-    height: calc(100vh - 200px);
-    border-radius: var(--card-radius);
+    /* Calcolo altezza: 100vh - Header(65) - NavPadding(75+30) - Margini(10) */
+    height: calc(100vh - 180px);
+    min-height: 500px; /* Altezza minima di sicurezza */
+    
+    background-size: cover; 
+    background-position: center;
+    border-radius: 24px; /* Come le altre card */
     overflow: hidden;
-    background-color: #E0F2F1; /* Sfondo verdino chiaro mentre carica */
     position: relative;
     box-shadow: var(--shadow-soft);
-    border: 4px solid var(--surface); /* Bordo bianco spesso */
+    
+    /* Per animazione ingresso */
+    opacity: 0; animation: fadeIn 0.5s forwards;
 }
 
-/* Badge fluttuante sulla mappa */
-.map-note {
-    position: absolute;
-    bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(4px);
-    padding: 8px 20px; border-radius: 50px;
-    font-size: 0.8rem; font-weight: 700; 
+/* Overlay Scuro Gradiente */
+.welcome-overlay {
+    width: 100%; height: 100%;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Contenuto in basso */
+    padding: 30px;
+}
+
+/* Testi Benvenuto */
+.welcome-title {
+    font-family: 'Ultra', serif;
+    font-size: 2.8rem;
+    color: white;
+    margin-bottom: 10px;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    line-height: 1.1;
+}
+
+.welcome-desc {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1.05rem;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+.welcome-divider {
+    width: 50px; height: 4px;
+    background: var(--accent-col);
+    border-radius: 2px;
+    margin-bottom: 25px;
+}
+
+/* Griglia Tasti Lingua */
+.lang-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 10px;
+}
+
+.lang-tile {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    padding: 12px 5px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s;
+    color: white;
+}
+
+.lang-tile:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.lang-tile.active {
+    background: white;
     color: var(--primary-dark);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    pointer-events: none;
-    letter-spacing: 0.5px;
+    border-color: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
-/* Stili Badge Monumenti */
-.monument-meta {
-    display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
-}
+.lang-flag-large { font-size: 1.8rem; margin-bottom: 4px; }
+.lang-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
 
-.meta-badge {
-    font-size: 0.7rem; padding: 6px 12px; border-radius: 12px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.5px;
-}
-
-/* Colori badge ispirati alla natura */
-.badge-easy { background-color: #E8F5E9; color: #2E7D32; } /* Verde vegetazione */
-.badge-hard { background-color: #FFEBEE; color: #a12222; } /* Rosso sentiero */
-.badge-time { background-color: #E3F2FD; color: #1565C0; } /* Azzurro cielo */
-
-/* Card Monumento Specifica */
-.card-list-item.monument-mode {
-    border-left: none; /* Rimuovo il vecchio stile */
-    border-bottom: 3px solid #9C27B0; /* Accento colorato sotto */
-}
-
-/* Box Curiosità */
-.curiosity-box {
-    background-color: #FFF8E1; /* Luce calda */
-    border: none;
-    border-left: 4px solid var(--accent-soft);
-    padding: 15px; margin-top: 20px; border-radius: 8px;
-    font-size: 0.95rem; color: #5D4037;
-    font-style: italic;
-}
 /* ============================================================
-   AGGIUNTA: STILE SELETTORE LINGUA & HEADER ACTIONS
+   STILE SELETTORE LINGUA & HEADER (Condizionale)
    ============================================================ */
-
-/* Contenitore destra header (Lingua + Share) */
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 15px; /* Spazio tra bandiera e icona share */
+    gap: 15px; 
 }
 
-/* Bottone corrente (Bandiera) */
 .current-lang-btn {
     background: rgba(255, 255, 255, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 20px;
     padding: 5px 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'Roboto', sans-serif;
-    font-weight: 700;
-    font-size: 0.85rem;
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Roboto', sans-serif; font-weight: 700; font-size: 0.85rem;
     color: var(--primary-dark);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -855,245 +309,121 @@ main, #app-content {
 
 .current-lang-btn:active { transform: scale(0.95); background: white; }
 
-/* Contenitore Dropdown (Posizionamento relativo) */
-.lang-selector {
-    position: relative;
-    display: inline-block;
-}
+.lang-selector { position: relative; display: inline-block; }
 
-/* Menu a tendina (Glass Style) */
 .lang-dropdown {
-    position: absolute;
-    top: 45px; /* Sotto il bottone */
-    right: 0;
-    background-color: var(--surface); /* O var(--glass-bg) se preferisci trasparenza */
+    position: absolute; top: 45px; right: 0;
+    background-color: var(--surface); 
     min-width: 160px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    border-radius: 16px;
-    padding: 8px;
-    z-index: 2000;
-    
-    /* Animazione apertura */
-    opacity: 0; 
-    visibility: hidden;
+    border-radius: 16px; padding: 8px; z-index: 2000;
+    opacity: 0; visibility: hidden;
     transform: translateY(-10px);
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     border: 1px solid rgba(0,0,0,0.05);
 }
 
-/* Stato aperto */
-.lang-dropdown.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
+.lang-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
-/* Opzioni Lingua */
 .lang-opt {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 12px;
-    border: none;
-    background: none;
-    text-align: left;
-    font-family: 'Roboto Slab', sans-serif;
-    font-weight: 600;
-    color: var(--text-main);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background 0.2s;
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 10px 12px; border: none; background: none;
+    text-align: left; font-family: 'Roboto Slab', sans-serif;
+    font-weight: 600; color: var(--text-main);
+    border-radius: 10px; cursor: pointer; transition: background 0.2s;
 }
 
 .lang-opt:hover { background-color: #F8F9FA; }
 .lang-opt.active { background-color: #E0F2F1; color: var(--primary-col); font-weight: 800; }
 .lang-flag { font-size: 1.2rem; }
-/* Utility: Nascondi frecce liste (Pulizia visiva) */
+
+/* Utility e altre card (copiate per completezza strutturale) */
+.sub-nav-tabs::-webkit-scrollbar, .filter-bar::-webkit-scrollbar { display: none; }
+.sub-nav-tabs, .filter-bar { -ms-overflow-style: none; scrollbar-width: none; }
+.filter-bar { display: flex; overflow-x: auto; flex-wrap: nowrap; gap: 10px; padding: 5px 20px 10px 20px; }
+.sub-nav-bar { padding-top: 15px !important; padding-bottom: 0 !important; align-items: flex-end !important; min-height: 60px; }
+.sub-nav-item { padding: 10px 5px !important; position: relative; font-size: 1rem !important; font-weight: 600 !important; color: #B2BEC3 !important; text-transform: uppercase; letter-spacing: 1px; background: transparent !important; box-shadow: none !important; border-radius: 0 !important; transition: color 0.3s ease; }
+.sub-nav-item::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background-color: var(--primary-col); transform: scaleX(0); transform-origin: center; transition: transform 0.3s ease; border-radius: 3px 3px 0 0; }
+.sub-nav-item.active-sub { color: var(--primary-col) !important; font-weight: 800 !important; transform: none !important; }
+.sub-nav-item.active-sub::after { transform: scaleX(0.8); }
+.grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 0; }
+.village-card { height: 180px; position: relative; overflow: hidden; background-size: cover; background-position: center; border: none; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); margin-bottom: 0 !important; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.village-card:active { transform: scale(0.96); }
+.card-title-overlay { position: absolute; bottom: 0; width: 100%; height: 60%; background: linear-gradient(to top, rgba(38, 70, 83, 0.9) 0%, transparent 100%); display: flex; align-items: flex-end; padding: 15px; color: white; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px; text-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+.card-list-item { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 22px; border-left: none !important; }
+.item-info { flex: 1; min-width: 0; }
+.item-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+.item-tag { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background-color: var(--accent-soft); color: white; padding: 6px 12px; border-radius: 12px; box-shadow: 0 4px 10px -2px rgba(244, 162, 97, 0.5); }
+.card-product { display: flex; flex-direction: column; overflow: hidden; border: none; border-radius: 24px; box-shadow: 0 15px 35px -10px rgba(0,0,0,0.15); transform: translateZ(0); }
+.prod-thumb { width: 100%; height: 230px; object-fit: cover; background-color: #eee; transition: transform 0.5s ease; }
+.card-product:active .prod-thumb { transform: scale(1.05); }
+.prod-info { padding: 22px; background: white; position: relative; }
+.card-spiaggia { padding: 22px 25px; border-left: none; position: relative; }
+.sentiero-header { display: flex; justify-content: space-between; align-items: center; color: var(--accent-col); font-family: 'Roboto', sans-serif; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+.spiaggia-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.spiaggia-header span { font-size: 1.6rem; margin-left: 10px; }
+.spiaggia-location { display: inline-flex; align-items: center; background-color: #F8F9FA; padding: 4px 10px; border-radius: 8px; font-size: 0.85rem; color: var(--text-light); font-weight: 700; }
+.sentiero-footer, .spiaggia-footer { display: flex; margin-top: 18px; padding-top: 15px; border-top: 2px dashed rgba(0,0,0,0.06); }
+.sentiero-footer { justify-content: space-between; align-items: center; }
+.spiaggia-footer { gap: 12px; }
+.btn-sentiero-small { padding: 10px 18px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--accent-col); background-color: #FFF3E0; border-radius: 50px; border: none; letter-spacing: 0.5px; transition: transform 0.2s; }
+.btn-sentiero-small:active { background-color: var(--accent-col); color: white; transform: scale(0.95); }
+.card-sentiero-modern { position: relative; width: 100%; height: 420px; border-radius: 24px; overflow: hidden; margin-bottom: 25px; background: #f0f0f0; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+.sentiero-map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+.sentiero-card-overlay { position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-radius: 20px; padding: 18px 15px; z-index: 2; box-shadow: 0 4px 20px rgba(0,0,0,0.15); text-align: center; }
+.sentiero-overlay-title { font-family: 'Roboto Slab', cursive; font-size: 1.25rem; color: #222; margin: 0 0 12px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px; }
+.sentiero-stats { display: flex; justify-content: center; gap: 6px; margin-bottom: 18px; flex-wrap: nowrap; }
+.stat-pill { background: #FFF9F2; padding: 5px 10px; border-radius: 50px; display: flex; align-items: center; gap: 4px; border: 1px solid rgba(231, 111, 81, 0.1); }
+.stat-icon { font-size: 0.9rem; }
+.stat-label { font-size: 0.7rem; text-transform: uppercase; color: #888; font-weight: 700; }
+.stat-val { font-size: 0.8rem; font-weight: 700; color: #444; }
+.btn-outline-details { display: inline-block; width: 80%; padding: 8px 0; background: transparent; border: 1.5px solid #444; border-radius: 50px; font-size: 0.85rem; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; }
+.btn-azure { padding: 10px 18px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; background-color: #E0F2F1; color: #00897B; border-radius: 50px; border: none; letter-spacing: 0.5px; transition: transform 0.2s; }
+.btn-azure:active { background-color: #00897B; color: white; transform: scale(0.95); }
+.card-transport, .card-pharmacy { display: flex; align-items: center; padding: 18px; border: none; position: relative; overflow: hidden; }
+.transport-thumb { width: 72px; height: 72px; flex-shrink: 0; border-radius: 18px; background-color: #ECEFF1; background-size: cover; background-position: center; margin-right: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+.transport-info, .pharmacy-info { flex: 1; min-width: 0; }
+.card-pharmacy { border-left: none; background: linear-gradient(to right, white 60%, #F1F8E9 100%); }
+.pharmacy-icon { font-size: 2rem; margin-right: 20px; color: #2ECC71; background: white; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.btn-pharmacy-call { background-color: white; color: #27AE60; border: 1px solid #E8F5E9; border-radius: 50px; padding: 8px 16px; font-size: 0.8rem; font-weight: 700; gap: 6px; display: inline-flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.card-actions { display: flex; gap: 12px; margin-top: 15px; padding-top: 15px; border-top: 2px dashed rgba(0,0,0,0.06); width: 100%; }
+.action-btn { flex: 1; padding: 12px 10px; font-size: 0.85rem; gap: 8px; border-radius: 50px; border: none; font-weight: 700; font-family: 'Roboto', sans-serif; transition: transform 0.2s ease, filter 0.2s; }
+.btn-phone { background-color: #E0F2F1; color: #00695C; }
+.btn-phone:active { filter: brightness(0.95); transform: scale(0.97); }
+.btn-map { background-color: #E3F2FD; color: #1565C0; }
+.btn-map:active { filter: brightness(0.95); transform: scale(0.97); }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(38, 70, 83, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 20px; opacity: 0; animation: fadeIn 0.3s forwards; }
+.modal-content { background: var(--surface); padding: 0; border-radius: 25px; width: 100%; max-width: 450px; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+.modal-content img { border-radius: 0; width: 100%; display: block; }
+.modal-content h2 { padding: 25px 25px 5px 25px; font-family: 'Roboto', sans-serif; color: var(--primary-dark); font-size: 1.5rem; }
+.modal-content p { padding: 0 25px 25px 25px; color: var(--text-light); line-height: 1.7; }
+.close-modal { position: absolute; top: 15px; right: 15px; width: 40px; height: 40px; background: white; color: var(--text-main); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 1.5rem; font-weight: 300; box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 10; }
+@keyframes fadeIn { to { opacity: 1; } }
+.map-container { width: 100%; height: calc(100vh - 200px); border-radius: var(--card-radius); overflow: hidden; background-color: #E0F2F1; position: relative; box-shadow: var(--shadow-soft); border: 4px solid var(--surface); }
+.map-note { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(4px); padding: 8px 20px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; color: var(--primary-dark); box-shadow: 0 4px 15px rgba(0,0,0,0.15); pointer-events: none; letter-spacing: 0.5px; }
+.monument-meta { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.meta-badge { font-size: 0.7rem; padding: 6px 12px; border-radius: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-easy { background-color: #E8F5E9; color: #2E7D32; } 
+.badge-hard { background-color: #FFEBEE; color: #a12222; } 
+.badge-time { background-color: #E3F2FD; color: #1565C0; } 
+.card-list-item.monument-mode { border-left: none; border-bottom: 3px solid #9C27B0; }
 .prod-arrow, .item-arrow { display: none !important; }
-/* =========================================
-   STILE MOTORE DI RICERCA BUS (Modern UI)
-   ========================================= */
-
-/* Contenitore Principale */
-.bus-search-box {
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* Ombra morbida */
-    border: 1px solid #f0f0f0;
-    margin-top: 15px;
-}
-
-/* Titolo con icona */
-.bus-title {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #2c3e50;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    letter-spacing: -0.5px;
-}
-
-.bus-title .material-icons {
-    color: #FFC107; /* Giallo Cinque Terre */
-    background: #FFF8E1;
-    padding: 6px;
-    border-radius: 50%;
-    font-size: 1.2rem;
-}
-
-/* Griglia Input (Partenza/Arrivo e Data/Ora) */
-.bus-inputs {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 15px;
-}
-
-/* Etichette sopra gli input */
-.bus-inputs label {
-    display: block;
-    margin-bottom: 4px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #90a4ae;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* I campi di input e select */
-.bus-select {
-    width: 100%;
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 12px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #37474f;
-    outline: none;
-    transition: all 0.2s ease;
-    -webkit-appearance: none; /* Rimuove lo stile default iOS */
-    appearance: none;
-}
-
-/* Effetto Focus (quando clicchi) */
-.bus-select:focus {
-    border-color: #FFC107;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
-}
-
-/* Bottone Cerca */
-.btn-yellow {
-    background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%);
-    color: #3e2723;
-    border: none;
-    padding: 14px;
-    border-radius: 14px;
-    font-size: 1rem;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
-    transition: transform 0.1s ease, box-shadow 0.2s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.btn-yellow:active {
-    transform: scale(0.97);
-    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
-}
-
-/* =========================================
-   RISULTATI RICERCA
-   ========================================= */
-
-/* Card Risultato Principale (Quello grosso) */
-.bus-result-main {
-    background: #E3F2FD; /* Azzurro tenue */
-    border: 1px solid #BBDEFB;
-    border-radius: 16px;
-    padding: 20px;
-    text-align: center;
-    margin-bottom: 20px;
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* L'ora gigante */
-.bus-time-big {
-    font-size: 3rem;
-    font-weight: 900;
-    color: #1565C0; /* Blu scuro */
-    line-height: 1;
-    margin: 8px 0;
-    font-family: 'Roboto', sans-serif; /* Assicurati di avere un font sans-serif */
-    letter-spacing: -2px;
-}
-
-/* Lista corse successive */
-.bus-list-container {
-    background: #fafafa;
-    border-radius: 12px;
-    border: 1px solid #eee;
-    overflow: hidden;
-}
-
-.bus-list-item {
-    padding: 12px 15px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9rem;
-    transition: background 0.2s;
-}
-
-.bus-list-item:last-child {
-    border-bottom: none;
-}
-
-.bus-list-item:hover {
-    background: #fff;
-}
-
-/* Animazione Caricamento (Spin) */
-.spin {
-    animation: spin 1s linear infinite;
-    color: #FFC107;
-}
-
+.bus-search-box { background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #f0f0f0; margin-top: 15px; }
+.bus-title { font-size: 1.1rem; font-weight: 800; color: #2c3e50; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+.bus-title .material-icons { color: #FFC107; background: #FFF8E1; padding: 6px; border-radius: 50%; font-size: 1.2rem; }
+.bus-inputs { display: flex; gap: 12px; margin-bottom: 15px; }
+.bus-inputs label { display: block; margin-bottom: 4px; font-size: 0.7rem; font-weight: 700; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.5px; }
+.bus-select { width: 100%; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 12px; padding: 12px; font-size: 0.95rem; font-weight: 600; color: #37474f; outline: none; transition: all 0.2s ease; -webkit-appearance: none; appearance: none; }
+.bus-select:focus { border-color: #FFC107; background: #fff; box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2); }
+.btn-yellow { background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%); color: #3e2723; border: none; padding: 14px; border-radius: 14px; font-size: 1rem; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4); transition: transform 0.1s ease, box-shadow 0.2s ease; display: flex; justify-content: center; align-items: center; }
+.btn-yellow:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3); }
+.bus-result-main { background: #E3F2FD; border: 1px solid #BBDEFB; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.bus-time-big { font-size: 3rem; font-weight: 900; color: #1565C0; line-height: 1; margin: 8px 0; font-family: 'Roboto', sans-serif; letter-spacing: -2px; }
+.bus-list-container { background: #fafafa; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
+.bus-list-item { padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; transition: background 0.2s; }
+.bus-list-item:last-child { border-bottom: none; }
+.bus-list-item:hover { background: #fff; }
+.spin { animation: spin 1s linear infinite; color: #FFC107; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
-@keyframes popIn { 
-    0% { opacity: 0; transform: scale(0.8); }
-    100% { opacity: 1; transform: scale(1); }
-}
-
-/* Piccola correzione per i Date/Time input su iOS per vederli meglio */
-input[type="date"], input[type="time"] {
-    display: block;
-    min-height: 45px; /* Altezza dito */
-}/* ============================================================
-   RIMOZIONE FASCIA SUPERIORE (Full Screen Mode)
-   ============================================================ */
-
-/* 1. Nascondiamo la barra, il titolo e i bottoni */
-header, #app-header {
-    display: none !important;
-}
-
-/* 2. Sistemiamo il corpo della pagina */
-body {
-    /* Togliamo lo spazio vuoto in alto che serviva per la barra */
-    padding-top: 0 !important;
-}
-
-/* 3. Diamo un po' di respiro ai contenuti in alto */
-/* Altrimenti la prima card si appiccica al bordo del telefono */
-main, #app-content {
-    margin-top: 25px !important; 
-}
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+input[type="date"], input[type="time"] { display: block; min-height: 45px; }
