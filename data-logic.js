@@ -38,7 +38,7 @@ const UI_TEXT = {
         ideal_for: "Ideale per", no_results: "Nessun risultato.", visit_time: "min", curiosity: "Curiosità", coverage: "Copertura", pharmacy_tag: "FARMACIA",
         map_loaded: "Mappa caricata",
         // NUOVI TESTI WELCOME
-        welcome_app_name: "5 Terre Guide",
+        welcome_app_name: "Five2Go",
         welcome_desc: "La tua guida essenziale per esplorare le Cinque Terre. Scopri sentieri, spiagge, cultura e sapori locali.",
         welcome_start: "Inizia a Esplorare"
     },
@@ -51,7 +51,7 @@ const UI_TEXT = {
         ideal_for: "Best for", no_results: "No results found.", visit_time: "min", curiosity: "Curiosity", coverage: "Coverage", pharmacy_tag: "PHARMACY",
         map_loaded: "Map loaded",
         // NEW WELCOME TEXTS
-        welcome_app_name: "5 Terre Guide",
+        welcome_app_name: "Five2Go",
         welcome_desc: "Your essential guide to exploring Cinque Terre. Discover trails, beaches, culture, and local flavors.",
         welcome_start: "Start Exploring"
     },
@@ -64,7 +64,7 @@ const UI_TEXT = {
         btn_call: "Llamar", btn_map: "Mapa", btn_info: "Info", btn_website: "Sitio Web", btn_hours: "Horario", btn_toll: "Peaje", btn_position: "Posición",
         ideal_for: "Ideal para", no_results: "Sin resultados.", visit_time: "min", curiosity: "Curiosidad", coverage: "Cobertura", pharmacy_tag: "FARMACIA",
         map_loaded: "Mapa cargado",
-        welcome_app_name: "5 Terre Guide",
+        welcome_app_name: "Five2Go",
         welcome_desc: "Tu guía esencial para explorar Cinque Terre. Descubre senderos, playas, cultura y sabores.",
         welcome_start: "Empezar"
     },
@@ -76,7 +76,7 @@ const UI_TEXT = {
         btn_call: "Appeler", btn_map: "Carte", btn_info: "Info", btn_website: "Site Web", btn_hours: "Horaires", btn_toll: "Péage", btn_position: "Position",
         ideal_for: "Idéal pour", no_results: "Aucun résultat.", visit_time: "min", curiosity: "Curiosité", coverage: "Couverture", pharmacy_tag: "PHARMACIE",
         map_loaded: "Carte chargée",
-        welcome_app_name: "5 Terre Guide",
+        welcome_app_name: "Five2Go",
         welcome_desc: "Votre guide essentiel pour explorer les Cinque Terre. Découvrez sentiers, plages, culture et saveurs.",
         welcome_start: "Commencer"
     },
@@ -88,7 +88,7 @@ const UI_TEXT = {
         btn_call: "Anrufen", btn_map: "Karte", btn_info: "Info", btn_website: "Webseite", btn_hours: "Öffnungszeiten", btn_toll: "Maut", btn_position: "Standort",
         ideal_for: "Ideal für", no_results: "Keine Ergebnisse.", visit_time: "min", curiosity: "Kuriosität", coverage: "Abdeckung", pharmacy_tag: "APOTHEKE",
         map_loaded: "Karte geladen",
-        welcome_app_name: "5 Terre Guide",
+        welcome_app_name: "Five2Go",
         welcome_desc: "Ihr wesentlicher Reiseführer für die Cinque Terre. Entdecken Sie Wanderwege, Strände, Kultur und Geschmack.",
         welcome_start: "Starten"
     },
@@ -100,7 +100,7 @@ const UI_TEXT = {
         btn_call: "致电", btn_map: "地图", btn_info: "信息", btn_website: "网站", btn_hours: "时间", btn_toll: "通行费", btn_position: "位置",
         ideal_for: "适合", no_results: "无结果", visit_time: "分", curiosity: "趣闻", coverage: "覆盖范围", pharmacy_tag: "药房",
         map_loaded: "地图已加载",
-        welcome_app_name: "5 Terre Guide",
+        welcome_app_name: "Five2Go",
         welcome_desc: "探索五渔村的必备指南。发现步道、海滩、文化和当地风味。",
         welcome_start: "开始探索"
     }

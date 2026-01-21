@@ -380,7 +380,13 @@ main, #app-content {
 .sub-nav-item::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background-color: var(--primary-col); transform: scaleX(0); transform-origin: center; transition: transform 0.3s ease; border-radius: 3px 3px 0 0; }
 .sub-nav-item.active-sub { color: var(--primary-col) !important; font-weight: 800 !important; transform: none !important; }
 .sub-nav-item.active-sub::after { transform: scaleX(0.8); }
-.grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 0; }
+.grid-container { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 12px; 
+    /* Modifica questa riga: 10px sopra, 0 destra, 140px sotto, 0 sinistra */
+    padding: 10px 0 140px 0; 
+}
 .village-card { height: 180px; position: relative; overflow: hidden; background-size: cover; background-position: center; border: none; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); margin-bottom: 0 !important; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .village-card:active { transform: scale(0.96); }
 .card-title-overlay { position: absolute; bottom: 0; width: 100%; height: 60%; background: linear-gradient(to top, rgba(38, 70, 83, 0.9) 0%, transparent 100%); display: flex; align-items: flex-end; padding: 15px; color: white; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px; text-shadow: 0 2px 5px rgba(0,0,0,0.3); }
@@ -462,5 +468,5 @@ main, #app-content {
 @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
 input[type="date"], input[type="time"] { display: block; min-height: 45px; }
 header {
-  display: none;
+    display: none !important;
 }
