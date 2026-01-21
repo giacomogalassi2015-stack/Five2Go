@@ -200,11 +200,14 @@ main, #app-content {
    ============================================================ */
 
 /* Non è più full screen fixed, ma una card che riempie lo spazio disponibile */
+
+    /* Calcolo altezza: 100vh - Header(65) - NavPadding(75+30) - Margini(10) */
 .welcome-card {
     width: 100%;
-    /* Calcolo altezza: 100vh - Header(65) - NavPadding(75+30) - Margini(10) */
-    height: calc(100vh - 180px);
-    min-height: 500px; /* Altezza minima di sicurezza */
+    /* Riduciamo il valore sottratto dato che l'header non c'è più */
+    height: calc(100vh - 100px); 
+    min-height: 500px;
+    /* ... resto del codice ... */
     
     background-size: cover; 
     background-position: center;
