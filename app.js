@@ -266,7 +266,7 @@ window.loadTableData = async function(tableName, btnEl) {
         window.tempTransportData = data; 
         data.forEach((t, index) => {
             const nomeDisplay = window.dbCol(t, 'Località') || window.dbCol(t, 'Mezzo');
-            const imgUrl = window.getSmartUrl(t.Località || t.Mezzo, '', 400);
+            const imgUrl = window.getSmartUrl(t.Mezzo, '', 400);
             html += `<div class="card-product" onclick="openModal('transport', ${index})"><div class="prod-info"><div class="prod-title">${nomeDisplay}</div></div><img src="${imgUrl}" class="prod-thumb" loading="lazy" onerror="this.style.display='none'"></div>`;
         });
         html += '</div>';
@@ -428,11 +428,11 @@ async function renderServicesGrid() {
     let html = '<div class="grid-container animate-fade">';
     data.forEach((t, index) => {
         const titolo = t.Mezzo || t.Località || 'Trasporto'; 
-        const imgUrl = window.getSmartUrl(titolo, 'Trasporti', 600);
+        const imgUrl = window.getSmartUrl(titolo, '', 600);
         html += `<div class="village-card" style="background-image: url('${imgUrl}')" onclick="openModal('transport', ${index})"><div class="card-title-overlay">${titolo}</div></div>`;
     });
-    html += `<div class="village-card" style="background-image: url('https://images.unsplash.com/photo-1596524430623-ad560a5e8424?auto=format&fit=crop&w=600&q=80')" onclick="renderSimpleList('Numeri_utili')"><div class="card-title-overlay">${window.t('menu_num') || 'Numeri Utili'}</div></div>`;
-    html += `<div class="village-card" style="background-image: url('https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&w=600&q=80')" onclick="renderSimpleList('Farmacie')"><div class="card-title-overlay">${window.t('menu_pharm') || 'Farmacie'}</div></div>`;
+    html += `<div class="village-card" style="background-image: url('${imgUrl}')"  onclick="renderSimpleList('Numeri_utili')"><div class="card-title-overlay">${window.t('menu_num') || 'Numeri Utili'}</div></div>`;
+    html += `<div class="village-card" style="background-image: url('${imgUrl}')"  onclick="renderSimpleList('Farmacie')"><div class="card-title-overlay">${window.t('menu_pharm') || 'Farmacie'}</div></div>`;
     content.innerHTML = html + '</div>';
 }
 function renderSimpleList(tableName) {

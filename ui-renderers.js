@@ -143,10 +143,10 @@ window.attrazioniRenderer = (item) => {
     </div>`;
 };
 
+
 // ============================================================
 // SEZIONE LOGICA PRINCIPALE (Proveniente da app.js)
 // ============================================================
-
 window.openModal = async function(type, payload) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay animate-fade';
@@ -154,6 +154,8 @@ window.openModal = async function(type, payload) {
     modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
 
     let contentHtml = '';
+    // Di base usiamo la classe standard, ma la cambieremo per i prodotti
+    let modalClass = 'modal-content'; 
 
     if (type === 'village') {
         const bigImg = window.getSmartUrl(payload, '', 1000);
@@ -161,14 +163,42 @@ window.openModal = async function(type, payload) {
         const desc = data ? window.dbCol(data, 'Descrizione') : window.t('loading');
         contentHtml = `<img src="${bigImg}" style="width:100%; border-radius:12px; height:220px; object-fit:cover;"><h2>${payload}</h2><p>${desc}</p>`;
     } 
-    else if (type === 'product') {
-        const nome = window.dbCol(payload, 'Prodotti') || window.dbCol(payload, 'Nome');
-        const desc = window.dbCol(payload, 'Descrizione');
-        const ideale = window.dbCol(payload, 'Ideale per');
-        const bigImg = window.getSmartUrl(payload.Prodotti || payload.Nome, 'Prodotti', 800);
-        contentHtml = `<img src="${bigImg}" style="width:100%; border-radius:12px; height:200px; object-fit:cover;" onerror="this.style.display='none'"><h2>${nome}</h2><p>${desc || ''}</p><hr><p><strong>${window.t('ideal_for')}:</strong> ${ideale || ''}</p>`;
-    }
     
+    // --- MODIFICA RICHIESTA: PRODOTTI LIQUID GLASS ---
+   else if (type === 'product') {
+        // Decodifica il payload sicuro
+        const p = JSON.parse(decodeURIComponent(payload));
+
+        // CORREZIONE: Aggiunto fallback su 'Nome' (come fatto nel renderer della lista)
+        const nome = window.dbCol(p, 'Prodotti') || window.dbCol(p, 'Nome') || 'Prodotto';
+        
+        const desc = window.dbCol(p, 'Descrizione');   // Colonna "Descrizione"
+        const ideale = window.dbCol(p, 'Ideale per');  // Colonna "Ideale per"
+
+        // Cambio classe per attivare l'effetto Glass nel CSS
+        modalClass = 'modal-content glass-modal';
+
+        // Usa la variabile 'nome' corretta per cercare l'immagine
+        const bigImg = window.getSmartUrl(nome, '', 800);
+
+        // HTML Liquid Style
+        contentHtml = `
+            <div style="position: relative;">
+                <img src="${bigImg}" style="width:100%; border-radius: 0 0 24px 24px; height:250px; object-fit:cover; margin-bottom: 15px; mask-image: linear-gradient(to bottom, black 80%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);" onerror="this.style.display='none'">
+            </div>
+            
+            <div style="padding: 0 25px 25px 25px;">
+                <h2 style="font-size: 2rem; margin-bottom: 10px; color: #222;">${nome}</h2>
+                
+                ${ideale ? `
+                <div style="margin-bottom: 20px;">
+                    <span class="glass-tag">✨ Ideale per: ${ideale}</span>
+                </div>` : ''}
+
+                <p style="font-size: 1.05rem; line-height: 1.6; color: #444;">${desc || ''}</p>
+            </div>
+        `;
+    }
     // --- GESTIONE TRASPORTI ---
     else if (type === 'transport') {
         const item = window.tempTransportData[payload];
@@ -464,20 +494,24 @@ window.setBusStop = function(selectId, value) {
         setTimeout(() => select.style.backgroundColor = "white", 500);
     }
 };
-// Renderer per i Prodotti (Risolve sfarfallio e accenti)
+// Renderer per i Prodotti
 window.prodottoRenderer = (p) => {
+    // Cerchiamo il nome nella colonna 'Prodotti' o 'Nome' per sicurezza
     const titolo = window.dbCol(p, 'Prodotti') || window.dbCol(p, 'Nome');
     const imgUrl = window.getSmartUrl(titolo, '', 800);
     
-    // Impacchettiamo l'oggetto in modo sicuro per evitare che gli accenti rompano l'HTML
-    const safeObj = encodeURIComponent(JSON.stringify(p));
+    // 🔴 FIX CRITICO: encodeURIComponent lascia gli apostrofi intatti.
+    // Poiché l'HTML usa i singoli apici per racchiudere la stringa nell'onclick,
+    // un apostrofo nel testo (es. "L'originale") romperebbe il codice HTML.
+    // Aggiungiamo .replace(/'/g, "%27") per forzare la codifica dell'apostrofo.
+    const safeObj = encodeURIComponent(JSON.stringify(p)).replace(/'/g, "%27");
 
     return `
     <div class="village-card animate-fade" 
          style="background-image: url('${imgUrl}'); background-color: #f0f0f0;" 
          onclick="openModal('product', '${safeObj}')">
          <div class="card-title-overlay">
-            ${p.Prodotti || 'Senza Nome'}
+            ${titolo || 'Senza Nome'}
         </div>
     </div>`;
 };

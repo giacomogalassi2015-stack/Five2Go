@@ -336,7 +336,41 @@ main, #app-content {
 .lang-opt:hover { background-color: #F8F9FA; }
 .lang-opt.active { background-color: #E0F2F1; color: var(--primary-col); font-weight: 800; }
 .lang-flag { font-size: 1.2rem; }
+/* ============================================================
+   LIQUID GLASS MODAL (Specifico per Prodotti)
+   ============================================================ */
 
+.glass-modal {
+    /* Sfondo semi-trasparente bianco */
+    background: rgba(255, 255, 255, 0.65) !important;
+    
+    /* L'effetto sfocatura "magico" */
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px);
+    
+    /* Bordi sottili per dare profondità */
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    
+    /* Ombra colorata diffusa */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+    
+    /* Testo scuro per contrasto su vetro chiaro */
+    color: #2D3436;
+}
+
+/* Stile per il tag "Ideale per" dentro il vetro */
+.glass-tag {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-top: 10px;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
 /* Utility e altre card (copiate per completezza strutturale) */
 .sub-nav-tabs::-webkit-scrollbar, .filter-bar::-webkit-scrollbar { display: none; }
 .sub-nav-tabs, .filter-bar { -ms-overflow-style: none; scrollbar-width: none; }
