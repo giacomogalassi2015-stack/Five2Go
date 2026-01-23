@@ -215,27 +215,33 @@ main, #app-content {
 
 /* Testi Benvenuto */
 .welcome-title {
-    font-family: 'Barriecito', serif;
+    font-family: 'Barriecito', cursive; /* 'cursive' è il fallback corretto per Barriecito */
     font-size: 4rem;
     color: white;
-    margin-bottom: 10px;
     text-shadow: 0 4px 10px rgba(0,0,0,0.5);
     line-height: 1.1;
-}
 
+    /* --- POSIZIONAMENTO --- */
+    position: absolute; /* Lo sgancia dal resto del contenuto */
+    top: 80px;          /* Distanza dall'alto (modifica questo valore se lo vuoi più su o giù) */
+    left: 0;
+    width: 100%;        /* Occupa tutta la larghezza */
+    text-align: center; /* Centra il testo */
+    margin: 0;          /* Rimuove margini extra */
+    padding: 0 20px;    /* Evita che il testo tocchi i bordi su schermi piccoli */
+}
 .welcome-desc {
     font-family: 'Roboto', sans-serif;
     font-size: 1.05rem;
     color: rgba(255, 255, 255, 0.95);
     margin-bottom: 25px;
     line-height: 1.5;
-}
 
-.welcome-divider {
-    width: 50px; height: 4px;
-    background: var(--accent-col);
-    border-radius: 2px;
-    margin-bottom: 25px;
+    /* --- AGGIUNTE PER CENTRARE --- */
+    text-align: center;   /* Centra il testo all'interno */
+    margin-left: auto;    /* Centra il blocco orizzontalmente */
+    margin-right: auto;   /* Centra il blocco orizzontalmente */
+    max-width: 90%;       /* Evita che tocchi i bordi laterali (opzionale ma consigliato) */
 }
 
 /* Griglia Tasti Lingua */
