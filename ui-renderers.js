@@ -99,60 +99,56 @@ window.spiaggiaRenderer = (s) => {
         </div>
     </div>`;
 };
-// === RENDERER FARMACIA (Con Icone Località) ===
+// === RENDERER FARMACIA (Centrato & Proporzionato) ===
 window.farmaciaRenderer = (f) => {
     const nome = window.dbCol(f, 'Nome');
     const paesi = window.dbCol(f, 'Paesi');
     const indirizzo = f.Indirizzo || '';
     const safeObj = encodeURIComponent(JSON.stringify(f)).replace(/'/g, "%27");
-    
     const fullAddress = `${indirizzo}, ${paesi}`;
     const mapLink = f.Mappa || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Farmacia ' + nome + ' ' + fullAddress)}`;
 
     return `
-    <div class="info-card" onclick="openModal('farmacia', '${safeObj}')">
-        <div class="info-content">
-            <h3 style="margin-bottom: 4px;">${nome}</h3>
-            <p style="margin:2px 0; color:rgba(255,255,255,0.9);">
-                <span class="material-icons" style="font-size:1rem; vertical-align:middle; color:#ea4335; margin-right:4px;">place</span>
-                ${paesi}
-            </p>
-            <p style="margin:0; font-size:0.85rem; color:rgba(255,255,255,0.6); padding-left:22px;">
-                ${indirizzo}
-            </p>
-            ${f.Orario ? `<p style="font-size:0.85rem; color:#f1c40f; margin-top:6px; padding-left:22px;">🕒 ${f.Orario}</p>` : ''}
-        </div>
+    <div class="info-card" onclick="openModal('farmacia', '${safeObj}')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; text-align: center; padding: 20px;">
         
-        <div style="display:flex; gap:10px;">
+        <h3 style="margin: 0 0 8px 0; font-size: 1.3rem; width: 100%; color: #ffffff;">${nome}</h3>
+        
+        <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.95rem; display: flex; align-items: center; justify-content: center;">
+            <span class="material-icons" style="font-size: 1.1rem; color: #ea4335; margin-right: 5px;">place</span>
+            ${paesi}
+        </p>
+        <p style="margin: 4px 0 15px 0; font-size: 0.85rem; color: rgba(255,255,255,0.5);">${indirizzo}</p>
+
+        <div style="display: flex; justify-content: center; gap: 25%; width: 100%; padding: 0 10%;">
             ${f.Numero ? `
-                <div class="action-btn btn-call" onclick="event.stopPropagation(); window.location.href='tel:${f.Numero}'">
+                <div class="action-btn btn-call" style="margin:0;" onclick="event.stopPropagation(); window.location.href='tel:${f.Numero}'">
                     <span class="material-icons">call</span>
                 </div>` : ''}
-            <div class="action-btn btn-map" onclick="event.stopPropagation(); window.open('${mapLink}', '_blank')">
+            <div class="action-btn btn-map" style="margin:0;" onclick="event.stopPropagation(); window.open('${mapLink}', '_blank')">
                 <span class="material-icons">map</span>
             </div>
         </div>
     </div>`;
 };
 
-// === RENDERER NUMERI UTILI (Layout Fisso) ===
+// === RENDERER NUMERI UTILI (Centrato & Titolo Grande) ===
 window.numeriUtiliRenderer = (n) => {
     const nome = window.dbCol(n, 'Nome');
     const paesi = window.dbCol(n, 'Paesi'); 
     const numero = n.Numero || n.Telefono || '';
 
     return `
-    <div class="info-card" onclick="window.location.href='tel:${numero}'" style="display: flex; align-items: center; min-height: 85px;">
-        <div class="info-content" style="flex: 1;">
-            <h3 style="margin: 0 0 4px 0;">${nome}</h3>
-            <p style="color:rgba(255,255,255,0.7); font-size:0.85rem; margin:0; display: flex; align-items: center;">
-                <span class="material-icons" style="font-size:1.1rem; color:#4285f4; margin-right:6px;">location_on</span>
-                ${paesi}
-            </p>
-        </div>
+    <div class="info-card" onclick="window.location.href='tel:${numero}'" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; text-align: center; padding: 20px;">
+        
+        <h3 style="margin: 0 0 10px 0; font-size: 1.4rem; width: 100%; color: #ffffff; letter-spacing: 0.5px;">${nome}</h3>
+        
+        <p style="margin: 0 0 25px 0; color: rgba(255,255,255,0.7); font-size: 1rem; display: flex; align-items: center; justify-content: center;">
+            <span class="material-icons" style="font-size: 1.2rem; color: #4285f4; margin-right: 6px;">location_on</span>
+            ${paesi}
+        </p>
 
-        <div class="action-btn btn-call" style="flex-shrink: 0;">
-            <span class="material-icons">call</span>
+        <div class="action-btn btn-call" style="margin: 0; width: 60px; height: 60px;">
+            <span class="material-icons" style="font-size: 1.8rem;">call</span>
         </div>
     </div>`;
 };
