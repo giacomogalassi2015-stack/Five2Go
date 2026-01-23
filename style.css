@@ -223,7 +223,7 @@ main, #app-content {
 
     /* --- POSIZIONAMENTO --- */
     position: absolute; /* Lo sgancia dal resto del contenuto */
-    top: 80px;          /* Distanza dall'alto (modifica questo valore se lo vuoi più su o giù) */
+    top: 50px;          /* Distanza dall'alto (modifica questo valore se lo vuoi più su o giù) */
     left: 0;
     width: 100%;        /* Occupa tutta la larghezza */
     text-align: center; /* Centra il testo */
@@ -231,8 +231,8 @@ main, #app-content {
     padding: 0 20px;    /* Evita che il testo tocchi i bordi su schermi piccoli */
 }
 .welcome-desc {
-    font-family: 'Roboto', sans-serif;
-    font-size: 1.05rem;
+  
+    font-size: 0rem;
     color: rgba(255, 255, 255, 0.95);
     margin-bottom: 25px;
     line-height: 1.5;
