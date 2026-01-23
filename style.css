@@ -382,7 +382,7 @@ main, #app-content {
 .grid-container { 
     display: grid; 
     grid-template-columns: 1fr 1fr; 
-    gap: 16px; 
+    gap: 10px; 
     /* Modifica questa riga: 10px sopra, 0 destra, 140px sotto, 0 sinistra */
     padding: 10px 0 10px 0; 
 }
