@@ -382,7 +382,7 @@ main, #app-content {
 .grid-container { 
     display: grid; 
     grid-template-columns: 1fr 1fr; 
-    gap: 2px; 
+    gap: 16px; 
     /* Modifica questa riga: 10px sopra, 0 destra, 140px sotto, 0 sinistra */
     padding: 10px 0 10px 0; 
 }
@@ -682,4 +682,12 @@ header { display: none !important; }
     background: linear-gradient(135deg, #FF5252, #D32F2F) !important;
     box-shadow: 0 4px 6px rgba(211, 47, 47, 0.25) !important;
     color: white !important;
+}/* Add this to the bottom of your CSS file */
+.card-full-width {
+    grid-column: 1 / -1 !important; /* Spans all columns */
+    width: 100% !important;
+    aspect-ratio: unset !important; /* Removes square shape */
+    height: 120px !important; /* Fixed height for rectangle */
+    background-size: cover !important;
+    background-position: center !important;
 }
