@@ -615,47 +615,39 @@ window.toggleBusMap = function() {
 
 window.trainSearchRenderer = () => {
     return `
-    <div class="bus-search-box animate-fade" style="border-top: 4px solid #d32f2f;">
+    <div class="bus-search-box animate-fade" style="border-top: 4px solid #d32f2f; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); color: white; border-radius: 20px;">
         <div class="bus-title">
-            <span class="material-icons" style="background:#ffebee; color:#d32f2f;">train</span> 
+            <span class="material-icons" style="background: rgba(255,255,255,0.1); color:#ff5252;">train</span> 
             Cinque Terre Express
         </div>
         
         <div style="padding: 0 5px;">
-            <p style="font-size:0.95rem; color:#444; line-height:1.5; margin-bottom:15px;">
-                Il treno è il mezzo più veloce. La linea <b>Cinque Terre Express</b> collega tutti i borghi con corse ogni 15-20 minuti.
+            <p style="font-size:0.9rem; color:#ccc; line-height:1.5; margin-bottom:15px;">
+                Il treno è il mezzo più veloce. Corse frequenti ogni 15-20 minuti tra i borghi.
             </p>
 
-            <div style="background:#f9f9f9; border-radius:8px; padding:10px; margin-bottom:20px; border:1px solid #eee;">
-                <h4 style="margin:0 0 10px 0; font-size:0.85rem; color:#666; text-transform:uppercase;">⏱️ Tempi Medi di Viaggio</h4>
+            <div style="background: rgba(255,255,255,0.05); border-radius:12px; padding:15px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.1);">
+                <h4 style="margin:0 0 10px 0; font-size:0.8rem; color:#aaa; text-transform:uppercase;">⏱️ Tempi Medi</h4>
                 
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e0e0e0; padding:6px 0;">
-                    <span>La Spezia ↔ Riomaggiore</span> <b>7 min</b>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.1); padding:8px 0;">
+                    <span>La Spezia ↔ Riomaggiore</span> <b style="color:white;">7 min</b>
                 </div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e0e0e0; padding:6px 0;">
-                    <span>Riomaggiore ↔ Manarola</span> <b>2 min</b>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.1); padding:8px 0;">
+                    <span>Tra i Borghi (es. Rio-Manarola)</span> <b style="color:white;">2-4 min</b>
                 </div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e0e0e0; padding:6px 0;">
-                    <span>Manarola ↔ Corniglia</span> <b>3 min</b>
-                </div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e0e0e0; padding:6px 0;">
-                    <span>Corniglia ↔ Vernazza</span> <b>4 min</b>
-                </div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e0e0e0; padding:6px 0;">
-                    <span>Vernazza ↔ Monterosso</span> <b>4 min</b>
-                </div>
-                <div style="display:flex; justify-content:space-between; padding:6px 0;">
-                    <span>Monterosso ↔ Levanto</span> <b>5 min</b>
+                <div style="display:flex; justify-content:space-between; padding:8px 0;">
+                    <span>Monterosso ↔ Levanto</span> <b style="color:white;">5 min</b>
                 </div>
             </div>
         </div>
 
-        <button onclick="apriTrenit()" class="btn-yellow" style="background: #d32f2f; color: white; box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3); display:flex; align-items:center; justify-content:center; gap:10px;">
-            <span style="font-size:1.2rem;">🔎</span> CERCA ORARI SU TRENIT!
+        <button onclick="apriMonitorMobile()" class="btn-yellow" style="background: #212121; color: white; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:15px; border-radius:12px;">
+            <span class="material-icons" style="font-size:1.2rem;">dvr</span> 
+            <span style="font-weight:bold;">MONITOR LIVE (Web)</span>
         </button>
-        
-        <p style="font-size:0.75rem; text-align:center; color:#999; margin-top:10px;">
-            Link esterno al servizio ufficiale Trenit
+
+        <p style="font-size:0.75rem; text-align:center; color:#888; margin-top:10px;">
+            Versione web leggera ufficiale RFI. Nessuna App richiesta.
         </p>
     </div>`;
 };

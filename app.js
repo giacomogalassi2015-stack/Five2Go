@@ -442,9 +442,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNavBar(); 
     switchView('home');
 });
-// --- FUNZIONE TRENI (LINK ESTERNO TRENIT) ---
-window.apriTrenit = function() {
-    // Apre direttamente la web-app di Trenit, che è ottimizzata per mobile
-    // e non da mai errori di connessione.
-    window.open('https://www.trenit.app', '_blank');
+// --- FUNZIONE TRENI (Sito Ufficiale HTTPS) ---
+window.apriMonitorMobile = function() {
+    // Puntiamo alla Home ufficiale sicura. 
+    // Si adatta al telefono e permette di cercare "Riomaggiore", "Monterosso", ecc.
+    // Non da errore perché è il sito principale.
+    window.open('https://www.viaggiatreno.it/', '_blank');
 };
