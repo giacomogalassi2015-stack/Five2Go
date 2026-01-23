@@ -269,7 +269,7 @@ window.openModal = async function(type, payload) {
 
         let customContent = '';
 
-        if (isBus) {
+       if (isBus) {
             const { data: fermate, error } = await window.supabaseClient
                 .from('Fermate_bus')
                 .select('ID, NOME_FERMATA, LAT, LONG') 
@@ -281,6 +281,7 @@ window.openModal = async function(type, payload) {
                 const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
                 const options = fermate.map(f => `<option value="${f.ID}">${f.NOME_FERMATA}</option>`).join('');
                 
+                // Sezione Biglietti (Turchese)
                 let ticketSection = '';
                 if (hasTicketInfo) {
                     ticketSection = `
@@ -294,13 +295,28 @@ window.openModal = async function(type, payload) {
                     </div>`;
                 }
 
+                // === NUOVA SEZIONE MAPPA A TENDINA (Viola) ===
+                const mapToggleSection = `
+                    <button id="btn-bus-map-toggle" onclick="toggleBusMap()" style="width:100%; margin-bottom:15px; background:#EDE7F6; color:#4527A0; border:1px solid #D1C4E9; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition: background 0.3s;">
+                        🗺️ MOSTRA MAPPA FERMATE ▾
+                    </button>
+                    
+                    <div id="bus-map-wrapper" style="display:none; margin-bottom: 20px;">
+                        <div id="bus-map" style="height: 280px; width: 100%; border-radius: 12px; z-index: 1; border: 2px solid #EDE7F6;"></div>
+                        <p style="font-size:0.75rem; text-align:center; color:#999; margin-top:5px;">Tocca i segnaposto per impostare Partenza/Arrivo</p>
+                    </div>
+                `;
+
+                // Costruzione HTML finale
                 customContent = `
                 <div class="bus-search-box animate-fade">
-                    <div class="bus-title" style="margin-bottom: 0px; padding-bottom: 5px;">
+                    <div class="bus-title" style="margin-bottom: 0px; padding-bottom: 15px;">
                         <span class="material-icons">directions_bus</span> Pianifica Viaggio
                     </div>
-                    <div id="bus-map" style="margin-top: 0px; height: 280px; width: 100%; border-radius: 12px; margin-bottom: 20px; z-index: 1;"></div>
+                    
                     ${ticketSection}
+                    ${mapToggleSection} 
+                    
                     <div class="bus-inputs">
                         <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">PARTENZA</label><select id="selPartenza" class="bus-select"><option value="" disabled selected>Seleziona...</option>${options}</select></div>
                         <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">ARRIVO</label><select id="selArrivo" class="bus-select"><option value="" disabled selected>Seleziona...</option>${options}</select></div>
@@ -312,11 +328,13 @@ window.openModal = async function(type, payload) {
                     <button onclick="eseguiRicercaBus()" class="btn-yellow" style="width:100%; font-weight:bold; margin-top:5px;">TROVA ORARI</button>
                     <div id="busResultsContainer" style="display:none; margin-top:20px;"><div id="nextBusCard" class="bus-result-main"></div><div style="font-size:0.8rem; font-weight:bold; color:#666; margin-top:15px;">CORSE SUCCESSIVE:</div><div id="otherBusList" class="bus-list-container"></div></div>
                 </div>`;
+                
+                // Inizializza la mappa (anche se nascosta, deve essere pronta)
                 setTimeout(() => { initBusMap(fermate); }, 300);
             } else {
                 customContent = `<p style="color:red;">Errore caricamento fermate.</p>`;
             }
-        } 
+        }
         else if (isTrain) {
             const LINK_OMIO = "https://omio.sjv.io/c/6902975/861892/7385/"; 
             customContent = `
@@ -509,13 +527,32 @@ window.initPendingMaps = function() {
 };
 
 window.initBusMap = function(fermate) {
-    const startLat = 44.12; 
-    const startLong = 9.70;
+    // === COORDINATE RIOMAGGIORE ===
+    const startLat = 44.1000; 
+    const startLong = 9.7385;
+    
+    // Zoom 13: Abbastanza per vedere Riomaggiore e dintorni, ma non troppo chiuso sui tetti
+    const startZoom = 13; 
+
     const mapContainer = document.getElementById('bus-map');
     if (!mapContainer) return;
 
-    const map = L.map('bus-map').setView([startLat, startLong], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(map);
+    // Rimuove la mappa vecchia se esiste (pulizia)
+    if (window.currentBusMap) {
+        window.currentBusMap.remove();
+        window.currentBusMap = null;
+    }
+
+    // Inizializza la mappa su Riomaggiore
+    const map = L.map('bus-map').setView([startLat, startLong], startZoom);
+    
+    // Salviamo la mappa in globale
+    window.currentBusMap = map; 
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+        attribution: '© OpenStreetMap', 
+        maxZoom: 18 
+    }).addTo(map);
 
     const markersGroup = new L.FeatureGroup();
     fermate.forEach(f => {
@@ -533,7 +570,12 @@ window.initBusMap = function(fermate) {
         markersGroup.addLayer(marker);
     });
     map.addLayer(markersGroup);
-    if (markersGroup.getLayers().length > 0) { map.fitBounds(markersGroup.getBounds(), { padding: [30, 30] }); }
+    
+    // --- NOTA: Ho rimosso map.fitBounds() ---
+    // In questo modo la mappa rispetta il tuo "setView" su Riomaggiore
+    // invece di auto-adattarsi per mostrare tutte le fermate da La Spezia a Levanto.
+    
+    // Forza il ricalcolo dimensionale (per il toggle a tendina)
     setTimeout(() => { map.invalidateSize(); }, 200);
 };
 
@@ -543,5 +585,37 @@ window.setBusStop = function(selectId, value) {
         select.value = value;
         select.style.backgroundColor = "#fff3cd"; 
         setTimeout(() => select.style.backgroundColor = "white", 500);
+    }
+};
+window.toggleBusMap = function() {
+    const container = document.getElementById('bus-map-wrapper');
+    const btn = document.getElementById('btn-bus-map-toggle');
+    
+    if (!container || !btn) {
+        console.error("❌ Elementi mappa non trovati (container o bottone mancante)");
+        return;
+    }
+
+    const isHidden = container.style.display === 'none';
+
+    if (isHidden) {
+        // MOSTRA
+        container.style.display = 'block';
+        btn.innerHTML = '📍 NASCONDI MAPPA FERMATE ▴';
+        btn.style.backgroundColor = '#D1C4E9'; // Viola più scuro
+        
+        // Ricalcola dimensioni mappa Leaflet
+        setTimeout(() => {
+            if (window.currentBusMap) {
+                window.currentBusMap.invalidateSize();
+            } else {
+                console.warn("⚠️ Mappa non ancora inizializzata");
+            }
+        }, 100);
+    } else {
+        // NASCONDI
+        container.style.display = 'none';
+        btn.innerHTML = '🗺️ MOSTRA MAPPA FERMATE ▾';
+        btn.style.backgroundColor = '#EDE7F6'; // Viola chiaro
     }
 };

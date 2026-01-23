@@ -1,8 +1,12 @@
+
 /* ============================================================
    1. SETUP, VARIABILI & FONTS 
    ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800&family=Ultra&family=Inter:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Roboto:wght@400;700&display=swap');
+
+/* --- QUESTA È LA RIGA NUOVA PER BARRIECITO --- */
+@import url('https://fonts.googleapis.com/css2?family=Barriecito&display=swap');
 
 :root {
 
@@ -72,23 +76,6 @@ header, #app-header {
     width: 100%; 
 }
 
-/* Titolo Centrato Assoluto */
-#view-title { 
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    
-    font-family: 'Ultra', serif;
-    font-size: 1.5rem;
-    color: var(--primary-col); 
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
-    margin: 0;
-    
-    white-space: nowrap; 
-    text-align: center;
-    z-index: 1; 
-}
-#view-title::first-letter { text-transform: uppercase; font-size: 1.2em; font-weight: 600; }
 
 /* Main Content */
 main, #app-content { 
@@ -228,8 +215,8 @@ main, #app-content {
 
 /* Testi Benvenuto */
 .welcome-title {
-    font-family: 'Ultra', serif;
-    font-size: 2.8rem;
+    font-family: 'Barriecito', serif;
+    font-size: 4rem;
     color: white;
     margin-bottom: 10px;
     text-shadow: 0 4px 10px rgba(0,0,0,0.5);
