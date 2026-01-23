@@ -613,44 +613,49 @@ window.toggleBusMap = function() {
 
 // ui-renderers.js
 
-window.trainSearchRenderer = (stazioniIgnorate, defaultTime) => {
-    const stazioni = [
-        { id: "S00228", nome: "La Spezia Centrale" },
-        { id: "S00226", nome: "Riomaggiore" },
-        { id: "S00225", nome: "Manarola" },
-        { id: "S00224", nome: "Corniglia" },
-        { id: "S00223", nome: "Vernazza" },
-        { id: "S00222", nome: "Monterosso" },
-        { id: "S00221", nome: "Levanto" }
-    ];
-
-    const options = stazioni.map(s => `<option value="${s.id}">${s.nome}</option>`).join('');
-
+window.trainSearchRenderer = () => {
     return `
-    <div class="bus-search-box animate-fade" style="border-top: 4px solid #27AE60;">
+    <div class="bus-search-box animate-fade" style="border-top: 4px solid #d32f2f;">
         <div class="bus-title">
-            <span class="material-icons" style="background:#E9F7EF; color:#27AE60;">dvr</span> 
-            Tabellone Partenze
+            <span class="material-icons" style="background:#ffebee; color:#d32f2f;">train</span> 
+            Cinque Terre Express
         </div>
         
-        <p style="font-size:0.9rem; color:#666; margin-bottom:15px;">
-            Visualizza i treni in partenza, i <b>ritardi</b> e i <b>binari</b> in tempo reale.
-        </p>
+        <div style="padding: 0 5px;">
+            <p style="font-size:0.95rem; color:#444; line-height:1.5; margin-bottom:15px;">
+                Il treno è il mezzo più veloce. La linea <b>Cinque Terre Express</b> collega tutti i borghi con corse ogni 15-20 minuti.
+            </p>
 
-        <div class="bus-inputs-row">
-            <div class="bus-input-group" style="width:100%;">
-                <label class="bus-label">SELEZIONA STAZIONE</label>
-                <select id="trainPartenza" class="bus-select">
-                    <option value="" disabled selected>Dove ti trovi?</option>
-                    ${options}
-                </select>
+            <div style="background:#f9f9f9; border-radius:8px; padding:10px; margin-bottom:20px; border:1px solid #eee;">
+                <h4 style="margin:0 0 10px 0; font-size:0.85rem; color:#666; text-transform:uppercase;">⏱️ Tempi Medi di Viaggio</h4>
+                
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e0e0e0; padding:6px 0;">
+                    <span>La Spezia ↔ Riomaggiore</span> <b>7 min</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e0e0e0; padding:6px 0;">
+                    <span>Riomaggiore ↔ Manarola</span> <b>2 min</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e0e0e0; padding:6px 0;">
+                    <span>Manarola ↔ Corniglia</span> <b>3 min</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e0e0e0; padding:6px 0;">
+                    <span>Corniglia ↔ Vernazza</span> <b>4 min</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e0e0e0; padding:6px 0;">
+                    <span>Vernazza ↔ Monterosso</span> <b>4 min</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:6px 0;">
+                    <span>Monterosso ↔ Levanto</span> <b>5 min</b>
+                </div>
             </div>
         </div>
 
-        <button onclick="caricaTabelloneJSON()" class="btn-yellow" style="background: linear-gradient(135deg, #27AE60 0%, #145A32 100%); color:white; margin-top:10px;">
-            AGGIORNA TABELLONE
+        <button onclick="apriTrenit()" class="btn-yellow" style="background: #d32f2f; color: white; box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3); display:flex; align-items:center; justify-content:center; gap:10px;">
+            <span style="font-size:1.2rem;">🔎</span> CERCA ORARI SU TRENIT!
         </button>
-
-        <div id="liveTrainResults" style="margin-top:20px; min-height:50px;"></div>
+        
+        <p style="font-size:0.75rem; text-align:center; color:#999; margin-top:10px;">
+            Link esterno al servizio ufficiale Trenit
+        </p>
     </div>`;
 };
