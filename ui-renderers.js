@@ -3,6 +3,7 @@ console.log("✅ 2. ui-renderers.js caricato (Localizzato)");
 
 
 // === RENDERER RISTORANTE ===
+
 window.ristoranteRenderer = (r) => {
     const nome = window.dbCol(r, 'Nome') || 'Ristorante';
     const paesi = window.dbCol(r, 'Paesi') || '';
@@ -11,30 +12,22 @@ window.ristoranteRenderer = (r) => {
     const mapLink = r.Mappa || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nome + ' ' + paesi)}`;
 
     return `
-<div class="info-card" onclick="openModal('ristorante', '${safeObj}')" 
-         style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 220px; text-align: center; 
-                /* MODIFICA 1: Padding ridotto sopra e sotto (15px) ma uguale ai lati (25px) */
-                padding: 15px 25px;
-                background: rgba(0, 0, 0, 0.6) !important; 
-                backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-                border: 1px solid rgba(255, 255, 255, 0.1) !important;
-                border-radius: 30px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                margin-bottom: 20px;">
+    <div class="restaurant-glass-card" onclick="openModal('ristorante', '${safeObj}')">
         
-        <h3 style="margin: 0 0 4px 0; font-size: 1.5rem; color: #ffffff;">${nome}</h3>
+        <h3 class="rest-card-title">${nome}</h3>
         
-        <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 1.1rem; display: flex; align-items: center; justify-content: center;">
-            <span class="material-icons" style="font-size: 1.2rem; color: #f39c12; margin-right: 6px;">restaurant</span>
+        <p class="rest-card-subtitle">
+            <span class="material-icons" style="font-size: 1.2rem; color: #f39c12;">restaurant</span>
             ${paesi}
         </p>
        
-        <div style="display: flex; justify-content: center; gap: 30px; width: 100%; margin-top: 20px;">
+        <div class="rest-card-actions">
             ${numero ? `
-                <div class="action-btn btn-call" style="width: 55px; height: 55px;" onclick="event.stopPropagation(); window.location.href='tel:${numero}'">
+                <div class="action-btn btn-call rest-btn-size" onclick="event.stopPropagation(); window.location.href='tel:${numero}'">
                     <span class="material-icons">call</span>
                 </div>` : ''}
-            <div class="action-btn btn-map" style="width: 55px; height: 55px;" onclick="event.stopPropagation(); window.open('${mapLink}', '_blank')">
+            
+            <div class="action-btn btn-map rest-btn-size" onclick="event.stopPropagation(); window.open('${mapLink}', '_blank')">
                 <span class="material-icons">map</span>
             </div>
         </div>
@@ -410,31 +403,7 @@ window.openModal = async function(type, payload) {
             <div style="margin-top:25px; line-height:1.6; color:#444; font-size:0.95rem; text-align:justify;">${desc}</div>
         </div>`;
     }
-    // --- DETTAGLI RISTORANTE ---
-    else if (type === 'restaurant') {
-        const item = JSON.parse(decodeURIComponent(payload));
-        const nome = window.dbCol(item, 'Nome');
-        const desc = window.dbCol(item, 'Descrizione') || '';
-        const orari = item.Orari || window.t('no_hours');
-        const telefono = item.Telefono || '';
-        const web = item.SitoWeb || '';
-        const mapQuery = encodeURIComponent(`${nome} ${window.dbCol(item, 'Paesi')}`);
-        
-        contentHtml = `
-            <h2>${nome}</h2>
-            <div style="margin-bottom:15px; color:#666;">📍 ${window.dbCol(item, 'Paesi')} • ${item.Indirizzo || ''}</div>
-            <p>${desc}</p>
-            <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
-            <div style="display:flex; flex-direction:column; gap:10px;">
-                <div><strong>🕒 ${window.t('hours_label')}:</strong><br>${orari}</div>
-                ${telefono ? `<div><strong>📞 ${window.t('phone_label')}:</strong> <a href="tel:${telefono}">${telefono}</a></div>` : ''}
-                ${web ? `<div><strong>🌐 ${window.t('website_label')}:</strong> <a href="${web}" target="_blank">${window.t('open_site')}</a></div>` : ''}
-            </div>
-            <div style="margin-top:20px; text-align:center;">
-                <a href="https://www.google.com/maps/search/?api=1&query=${mapQuery}" target="_blank" class="btn-azure" style="display:inline-block; text-decoration:none; padding:10px 20px; border-radius:20px;">${window.t('take_me_here')} 🗺️</a>
-            </div>`;
-    
-        }
+ 
         // --- MAPPA FULL SCREEN (GPX) ---
     else if (type === 'map') {
         const gpxUrl = payload;

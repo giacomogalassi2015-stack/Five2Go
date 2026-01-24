@@ -674,3 +674,116 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+
+/* === SCHEDA RISTORANTE (LUXURY GLASS DESIGN) === */
+.restaurant-glass-card {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 220px; 
+    text-align: center; 
+    position: relative;
+    overflow: hidden;
+
+    /* Margini interni ed esterni */
+    padding: 20px 25px; 
+    margin-bottom: 25px;
+
+    /* --- IL SEGRETO DEL LOOK PREMIUM --- */
+    /* 1. Sfondo non nero piatto, ma gradiente profondo semitrasparente */
+    background: linear-gradient(145deg, rgba(30, 30, 30, 0.85), rgba(10, 10, 10, 0.95)) !important;
+    
+    /* 2. Blur molto alto per confondere lo sfondo dietro */
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    
+    /* 3. Bordo sottile che sembra luce riflessa (più chiaro sopra) */
+    border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+    
+    border-radius: 32px;
+    
+    /* 4. Ombra profonda per staccarla dallo schermo */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(0,0,0,0.5);
+    
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Effetto tocco: si illumina leggermente invece di rimpicciolirsi solo */
+.restaurant-glass-card:active {
+    transform: scale(0.97);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    border-color: rgba(255,255,255,0.3) !important;
+}
+
+.rest-card-title {
+    margin: 0 0 8px 0; 
+    font-size: 1.6rem; 
+    color: #ffffff;
+    font-family: 'Roboto Slab', serif;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    letter-spacing: 0.5px;
+}
+
+.rest-card-subtitle {
+    margin: 0; 
+    color: #cfd8dc; /* Grigio argento chiaro */
+    font-size: 1rem; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    gap: 8px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+}
+
+/* Icona posate dorata */
+.rest-card-subtitle .material-icons {
+    color: #FFD700; /* Oro Puro */
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5)); /* Bagliore dorato */
+}
+
+/* Contenitore Bottoni */
+.rest-card-actions {
+    display: flex; 
+    justify-content: center; 
+    gap: 25px; 
+    width: 100%; 
+    margin-top: 40px; /* Più spazio per respirare */
+}
+
+/* Stile Pulsanti all'interno della card */
+.rest-card-actions .action-btn {
+    width: 55px; 
+    height: 55px;
+    border-radius: 50%;
+    
+    /* Neumorphism Scuro (Effetto pulsante fisico) */
+    background: linear-gradient(145deg, #2b2b2b, #1a1a1a);
+    box-shadow:  5px 5px 10px #0b0b0b, 
+                -5px -5px 10px #3d3d3d;
+    border: 1px solid rgba(255,255,255,0.05);
+    
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.rest-card-actions .action-btn:active {
+    background: #1a1a1a;
+    box-shadow: inset 5px 5px 10px #0b0b0b, 
+                inset -5px -5px 10px #3d3d3d;
+}
+
+/* Icone nei pulsanti */
+.rest-card-actions .action-btn .material-icons {
+    font-size: 1.6rem;
+}
+/* Colori specifici icone pulsanti */
+.btn-call .material-icons { color: #4CAF50; } /* Verde brillante */
+.btn-map .material-icons { color: #29B6F6; } /* Azzurro brillante */
