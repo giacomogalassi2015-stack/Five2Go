@@ -121,12 +121,10 @@ window.switchView = async function(view, el) {
         content.innerHTML = `<div class="error-msg">${window.t('error')}: ${err.message}</div>`;
     }
 };
-
-// --- NUOVA RENDER HOME (Integrata nel layout) ---
+// --- NUOVA RENDER HOME (Corretta senza scritta doppia) ---
 function renderHome() {
     const bgImage = "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
 
-    // Nota: Non usiamo più position:fixed, ma riempiamo il contenitore principale
     content.innerHTML = `
     <div class="welcome-card animate-fade" style="background-image: url('${bgImage}');">
         <div class="welcome-overlay">
@@ -135,7 +133,6 @@ function renderHome() {
                 <p class="welcome-desc">${window.t('welcome_desc')}</p>
                 <div class="welcome-divider"></div>
                 
-                <p style="color:rgba(255,255,255,0.8); font-size:0.8rem; margin-bottom:10px; text-transform:uppercase; font-weight:bold;">${window.t('nav_villages')}</p>
                 <div class="lang-grid">
                     ${window.AVAILABLE_LANGS.map(l => `
                         <button class="lang-tile ${l.code === window.currentLang ? 'active' : ''}" onclick="changeLanguage('${l.code}')">
@@ -179,11 +176,15 @@ window.loadTableData = async function(tableName, btnEl) {
     const filterBtn = document.getElementById('filter-toggle-btn');
     if (!subContent) return;
 
+    // === AGGIUNGI QUESTE RIGHE QUI PER PULIRE I FILTRI ===
+    const filterContainer = document.getElementById('filters-scroll') || document.getElementById('category-filters');
+    if (filterContainer) filterContainer.innerHTML = '';
+    // ====================================================
+
     // Gestione visuale tab attivo
     document.querySelectorAll('.sub-nav-item').forEach(b => b.classList.remove('active-sub'));
     if (btnEl) btnEl.classList.add('active-sub');
     if(filterBtn) filterBtn.style.display = 'none';
-
     subContent.innerHTML = `<div class="loader">${window.t('loading')}</div>`;
     
     if (tableName === 'Mappe') {
@@ -313,29 +314,62 @@ function handlePageSwipe() {
     touchStartY = null;
 }
 
-// ... (renderServicesGrid e toggleTicketInfo restano uguali alla versione precedente, omettiamo per brevità visto che non sono toccati) ...
-async function renderServicesGrid() {
+// --- RENDER SERVIZI (Versione Vetro Nero & Icone) ---
+window.renderServicesGrid = async function() {
+    const content = document.getElementById('app-content');
+    
+    // 1. Recupero dati dal DB
     const { data, error } = await window.supabaseClient.from('Trasporti').select('*');
-    if (error) throw error;
+    if (error) { 
+        console.error(error);
+        content.innerHTML = `<p class="error-msg">Errore caricamento servizi.</p>`; 
+        return;
+    }
     window.tempTransportData = data;
-    let html = '<div class="grid-container animate-fade">';
-    data.forEach((t, index) => {
-        const titolo = t.Mezzo || t.Località || 'Trasporto'; 
-        const imgUrl = window.getSmartUrl(titolo, '', 600);
-        html += `<div class="village-card" style="background-image: url('${imgUrl}')" onclick="openModal('transport', ${index})"><div class="card-title-overlay">${titolo}</div></div>`;
-    });
-    // 2. Card statiche (Numeri Utili e Farmacie)
-    // Definiamo manualmente i nomi delle immagini che vogliamo cercare su Cloudinary
-    // Assicurati di avere immagini chiamate "numeri_utili" (o "telefono") e "farmacia" nel tuo Cloudinary
-    const urlNumeri = window.getSmartUrl('Numeri Utili', '', 600); 
-    const urlFarmacie = window.getSmartUrl('Farmacie', '', 600);
 
-    html += `<div class="village-card" style="background-image: url('${urlNumeri}')"  onclick="renderSimpleList('Numeri_utili')"><div class="card-title-overlay">${window.t('menu_num') || 'Numeri Utili'}</div></div>`;
+    // 2. Helper Semplice: Solo Icone (I colori sono gestiti dal CSS ora)
+    function getServiceIcon(name, type) {
+        const n = name.toLowerCase();
+        if (n.includes('treno') || n.includes('stazione')) return 'train';
+        if (n.includes('battello') || n.includes('traghetto')) return 'directions_boat';
+        if (n.includes('bus') || n.includes('autobus')) return 'directions_bus';
+        if (n.includes('taxi')) return 'local_taxi';
+        if (type === 'farmacia') return 'local_pharmacy';
+        if (type === 'info') return 'phonelink_ring';
+        return 'confirmation_number'; // Icona default
+    }
+
+    let html = '<div class="services-grid-modern animate-fade">';
+
+    // 3. Generazione Card Trasporti
+    data.forEach((t, index) => {
+        const nome = t.Mezzo || t.Località || 'Trasporto';
+        const icon = getServiceIcon(nome, 'trasporto');
+        
+        // NOTA: Ho rimosso style="background..." -> Ora è tutto nero dal CSS
+        html += `
+        <div class="service-widget" onclick="openModal('transport', ${index})">
+            <span class="material-icons widget-icon">${icon}</span>
+            <span class="widget-label">${nome}</span>
+        </div>`;
+    });
+
+    // 4. Generazione Card Statiche
+    html += `
+    <div class="service-widget" onclick="renderSimpleList('Numeri_utili')">
+        <span class="material-icons widget-icon">phonelink_ring</span>
+        <span class="widget-label">${window.t('menu_num') || 'Numeri Utili'}</span>
+    </div>`;
     
-    html += `<div class="village-card" style="background-image: url('${urlFarmacie}')"  onclick="renderSimpleList('Farmacie')"><div class="card-title-overlay">${window.t('menu_pharm') || 'Farmacie'}</div></div>`;
-    
-    content.innerHTML = html + '</div>';
-}
+    html += `
+    <div class="service-widget" onclick="renderSimpleList('Farmacie')">
+        <span class="material-icons widget-icon">medical_services</span>
+        <span class="widget-label">${window.t('menu_pharm') || 'Farmacie'}</span>
+    </div>`;
+
+    html += '</div>';
+    content.innerHTML = html;
+};
 function renderSimpleList(tableName) {
     content.innerHTML = `<div style="padding: 10px 0; display:flex; align-items:center; gap:10px;"><button onclick="renderServicesGrid()" class="btn-back" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">⬅</button><h2 style="margin:0;">${tableName.replace('_', ' ')}</h2></div><div id="sub-content"></div>`;
     window.loadTableData(tableName, null);
@@ -345,30 +379,59 @@ window.toggleTicketInfo = function() {
     if (box) { box.style.display = (box.style.display === 'none') ? 'block' : 'none'; }
 };
 
-// --- LOGICA FILTRI ---
+// --- LOGICA FILTRI (Tasto Galleggiante in Basso) ---
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
-    container.innerHTML = `<div class="filter-bar animate-fade" id="dynamic-filters" style="display:none;"></div><div class="list-container animate-fade" id="dynamic-list"></div>`;
+    // Prepara i contenitori
+    container.innerHTML = `
+        <div class="filter-bar animate-fade" id="dynamic-filters" style="display:none; margin-bottom:15px;"></div>
+        <div class="list-container animate-fade" id="dynamic-list"></div>
+    `;
     
     const filterBar = container.querySelector('#dynamic-filters');
     const listContainer = container.querySelector('#dynamic-list');
-    const filterBtn = document.getElementById('filter-toggle-btn');
-
-    if (filterBtn) {
-        filterBtn.style.display = 'block'; 
-        const newBtn = filterBtn.cloneNode(true);
-        filterBtn.parentNode.replaceChild(newBtn, filterBtn);
-        
-        newBtn.onclick = () => {
-            const isHidden = filterBar.style.display === 'none';
-            filterBar.style.display = isHidden ? 'flex' : 'none';
-            newBtn.style.background = isHidden ? '#e0e0e0' : '#f0f0f0'; 
-        };
+    
+    // --- GESTIONE TASTO FILTRO ---
+    // Cerchiamo il tasto nel documento (fuori dal container, perché è fixed)
+    let filterBtn = document.getElementById('filter-toggle-btn');
+    
+    // Se non esiste, lo creiamo al volo
+    if (!filterBtn) {
+        filterBtn = document.createElement('button');
+        filterBtn.id = 'filter-toggle-btn';
+        document.body.appendChild(filterBtn);
     }
+    
+    // Impostiamo lo stile e l'ICONA (Imbuto/Filtro)
+    filterBtn.style.display = 'block';
+    filterBtn.innerHTML = '<span class="material-icons">filter_alt</span>'; // Icona Filtro
+    
+    // Gestione Click (Apre/Chiude la barra)
+    // Cloniamo il nodo per rimuovere vecchi event listener di altre pagine
+    const newBtn = filterBtn.cloneNode(true);
+    filterBtn.parentNode.replaceChild(newBtn, filterBtn);
+    
+    newBtn.onclick = () => {
+        const isHidden = filterBar.style.display === 'none';
+        
+        if (isHidden) {
+            filterBar.style.display = 'flex';
+            // Scrolla leggermente in alto per far vedere i filtri
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Cambia icona in "Chiudi" (X) o lascia filtro colorato?
+            // Lasciamo filtro ma magari cambiamo colore per feedback
+            newBtn.style.color = '#42e695'; // Diventa verde quando aperto
+        } else {
+            filterBar.style.display = 'none';
+            newBtn.style.color = '#ffffff'; // Torna bianco
+        }
+    };
 
+    // --- GENERAZIONE TAG DEI FILTRI ---
     let rawValues = allData.map(item => item[filterKey] ? item[filterKey].trim() : null).filter(x => x);
     let tagsRaw = [...new Set(rawValues)];
     
-    const customOrder = ["Tutti", "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso", "Facile", "Media", "Difficile", "Turistico", "Escursionistico", "Esperto"];
+    // Ordine personalizzato
+    const customOrder = ["Tutti", "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso", "Facile", "Media", "Difficile"];
     if (!tagsRaw.includes('Tutti')) tagsRaw.unshift('Tutti');
 
     const uniqueTags = tagsRaw.sort((a, b) => {
@@ -391,7 +454,7 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
             
             const filtered = tag === 'Tutti' ? allData : allData.filter(item => {
                 const valDB = item[filterKey] ? item[filterKey].trim() : '';
-                return (valDB === tag) || (item.Nome && (item.Nome.includes('112') || item.Nome.toLowerCase().includes('emergenza')));
+                return (valDB === tag) || (item.Nome && item.Nome.toLowerCase().includes('emergenza'));
             });
             updateList(filtered);
         };
@@ -399,11 +462,17 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
     });
 
     function updateList(items) {
-        if (!items || items.length === 0) { listContainer.innerHTML = `<p style="text-align:center; padding:20px; color:#999;">${window.t('no_results')}</p>`; return; }
+        if (!items || items.length === 0) { 
+            listContainer.innerHTML = `<p style="text-align:center; padding:20px; color:#999;">${window.t('no_results')}</p>`; 
+            return; 
+        }
         listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
+        
+        // Se ci sono mappe da inizializzare
         if (typeof initPendingMaps === 'function') setTimeout(() => initPendingMaps(), 100);
     }
     
+    // Caricamento iniziale
     updateList(allData);
 }
 document.addEventListener('DOMContentLoaded', () => {
@@ -412,3 +481,9 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNavBar(); 
     switchView('home');
 });
+// --- FUNZIONE SITO TRENITALIA ---
+window.apriTrenitalia = function() {
+    // Apre il sito ufficiale Trenitalia.
+    // Perfetto per: Acquistare biglietti, vedere prezzi e orari futuri.
+    window.open('https://www.trenitalia.com', '_blank');
+};
