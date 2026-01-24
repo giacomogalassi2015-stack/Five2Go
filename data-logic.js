@@ -1,4 +1,4 @@
-console.log("✅ 1. data-logic.js caricato (con Calendario Italia)");
+console.log("✅ 1. data-logic.js caricato");
 
 // 1. CONFIGURAZIONE SUPABASE
 const SUPABASE_URL = 'https://ydrpicezcwtfwdqpihsb.supabase.co';
@@ -15,7 +15,7 @@ window.mapsToInit = [];
 window.tempTransportData = [];
 window.tempAttractionsData = [];
 window.currentLang = localStorage.getItem('app_lang') || 'it';
-window.currentViewName = 'home'; 
+window.currentViewName = 'home'; // Tracciamento vista per header
 
 // 3. CONFIGURAZIONE LINGUE
 window.AVAILABLE_LANGS = [
@@ -27,7 +27,7 @@ window.AVAILABLE_LANGS = [
     { code: 'zh', label: '中文', flag: '🇨🇳' }
 ];
 
-// 4. DIZIONARIO TESTI
+// 4. DIZIONARIO TESTI (Full Version)
 const UI_TEXT = {
     it: {
         loading: "Caricamento...", error: "Errore",
@@ -37,7 +37,8 @@ const UI_TEXT = {
         btn_call: "Chiama", btn_map: "Mappa", btn_info: "Info", btn_website: "Sito Web", btn_hours: "Orari", btn_toll: "Pedaggio", btn_position: "Posizione",
         ideal_for: "Ideale per", no_results: "Nessun risultato.", visit_time: "min", curiosity: "Curiosità", coverage: "Copertura", pharmacy_tag: "FARMACIA",
         map_loaded: "Mappa caricata",
-        welcome_app_name: "5 Terre Guide",
+        // NUOVI TESTI WELCOME
+        welcome_app_name: "Five2Go",
         welcome_desc: "La tua guida essenziale per esplorare le Cinque Terre. Scopri sentieri, spiagge, cultura e sapori locali.",
         welcome_start: "Inizia a Esplorare"
     },
@@ -49,10 +50,12 @@ const UI_TEXT = {
         btn_call: "Call", btn_map: "Map", btn_info: "Info", btn_website: "Website", btn_hours: "Hours", btn_toll: "Toll", btn_position: "Location",
         ideal_for: "Best for", no_results: "No results found.", visit_time: "min", curiosity: "Curiosity", coverage: "Coverage", pharmacy_tag: "PHARMACY",
         map_loaded: "Map loaded",
-        welcome_app_name: "5 Terre Guide",
+        // NEW WELCOME TEXTS
+        welcome_app_name: "Five2Go",
         welcome_desc: "Your essential guide to exploring Cinque Terre. Discover trails, beaches, culture, and local flavors.",
         welcome_start: "Start Exploring"
     },
+    // ... (Puoi aggiungere welcome_desc per le altre lingue se necessario, useranno fallback inglese/italiano se mancanti)
     es: {
         loading: "Cargando...", error: "Error",
         home_title: "Bienvenido", food_title: "Comida y Sabores", outdoor_title: "Aire Libre y Cultura", services_title: "Servicios", maps_title: "Mapas",
@@ -61,7 +64,7 @@ const UI_TEXT = {
         btn_call: "Llamar", btn_map: "Mapa", btn_info: "Info", btn_website: "Sitio Web", btn_hours: "Horario", btn_toll: "Peaje", btn_position: "Posición",
         ideal_for: "Ideal para", no_results: "Sin resultados.", visit_time: "min", curiosity: "Curiosidad", coverage: "Cobertura", pharmacy_tag: "FARMACIA",
         map_loaded: "Mapa cargado",
-        welcome_app_name: "5 Terre Guide",
+        welcome_app_name: "Five2Go",
         welcome_desc: "Tu guía esencial para explorar Cinque Terre. Descubre senderos, playas, cultura y sabores.",
         welcome_start: "Empezar"
     },
@@ -73,7 +76,7 @@ const UI_TEXT = {
         btn_call: "Appeler", btn_map: "Carte", btn_info: "Info", btn_website: "Site Web", btn_hours: "Horaires", btn_toll: "Péage", btn_position: "Position",
         ideal_for: "Idéal pour", no_results: "Aucun résultat.", visit_time: "min", curiosity: "Curiosité", coverage: "Couverture", pharmacy_tag: "PHARMACIE",
         map_loaded: "Carte chargée",
-        welcome_app_name: "5 Terre Guide",
+        welcome_app_name: "Five2Go",
         welcome_desc: "Votre guide essentiel pour explorer les Cinque Terre. Découvrez sentiers, plages, culture et saveurs.",
         welcome_start: "Commencer"
     },
@@ -85,7 +88,7 @@ const UI_TEXT = {
         btn_call: "Anrufen", btn_map: "Karte", btn_info: "Info", btn_website: "Webseite", btn_hours: "Öffnungszeiten", btn_toll: "Maut", btn_position: "Standort",
         ideal_for: "Ideal für", no_results: "Keine Ergebnisse.", visit_time: "min", curiosity: "Kuriosität", coverage: "Abdeckung", pharmacy_tag: "APOTHEKE",
         map_loaded: "Karte geladen",
-        welcome_app_name: "5 Terre Guide",
+        welcome_app_name: "Five2Go",
         welcome_desc: "Ihr wesentlicher Reiseführer für die Cinque Terre. Entdecken Sie Wanderwege, Strände, Kultur und Geschmack.",
         welcome_start: "Starten"
     },
@@ -97,7 +100,7 @@ const UI_TEXT = {
         btn_call: "致电", btn_map: "地图", btn_info: "信息", btn_website: "网站", btn_hours: "时间", btn_toll: "通行费", btn_position: "位置",
         ideal_for: "适合", no_results: "无结果", visit_time: "分", curiosity: "趣闻", coverage: "覆盖范围", pharmacy_tag: "药房",
         map_loaded: "地图已加载",
-        welcome_app_name: "5 Terre Guide",
+        welcome_app_name: "Five2Go",
         welcome_desc: "探索五渔村的必备指南。发现步道、海滩、文化和当地风味。",
         welcome_start: "开始探索"
     }
@@ -106,14 +109,22 @@ const UI_TEXT = {
 // 5. HELPER FUNCTIONS GLOBALI
 window.t = function(key) {
     const langDict = UI_TEXT[window.currentLang] || UI_TEXT['it'];
-    return langDict[key] || key;
+    return langDict[key] || key; // Fallback sulla chiave stessa se manca
 };
 
 window.dbCol = function(item, field) {
-    if (!item) return '';
-    if (window.currentLang === 'it') return item[field]; 
-    const translatedField = `${field}_${window.currentLang}`; 
-    return (item[translatedField] && item[translatedField].trim() !== '') ? item[translatedField] : item[field];
+    if (!item || !item[field]) return '';
+
+    let value = item[field];
+
+    // Se Supabase restituisce il JSONB già come oggetto
+    if (typeof value === 'object' && value !== null) {
+        // Cerca la lingua corrente, altrimenti fallback su italiano, altrimenti stringa vuota
+        return value[window.currentLang] || value['it'] || '';
+    }
+
+    // Se è ancora una stringa (es. vecchi dati o errore di parsing), la restituisce così com'è
+    return value;
 };
 
 window.getSmartUrl = function(name, folder = '', width = 600) {
@@ -123,77 +134,45 @@ window.getSmartUrl = function(name, folder = '', width = 600) {
     return `${CLOUDINARY_BASE_URL}/w_${width},c_fill,f_auto,q_auto:good,fl_progressive/${folderPath}${safeName}`;
 };
 
-window.shareApp = async function() {
-    try {
-        if (navigator.share) await navigator.share({ title: '5 Terre App', text: 'Guarda questa guida!', url: window.location.href });
-        else { navigator.clipboard.writeText(window.location.href); alert("Link copiato!"); }
-    } catch (err) { console.log("Errore:", err); }
+window.changeLanguage = function(langCode) {
+    console.log("Cambio lingua a:", langCode);
+    
+    // 1. Aggiorna la variabile globale
+    window.currentLang = langCode;
+    
+    // (Opzionale) Salva la scelta nel browser per la prossima volta
+    localStorage.setItem('user_lang', langCode);
+
+    // 2. Aggiorna i testi statici dell'interfaccia (Titoli, Bottoni)
+    updateStaticInterface();
+
+    // 3. Ricarica la vista corrente (Forza il re-render delle card)
+    // Assumo che tu abbia una funzione che renderizza la pagina, es: renderApp() o loadData()
+    // Se usi una logica basata su router, ricarica la pagina corrente:
+    if (typeof renderCategory === 'function') {
+        // Esempio: se sei nella vista attrazioni, ricaricala
+        const currentCategory = window.currentCategory || 'attrazioni'; // O la tua variabile di stato
+        renderCategory(currentCategory); 
+    } else {
+        // Fallback brutale se non hai una funzione di render centralizzata
+        location.reload(); 
+    }
 };
 
-// =========================================================
-// 6. LOGICA CALENDARIO ITALIANO (Feriale/Festivo)
-// =========================================================
+// Funzione helper per aggiornare i testi fissi (Menu, Home Title, ecc.)
+function updateStaticInterface() {
+    // Esempio: Aggiorna il titolo della Home
+    const homeTitleEl = document.getElementById('home-title'); 
+    if(homeTitleEl) homeTitleEl.textContent = window.t('home_title');
 
-// Algoritmo di Gauss per calcolare la Pasqua
-function getEasterDate(year) {
-    const a = year % 19;
-    const b = Math.floor(year / 100);
-    const c = year % 100;
-    const d = Math.floor(b / 4);
-    const e = b % 4;
-    const f = Math.floor((b + 8) / 25);
-    const g = Math.floor((b - f + 1) / 3);
-    const h = (19 * a + b - d - g + 15) % 30;
-    const i = Math.floor(c / 4);
-    const k = c % 4;
-    const l = (32 + 2 * e + 2 * i - h - k) % 7;
-    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    // Esempio: Aggiorna i bottoni della navbar
+    // Suggerimento: Aggiungi id="nav-food" ai tuoi elementi HTML per trovarli facilmente
+    const navFood = document.getElementById('nav-food');
+    if(navFood) navFood.textContent = window.t('nav_food');
     
-    const month = Math.floor((h + l - 7 * m + 114) / 31) - 1; // 0-indexed per JS Date
-    const day = ((h + l - 7 * m + 114) % 31) + 1;
-    
-    return new Date(year, month, day);
+    // Aggiorna tutti gli elementi che usano window.t() al volo se necessario
 }
-
-// Verifica se è un giorno festivo in Italia
-function isItalianHoliday(dateObj) {
-    const d = dateObj.getDate();
-    const m = dateObj.getMonth() + 1; // 1-12
-    const y = dateObj.getFullYear();
-
-    // 1. Domenica
-    if (dateObj.getDay() === 0) return true;
-
-    // 2. Festività Fisse
-    const fixedHolidays = [
-        "1-1",   // Capodanno
-        "6-1",   // Epifania
-        "25-4",  // Liberazione
-        "1-5",   // Festa del Lavoro
-        "2-6",   // Festa della Repubblica
-        "15-8",  // Ferragosto
-        "1-11",  // Ognissanti
-        "8-12",  // Immacolata
-        "25-12", // Natale
-        "26-12"  // Santo Stefano
-    ];
-    if (fixedHolidays.includes(`${d}-${m}`)) return true;
-
-    // 3. Pasquetta (Lunedì dell'Angelo) = Pasqua + 1 giorno
-    const easter = getEasterDate(y);
-    const pasquetta = new Date(easter);
-    pasquetta.setDate(easter.getDate() + 1);
-
-    if (d === pasquetta.getDate() && (m - 1) === pasquetta.getMonth()) return true;
-    
-    // (Opzionale) Patrono della Spezia 19 Marzo? 
-    // Per ora teniamo le nazionali standard.
-    
-    return false;
-}
-
-// =========================================================
-// 7. MOTORE DI RICERCA BUS (Cervello)
+// 6. MOTORE DI RICERCA BUS (Cervello)
 // =========================================================
 window.eseguiRicercaBus = async function() {
     // 1. Lettura dati
@@ -203,15 +182,16 @@ window.eseguiRicercaBus = async function() {
     const selOra = document.getElementById('selOra');
 
     if (!selPartenza || !selArrivo || !selData || !selOra) {
-        console.error("Elementi DOM non trovati.");
+        console.error("Elementi DOM non trovati. Sei sicuro che il modale sia aperto?");
         return;
     }
 
     const partenzaId = parseInt(selPartenza.value);
     const arrivoId = parseInt(selArrivo.value);
-    const dataScelta = selData.value; // formato YYYY-MM-DD
+    const dataScelta = selData.value;
     const oraScelta = selOra.value;
 
+    // Riferimenti UI
     const nextCard = document.getElementById('nextBusCard');
     const list = document.getElementById('otherBusList');
     const resultsContainer = document.getElementById('busResultsContainer');
@@ -225,20 +205,11 @@ window.eseguiRicercaBus = async function() {
     nextCard.innerHTML = `<div style="text-align:center; padding:20px;">Cercando... <span class="material-icons spin">sync</span></div>`;
     list.innerHTML = '';
 
-    // === CALCOLO FESTIVO AVANZATO ===
-    // Parsing manuale per evitare problemi di timezone
-    const parts = dataScelta.split('-');
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1; 
-    const day = parseInt(parts[2]);
-    const dateObj = new Date(year, month, day);
+    // Calcolo Festivo
+    const dateObj = new Date(dataScelta);
+    const isFestivo = (dateObj.getDay() === 0); // 0 = Domenica
 
-    // Usa la funzione helper per determinare se è festivo
-    const isFestivo = isItalianHoliday(dateObj);
-
-    // 2. Chiamata RPC a Supabase
-    // Nota: Passiamo p_is_festivo. Lato DB la query dovrà fare qualcosa tipo:
-    // WHERE (p_is_festivo = true AND "ATTIVO_FESTIVO" = true) OR (p_is_festivo = false AND "ATTIVO_FERIALE" = true)
+    // 2. Chiamata RPC
     const { data, error } = await window.supabaseClient.rpc('trova_bus', { 
         p_partenza_id: partenzaId, 
         p_arrivo_id: arrivoId, 
@@ -252,19 +223,18 @@ window.eseguiRicercaBus = async function() {
         return; 
     }
 
-    // Badge UI per indicare all'utente che tipo di orario sta vedendo
-    const dayTypeLabel = isFestivo 
-        ? `<span class="badge-holiday">📅 FESTIVO</span>` 
-        : `<span class="badge-weekday">🏢 FERIALE</span>`;
-
     if (!data || data.length === 0) { 
         nextCard.innerHTML = `
             <div style="text-align:center; padding:15px; color:#c62828;">
                 <span class="material-icons">event_busy</span><br>
                 <strong>Nessuna corsa trovata</strong><br>
-                <div style="margin-top:5px;">${dayTypeLabel}</div>
-                <small style="display:block; margin-top:5px;">Prova a cambiare orario.</small>
+                <small>Prova a cambiare orario.</small>
             </div>`; 
+        
+        // (Opzionale) Scrolla anche se non trova nulla per mostrare l'errore
+        setTimeout(() => {
+            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
         return; 
     }
 
@@ -273,13 +243,10 @@ window.eseguiRicercaBus = async function() {
     const aOra = primo.ora_arrivo.slice(0,5);
 
     nextCard.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-            <span style="font-size:0.75rem; color:#e0f7fa; text-transform:uppercase; font-weight:bold;">PROSSIMA PARTENZA</span>
-            ${dayTypeLabel}
-        </div>
+        <div style="font-size:0.75rem; color:#555; text-transform:uppercase; font-weight:bold;">PROSSIMA PARTENZA</div>
         <div class="bus-time-big">${pOra}</div>
-        <div style="font-size:1rem; color:#e0f7fa;">Arrivo: <strong>${aOra}</strong></div>
-        <div style="font-size:0.8rem; color:#b2ebf2; margin-top:5px;">${primo.nome_linea || 'Linea ATC'}</div>
+        <div style="font-size:1rem; color:#333;">Arrivo: <strong>${aOra}</strong></div>
+        <div style="font-size:0.8rem; color:#777; margin-top:5px;">${primo.nome_linea}</div>
     `;
 
     const successivi = data.slice(1);
@@ -289,4 +256,12 @@ window.eseguiRicercaBus = async function() {
             <span style="color:#666;">➜ ${b.ora_arrivo.slice(0,5)}</span>
         </div>
     `).join('');
+
+    // === 3. NUOVO CODICE PER AUTOSCROLL ===
+    setTimeout(() => {
+        resultsContainer.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' // Cerca di mettere l'inizio del box in alto
+        });
+    }, 150); // Ritardo leggero per permettere al browser di disegnare il box
 };
