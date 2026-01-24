@@ -1,27 +1,6 @@
 console.log("✅ 2. ui-renderers.js caricato (Localizzato)");
 
-// === RENDERER SENTIERO ===
-window.sentieroRenderer = (s) => {
-    const paese = window.dbCol(s, 'Paesi');
-    const distanza = s.Distanza || '--';
-    const durata = s.Durata || '--';
-    const extra = window.dbCol(s, 'Extra') || 'Sentiero';
-    const gpxUrl = s.Gpxlink || s.gpxlink;
-    const uniqueMapId = `map-trail-${Math.random().toString(36).substr(2, 9)}`;
-    if (gpxUrl) { window.mapsToInit.push({ id: uniqueMapId, gpx: gpxUrl }); }
-    const safeObj = encodeURIComponent(JSON.stringify(s)).replace(/'/g, "%27");
 
-    return `
-    <div class="card-sentiero-modern animate-fade">
-        <div id="${uniqueMapId}" class="sentiero-map-bg" style="cursor: pointer;" onclick="event.stopPropagation(); openModal('map', '${gpxUrl}')"></div>
-        <div class="sentiero-card-overlay" style="cursor: pointer;" onclick="openModal('trail', '${safeObj}')">
-            <h2 class="sentiero-overlay-title">${paese}</h2>
-            <button class="btn-outline-details">
-                ${window.t('details_trail')}
-            </button>
-        </div>
-    </div>`;
-};
 
 // === RENDERER RISTORANTE ===
 window.ristoranteRenderer = (r) => {
@@ -61,22 +40,96 @@ window.ristoranteRenderer = (r) => {
         </div>
     </div>`;
 };
-// === RENDERER SPIAGGIA ===
+
+// === RENDERER SPIAGGIA (Ocean Vibe) ===
 window.spiaggiaRenderer = (s) => {
     const nome = window.dbCol(s, 'Nome') || 'Spiaggia';
     const paesi = window.dbCol(s, 'Paesi');
     const desc = window.dbCol(s, 'Descrizione') || '';
+    
+    // Sicurezza stringhe
     const safePaesi = paesi.replace(/'/g, "\\'").replace(/"/g, '"');
     const safeDesc = desc.replace(/'/g, "\\'").replace(/"/g, '"');
-    const mapQuery = encodeURIComponent(`${nome} ${paesi} beach`);
-    const mapLink = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nome + ' ' + paesi + ' beach')}`;
 
     return `
-    <div class="card-spiaggia" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
-        <div class="spiaggia-header"><div class="spiaggia-location">📍 ${paesi}</div><span></span></div>
-        <div class="item-title" style="font-size: 1.3rem; margin: 10px 0;">${nome}</div>
-        <div class="spiaggia-footer">
-            <a href="${mapLink}" target="_blank" class="btn-azure" onclick="event.stopPropagation()">${window.t('btn_position')}</a>
+    <div class="beach-card-modern animate-fade" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
+        <div class="beach-gradient-header">
+            <div style="font-size:0.8rem; opacity:0.8; text-transform:uppercase; font-weight:700; letter-spacing:1px;">
+                <span class="material-icons" style="font-size:1rem; vertical-align:text-top;">place</span> ${paesi}
+            </div>
+            <svg class="beach-wave-shape" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+                <path fill="#ffffff" fill-opacity="1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,250.7C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
+        </div>
+
+        <div class="beach-content-body">
+            <div class="beach-tag">🌊 Relax & Sole</div>
+            <div class="beach-title">${nome}</div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                <span style="font-size:0.85rem; color:#888;">Tocca per info</span>
+                <button onclick="event.stopPropagation(); window.open('${mapLink}', '_blank')" 
+                        style="background:#0288D1; color:white; border:none; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 5px 15px rgba(2, 136, 209, 0.4);">
+                    <span class="material-icons">near_me</span>
+                </button>
+            </div>
+        </div>
+    </div>`;
+};
+
+// === RENDERER SENTIERO (Adventure Vibe) ===
+window.sentieroRenderer = (s) => {
+    const paese = window.dbCol(s, 'Paesi');
+    const titolo = s.Nome || paese; // Nome del sentiero
+    const distanza = s.Distanza || '--';
+    const durata = s.Durata || '--';
+    const diff = s.Tag || s.Difficolta || 'Media';
+    const gpxUrl = s.Gpxlink || s.gpxlink;
+    const uniqueMapId = `map-trail-${Math.random().toString(36).substr(2, 9)}`;
+    const safeObj = encodeURIComponent(JSON.stringify(s)).replace(/'/g, "%27");
+
+    // Calcolo Colore Difficoltà
+    let diffClass = 'diff-medium';
+    if (diff.toLowerCase().includes('facile') || diff.toLowerCase().includes('easy')) diffClass = 'diff-easy';
+    if (diff.toLowerCase().includes('difficile') || diff.toLowerCase().includes('expert') || diff.toLowerCase().includes('hard')) diffClass = 'diff-hard';
+
+    // Inizializza mappa se c'è
+    if (gpxUrl) { window.mapsToInit.push({ id: uniqueMapId, gpx: gpxUrl }); }
+
+    return `
+    <div class="trail-card-modern animate-fade">
+        <div id="${uniqueMapId}" class="trail-map-container" 
+             onclick="event.stopPropagation(); openModal('map', '${gpxUrl}')">
+             </div>
+
+        <div class="trail-info-overlay" onclick="openModal('trail', '${safeObj}')">
+            
+            <div class="trail-title-row">
+                <div>
+                    <h3 style="margin:0; font-family:'Roboto Slab'; font-size:1.3rem; color:#222;">${paese}</h3>
+                    <div style="font-size:0.85rem; color:#888; margin-top:3px;">${titolo !== paese ? titolo : 'Sentiero Panoramico'}</div>
+                </div>
+                <div class="trail-diff-badge ${diffClass}">
+                    ${diff}
+                </div>
+            </div>
+
+            <div class="trail-stats-row">
+                <div class="stat-bubble">
+                    <strong>${distanza}</strong>
+                    <span>Distanza</span>
+                </div>
+                <div class="stat-bubble">
+                    <strong>${durata}</strong>
+                    <span>Tempo</span>
+                </div>
+            </div>
+
+            <button style="width:100%; padding:14px; border:none; background:#2D3436; color:white; border-radius:14px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
+                Vedi Dettagli <span class="material-icons" style="font-size:1rem;">arrow_forward</span>
+            </button>
+
         </div>
     </div>`;
 };
@@ -129,26 +182,49 @@ window.numeriUtiliRenderer = (n) => {
     </div>`;
 };
 
-// === RENDERER ATTRAZIONI ===
+// === RENDERER ATTRAZIONI (Museum/Art Style) ===
 window.attrazioniRenderer = (item) => {
     const titolo = window.dbCol(item, 'Attrazioni') || 'Attrazione';
     const paese = window.dbCol(item, 'Paese');
     const myId = (item._tempIndex !== undefined) ? item._tempIndex : 0;
-    const diff = window.dbCol(item, 'Difficoltà accesso');
-    const isHard = diff.toLowerCase().match(/alta|hard|difficile|schwer|difícil/); 
-    const diffStyle = isHard ? 'background:#ffebee; color:#c62828;' : 'background:#e8f5e9; color:#2e7d32;';
+    const diff = window.dbCol(item, 'Difficoltà Accesso') || 'Accessibile';
+    const tempo = item["Tempo Visita"] || '--';
+
+    // Logica Colori Difficoltà
+    const isHard = diff.toLowerCase().match(/alta|hard|difficile/);
+    const diffColor = isHard ? 'background:#FFEBEE; color:#D32F2F;' : 'background:#E8F5E9; color:#2E7D32;'; // Rosso o Verde chiaro
+
+    // Logica Icona Intelligente (Se il titolo contiene "Chiesa" cambia icona)
+    let icon = 'museum'; // Default
+    if (titolo.toLowerCase().includes('chiesa') || titolo.toLowerCase().includes('santuario')) icon = 'church';
+    if (titolo.toLowerCase().includes('castello') || titolo.toLowerCase().includes('torre')) icon = 'castle';
+    if (titolo.toLowerCase().includes('panorama') || titolo.toLowerCase().includes('vista')) icon = 'visibility';
 
     return `
-    <div class="card-list-item monument-mode" onclick="openModal('attrazione', ${myId})">
-        <div class="item-info">
-            <div class="item-header-row"><div class="item-title">${titolo}</div></div>
-            <div class="item-subtitle" style="margin-bottom: 8px;">📍 ${paese}</div>
-            <div class="monument-meta" style="display:flex; gap:8px;">
-                <span class="meta-badge" style="${diffStyle} padding:2px 8px; border-radius:4px; font-size:0.75rem;">${diff}</span>
-                <span class="meta-badge badge-time" style="background:#f5f5f5; padding:2px 8px; border-radius:4px; font-size:0.75rem;">⏱ ${item["Tempo Visita"] || '--'} ${window.t('visit_time')}</span>
+    <div class="culture-card-modern animate-fade" onclick="openModal('attrazione', ${myId})">
+        
+        <div class="culture-accent-strip"></div>
+        
+        <div class="culture-content">
+            <div class="culture-location">
+                <span class="material-icons" style="font-size:0.9rem;">place</span> ${paese}
+            </div>
+            
+            <div class="culture-title">${titolo}</div>
+            
+            <div style="margin-top: 12px;" class="culture-meta-tags">
+                <span class="culture-pill pill-time">
+                    <span class="material-icons" style="font-size:0.8rem;">schedule</span> ${tempo}
+                </span>
+                <span class="culture-pill" style="${diffColor}">
+                    ${diff}
+                </span>
             </div>
         </div>
-        <div class="item-arrow" style="margin-top: auto; margin-bottom: auto;">➜</div>
+
+        <div class="culture-icon-deco">
+            <span class="material-icons">${icon}</span>
+        </div>
     </div>`;
 };
 

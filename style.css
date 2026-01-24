@@ -488,3 +488,189 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
 @keyframes popIn { 0% { opacity: 0; transform: scale(0.9) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 .spin { animation: spin 1s linear infinite; color: #fff; }
+/* === NUOVO DESIGN SPIAGGE (Ocean Vibe) === */
+.beach-card-modern {
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px -5px rgba(0, 150, 255, 0.15);
+    margin-bottom: 20px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.2s;
+    border: 1px solid rgba(0,0,0,0.03);
+}
+.beach-card-modern:active { transform: scale(0.98); }
+
+.beach-gradient-header {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); /* Gradiente Oceano */
+    padding: 20px 20px 40px 20px; /* Padding extra sotto per l'effetto sovrapposizione */
+    color: white;
+    position: relative;
+}
+
+.beach-wave-shape {
+    position: absolute; bottom: -1px; left: 0; width: 100%;
+    line-height: 0; fill: #ffffff;
+}
+
+.beach-content-body {
+    padding: 0 20px 20px 20px;
+    margin-top: -30px; /* Tira su il contenuto sopra il gradiente */
+    position: relative;
+    z-index: 2;
+}
+
+.beach-title {
+    font-family: 'Roboto Slab', serif; font-size: 1.4rem; font-weight: 700; color: #005073;
+    margin-bottom: 5px; text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+}
+
+.beach-tag {
+    display: inline-block; background: #E1F5FE; color: #0288D1; 
+    padding: 5px 12px; border-radius: 50px; font-size: 0.75rem; 
+    font-weight: 800; text-transform: uppercase; margin-bottom: 15px;
+}
+
+/* === NUOVO DESIGN SENTIERI (Adventure Style) === */
+.trail-card-modern {
+    background: #fff;
+    border-radius: 28px;
+    box-shadow: 0 15px 40px -10px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+    overflow: hidden;
+    position: relative;
+}
+
+.trail-map-container {
+    height: 220px; /* Mappa bella grande */
+    background: #eee;
+    position: relative;
+}
+
+.trail-info-overlay {
+    background: white;
+    margin-top: -20px; /* Effetto foglio che copre la mappa */
+    border-radius: 24px 24px 0 0;
+    padding: 25px 20px 20px 20px;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+}
+
+.trail-title-row {
+    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;
+}
+
+.trail-diff-badge {
+    padding: 6px 14px; border-radius: 12px; color: white; 
+    font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* Colori dinamici difficoltà */
+.diff-easy { background: linear-gradient(135deg, #2ecc71, #27ae60); } /* Verde */
+.diff-medium { background: linear-gradient(135deg, #f1c40f, #f39c12); } /* Giallo/Arancio */
+.diff-hard { background: linear-gradient(135deg, #e74c3c, #c0392b); } /* Rosso */
+
+.trail-stats-row {
+    display: flex; gap: 15px; margin-bottom: 20px;
+}
+
+.stat-bubble {
+    background: #F8F9FA; border-radius: 16px; padding: 10px 15px; 
+    flex: 1; text-align: center; border: 1px solid #eee;
+}
+.stat-bubble strong { display: block; font-size: 1.1rem; color: #2D3436; }
+.stat-bubble span { font-size: 0.7rem; text-transform: uppercase; color: #B2BEC3; font-weight: 700; }
+/* === NUOVO DESIGN CULTURA (Art Gallery Style) === */
+.culture-card-modern {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px -5px rgba(100, 100, 100, 0.1);
+    margin-bottom: 18px;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid rgba(0,0,0,0.04);
+}
+
+.culture-card-modern:active {
+    transform: scale(0.98);
+}
+
+/* La fascia colorata verticale a sinistra */
+.culture-accent-strip {
+    width: 6px;
+    background: linear-gradient(to bottom, #8E2DE2, #4A00E0); /* Gradiente Viola */
+}
+
+.culture-content {
+    flex: 1;
+    padding: 20px 15px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.culture-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+/* Titolo elegante */
+.culture-title {
+    font-family: 'Roboto Slab', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1.3;
+}
+
+.culture-location {
+    font-size: 0.8rem;
+    color: #95a5a6;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 4px;
+}
+
+/* Box per le icone (Tempo e Difficoltà) */
+.culture-meta-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.culture-pill {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex; align-items: center; gap: 4px;
+}
+
+.pill-time { background: #F3E5F5; color: #8E2DE2; } /* Lilla */
+.pill-diff { background: #f0f0f0; color: #555; }
+
+/* Icona decorativa sfumata a destra */
+.culture-icon-deco {
+    width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(142, 45, 226, 0.1), rgba(74, 0, 224, 0.05));
+    border-left: 1px solid rgba(0,0,0,0.03);
+}
+
+.culture-icon-deco .material-icons {
+    font-size: 1.8rem;
+    background: -webkit-linear-gradient(#8E2DE2, #4A00E0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
