@@ -32,23 +32,25 @@ window.ristoranteRenderer = (r) => {
     const mapLink = r.Mappa || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nome + ' ' + paesi)}`;
 
     return `
-    <div class="info-card" onclick="openModal('ristorante', '${safeObj}')" 
-         style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 220px; text-align: center; padding: 25px;
+<div class="info-card" onclick="openModal('ristorante', '${safeObj}')" 
+         style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 220px; text-align: center; 
+                /* MODIFICA 1: Padding ridotto sopra e sotto (15px) ma uguale ai lati (25px) */
+                padding: 15px 25px;
                 background: rgba(0, 0, 0, 0.6) !important; 
                 backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
                 border: 1px solid rgba(255, 255, 255, 0.1) !important;
                 border-radius: 30px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
                 margin-bottom: 20px;">
-        <h3 style="margin: 0 0 8px 0; font-size: 1.5rem; color: #ffffff;">${nome}</h3>
+        
+        <h3 style="margin: 0 0 4px 0; font-size: 1.5rem; color: #ffffff;">${nome}</h3>
+        
         <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 1.1rem; display: flex; align-items: center; justify-content: center;">
             <span class="material-icons" style="font-size: 1.2rem; color: #f39c12; margin-right: 6px;">restaurant</span>
             ${paesi}
         </p>
-        <p style="margin: 12px 0 25px 0; color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: 1px;">
-            ${numero}
-        </p>
-        <div style="display: flex; justify-content: center; gap: 30px; width: 100%;">
+       
+        <div style="display: flex; justify-content: center; gap: 30px; width: 100%; margin-top: 20px;">
             ${numero ? `
                 <div class="action-btn btn-call" style="width: 55px; height: 55px;" onclick="event.stopPropagation(); window.location.href='tel:${numero}'">
                     <span class="material-icons">call</span>
@@ -59,7 +61,6 @@ window.ristoranteRenderer = (r) => {
         </div>
     </div>`;
 };
-
 // === RENDERER SPIAGGIA ===
 window.spiaggiaRenderer = (s) => {
     const nome = window.dbCol(s, 'Nome') || 'Spiaggia';

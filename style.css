@@ -307,11 +307,30 @@ main, #app-content {
     background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); 
     border-radius: 20px; padding: 18px 15px; z-index: 2; box-shadow: 0 4px 20px rgba(0,0,0,0.15); text-align: center; 
 }
-.sentiero-overlay-title { font-family: 'Roboto Slab', cursive; font-size: 1.25rem; color: #222; margin: 0 0 12px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px; }
-.btn-outline-details { 
-    display: inline-block; width: 80%; padding: 8px 0; background: transparent; 
-    border: 1.5px solid #444; border-radius: 50px; font-size: 0.85rem; 
-    font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; 
+/* Titolo Sentiero Adattivo */
+.sentiero-overlay-title {
+    /* 1. Tipografia e Adattamento */
+    font-family: 'Roboto Slab', serif;
+    
+    /* TRUCCO MAGICO: Il testo sarà minimo 1rem, ideale 5% dello schermo, massimo 1.4rem */
+    font-size: clamp(1rem, 5vw, 1.4rem); 
+    
+    line-height: 1.2;       /* Interlinea stretta per quando va su due righe */
+    color: #222;
+    font-weight: 700;
+
+    /* 2. Posizionamento e Centratura */
+    text-align: center;     /* Centra il testo */
+    width: 100%;            /* Occupa tutto lo spazio disponibile */
+    margin: 0 auto 10px auto; /* Centra il blocco e da spazio sotto */
+    
+    /* 3. Gestione Spazi (I "pochi mm" di bordo) */
+    padding: 0 5px;         /* Cuscinetto laterale per non toccare i bordi */
+    
+    /* 4. Gestione Testo Lungo */
+    white-space: normal;    /* Permette di andare a capo se il nome è lungo */
+    overflow: hidden;       /* Nasconde eventuali sbavature */
+    word-wrap: break-word;  /* Spezza le parole lunghissime se serve */
 }
 
 /* Sentiero Stats Grid */
