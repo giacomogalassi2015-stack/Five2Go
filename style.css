@@ -214,6 +214,29 @@ main, #app-content {
 }
 .lang-opt.active { background-color: #E0F2F1; color: var(--primary-col); font-weight: 800; }
 
+/* Badge Giorno Bus */
+.badge-holiday {
+    background-color: #ff5252;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.badge-weekday {
+    background-color: #26a69a; /* Colore Teal per matchare con il tema */
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
 /* ============================================================
    5. SPECIFICHE VISTE (Prodotti, Spiagge, Sentieri)
    ============================================================ */
