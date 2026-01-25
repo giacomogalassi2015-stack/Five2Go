@@ -448,7 +448,31 @@ window.openModal = async function(type, payload) {
             }
         }, 100); // Ritardo iniziale di 100ms per attendere il render HTML
     }
+// --- SCHEDA RISTORANTE (Solo Testo Centrato) ---
+    else if (type === 'ristorante' || type === 'restaurant') {
+        const item = JSON.parse(decodeURIComponent(payload));
+        
+        const nome = window.dbCol(item, 'Nome');
+        const indirizzo = window.dbCol(item, 'Paesi') || ''; 
+        const desc = window.dbCol(item, 'Descrizioni') || 'Dettagli non disponibili.'; 
 
+        contentHtml = `
+            <div class="rest-modal-wrapper">
+                
+                <div class="rest-header">
+                    <h2>${nome}</h2>
+                    <div class="rest-location">
+                        <span class="material-icons">place</span> ${indirizzo}
+                    </div>
+                    <div class="rest-divider"></div>
+                </div>
+
+                <div class="rest-body">
+                    ${desc}
+                </div>
+
+            </div>`;
+    }
     // --- DETTAGLI FARMACIA ---
     else if (type === 'farmacia') {
         const item = JSON.parse(decodeURIComponent(payload)); 

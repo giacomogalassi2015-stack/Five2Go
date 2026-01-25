@@ -787,3 +787,62 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
 /* Colori specifici icone pulsanti */
 .btn-call .material-icons { color: #4CAF50; } /* Verde brillante */
 .btn-map .material-icons { color: #29B6F6; } /* Azzurro brillante */
+/* === MODALE RISTORANTE (Luxury Minimal Design) === */
+
+.rest-modal-wrapper {
+    padding: 10px 5px;
+    color: #333;
+    text-align: center;
+}
+
+/* Titolo: Grande ed Elegante */
+.rest-header h2 {
+    font-family: 'Playfair Display', 'Roboto Slab', serif; /* Se hai importato Playfair è top, altrimenti usa Roboto Slab */
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 10px 0;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+}
+
+/* Sottotitolo (Indirizzo) */
+.rest-location {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px; /* Spazia le lettere per eleganza */
+    font-weight: 600;
+}
+
+.rest-location .material-icons {
+    font-size: 1rem;
+    color: #d4af37; /* Color Oro opaco */
+}
+
+/* Divisore decorativo piccolo */
+.rest-divider {
+    width: 40px;
+    height: 3px;
+    background-color: #d4af37; /* Oro */
+    margin: 20px auto;
+    border-radius: 2px;
+}
+
+/* Corpo del testo */
+.rest-body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1.1rem;      /* Leggermente più grande per leggibilità */
+    line-height: 1.6;       
+    color: #555;
+    
+    text-align: center;     /* <--- ECCO LA MODIFICA */
+    
+    padding: 0 15px;
+    margin-bottom: 20px;
+}
+
