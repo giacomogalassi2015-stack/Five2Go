@@ -5,6 +5,7 @@ console.log("✅ 2. ui-renderers.js caricato (Localizzato)");
 // === RENDERER RISTORANTE ===
 
 window.ristoranteRenderer = (r) => {
+    // ... (codice precedente invariato) ...
     const nome = window.dbCol(r, 'Nome') || 'Ristorante';
     const paesi = window.dbCol(r, 'Paesi') || '';
     const numero = r.Numero || r.Telefono || '';
@@ -12,24 +13,30 @@ window.ristoranteRenderer = (r) => {
     const mapLink = r.Mappa || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nome + ' ' + paesi)}`;
 
     return `
-    <div class="restaurant-glass-card" onclick="openModal('ristorante', '${safeObj}')">
+    <div class="restaurant-glass-card"> 
         
         <h3 class="rest-card-title">${nome}</h3>
         
         <p class="rest-card-subtitle">
-            <span class="material-icons" style="font-size: 1.2rem; color: #f39c12;">restaurant</span>
+            <span class="material-icons">restaurant</span>
             ${paesi}
         </p>
        
         <div class="rest-card-actions">
+            
+            <div class="action-btn btn-info rest-btn-size" onclick="openModal('ristorante', '${safeObj}')">
+                <span class="material-icons">info_outline</span>
+            </div>
+
             ${numero ? `
-                <div class="action-btn btn-call rest-btn-size" onclick="event.stopPropagation(); window.location.href='tel:${numero}'">
+                <div class="action-btn btn-call rest-btn-size" onclick="window.location.href='tel:${numero}'">
                     <span class="material-icons">call</span>
                 </div>` : ''}
             
-            <div class="action-btn btn-map rest-btn-size" onclick="event.stopPropagation(); window.open('${mapLink}', '_blank')">
+            <div class="action-btn btn-map rest-btn-size" onclick="window.open('${mapLink}', '_blank')">
                 <span class="material-icons">map</span>
             </div>
+
         </div>
     </div>`;
 };
@@ -173,39 +180,47 @@ window.numeriUtiliRenderer = (n) => {
 };
 
 
-// === RENDERER ATTRAZIONI (Con FontAwesome) ===
+// === RENDERER ATTRAZIONI (Basato su colonna LABEL) ===
 window.attrazioniRenderer = (item) => {
     const titolo = window.dbCol(item, 'Attrazioni') || 'Attrazione';
     const paese = window.dbCol(item, 'Paese');
     const myId = (item._tempIndex !== undefined) ? item._tempIndex : 0;
     const tempo = item.Tempo_visita || '--'; 
     const diff = window.dbCol(item, 'Difficoltà Accesso') || 'Accessibile';
-
-    const tLower = titolo.toLowerCase();
+    
+    // RECUPERA LA LABEL (Storico, Religioso, Panorama)
+    // Se è vuota, usa 'Storico' come default
+    const rawLabel = window.dbCol(item, 'Label') || 'Storico';
+    const label = rawLabel.toLowerCase().trim(); // Pulisce il testo (es. "  Religioso " -> "religioso")
 
     // Variabili per CSS e Icona
     let themeClass = 'is-monument';
-    let iconClass = 'fa-landmark'; // Default (Monumento generico)
+    let iconClass = 'fa-landmark'; 
 
-    // 1. RELIGIONE (Viola)
-    if (tLower.includes('chiesa') || tLower.includes('santuario') || tLower.includes('convento') || tLower.includes('oratorio')) {
+    // --- LOGICA DI ASSEGNAZIONE ---
+    
+    // 1. RELIGIOSO (Viola) -> Icona Chiesa
+    if (label === 'religioso') {
         themeClass = 'is-church';
-        iconClass = 'fa-church'; // Icona Chiesa FontAwesome
+        iconClass = 'fa-church'; 
     }
-    // 2. PANORAMI (Verde Acqua)
-    else if (tLower.includes('panorama') || tLower.includes('vista') || tLower.includes('belvedere') || tLower.includes('punta') || tLower.includes('via')) {
+    
+    // 2. PANORAMA (Verde Acqua) -> Icona Monti e Sole
+    else if (label === 'panorama') {
         themeClass = 'is-view';
-        iconClass = 'fa-mountain-sun'; // Icona Montagne e Sole
+        iconClass = 'fa-mountain-sun'; 
     }
-    // 3. CASTELLI / TORRI (Terracotta)
+    
+    // 3. STORICO (Terracotta) -> Icona Torre/Castello
+    else if (label === 'storico') {
+        themeClass = 'is-monument';
+        iconClass = 'fa-chess-rook'; // Torre medievale
+    }
+    
+    // Fallback (se hai scritto altro nella colonna Label)
     else {
         themeClass = 'is-monument';
-        // Se è specificamente un castello o torre usiamo la Torre, altrimenti Monumento generico
-        if (tLower.includes('castello') || tLower.includes('torre') || tLower.includes('bastione')) {
-             iconClass = 'fa-chess-rook'; // Torre medievale
-        } else {
-             iconClass = 'fa-landmark';   // Pantheon/Museo
-        }
+        iconClass = 'fa-landmark';
     }
 
     return `

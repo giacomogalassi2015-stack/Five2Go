@@ -677,6 +677,7 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
 
 /* === SCHEDA RISTORANTE (LUXURY GLASS DESIGN) === */
 .restaurant-glass-card {
+    cursor: default;
     display: flex; 
     flex-direction: column; 
     align-items: center; 
@@ -804,6 +805,16 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
     margin: 0 0 10px 0;
     letter-spacing: -0.5px;
     line-height: 1.1;
+}
+
+/* Colori specifici pulsanti */
+.btn-call .material-icons { color: #4CAF50; } /* Verde */
+.btn-map .material-icons  { color: #29B6F6; } /* Azzurro */
+
+/* Colore icona Info */
+.btn-info .material-icons { 
+    color: #ffffff; 
+    font-weight: 300; /* Forza un rendering più leggero se il font lo supporta */
 }
 
 /* Sottotitolo (Indirizzo) */
