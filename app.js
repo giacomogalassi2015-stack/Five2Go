@@ -256,24 +256,27 @@ window.loadTableData = async function(tableName, btnEl) {
     else if (tableName === 'Farmacie') { renderGenericFilterableView(data, 'Paesi', subContent, window.farmacieRenderer); } 
     else if (tableName === 'Numeri_utili') { renderGenericFilterableView(data, 'Comune', subContent, window.numeriUtiliRenderer); }
 };
-
-// ... (Resto funzioni swipe, servizi grid, ecc... invariate) ...
 /* ============================================================
-   SWIPE TRA LE PAGINE (Fixed & Global)
+   SWIPE TRA LE PAGINE (Aggiornato per Nuovi Pulsanti)
    ============================================================ */
 
 const minSwipeDistance = 50; 
-const maxVerticalDistance = 100;
+const maxVerticalDistance = 100; // Tolleranza per non confondere scroll e swipe
 let touchStartX = 0;
 let touchStartY = 0;
 let touchEndX = 0;
 let touchEndY = 0;
 
 document.addEventListener('touchstart', e => {
+    // 1. BLOCCO SWIPE SU ELEMENTI SPECIFICI
+    // Se tocchi mappe, slider o la barra del menu stesso, lo swipe di pagina NON parte
     if (e.target.closest('.leaflet-container') || 
         e.target.closest('.map-container') || 
-        e.target.closest('#bus-map') || 
-        e.target.closest('.sub-nav-tabs')) {
+        e.target.closest('.swiper-container') ||      // Blocca se tocchi lo slider Swiper
+        e.target.closest('.nav-scroll-container') ||  // Blocca se tocchi i bottoni 3D
+        e.target.closest('.nav-sticky-header') ||     // Blocca tutta la testata
+        e.target.closest('.modal-content')) {         // Blocca se c'è una modale aperta
+        
         touchStartX = null; 
         return;
     }
@@ -295,26 +298,45 @@ function handlePageSwipe() {
     const xDiff = touchEndX - touchStartX;
     const yDiff = touchEndY - touchStartY;
     
+    // 2. CONTROLLI DI VALIDITÀ
+    // Deve essere uno swipe abbastanza lungo orizzontalmente
     if (Math.abs(xDiff) < minSwipeDistance) return;
+    
+    // Non deve essere uno scroll verticale (se muovi più in Y che in X, è scroll)
     if (Math.abs(yDiff) > maxVerticalDistance) return;
     if (Math.abs(yDiff) > Math.abs(xDiff)) return;
 
-    const tabs = document.querySelectorAll('.sub-nav-item');
+    // 3. SELEZIONE DEI NUOVI BOTTONI
+    // Cerchiamo sia i bottoni 'chip' che quelli '3d'
+    const tabs = document.querySelectorAll('.nav-chip, .btn-3d');
+    
     if (tabs.length === 0) return;
 
+    // 4. TROVA IL TAB ATTIVO CORRENTE
     let activeIndex = -1;
     tabs.forEach((tab, index) => {
-        if (tab.classList.contains('active-sub')) activeIndex = index;
+        // Controlla le nuove classi attive (.active-chip o .active-3d)
+        if (tab.classList.contains('active-chip') || tab.classList.contains('active-3d')) {
+            activeIndex = index;
+        }
     });
 
-    if (activeIndex === -1) return;
+    if (activeIndex === -1) return; // Nessun tab attivo trovato
 
+    // 5. ESEGUI IL CLICK VIRTUALE SUL PROSSIMO/PRECEDENTE
     if (xDiff < 0) {
-        if (activeIndex < tabs.length - 1) tabs[activeIndex + 1].click();
+        // Swipe Sinistra -> Vado avanti (Tab successivo)
+        if (activeIndex < tabs.length - 1) {
+            tabs[activeIndex + 1].click();
+        }
     } else {
-        if (activeIndex > 0) tabs[activeIndex - 1].click();
+        // Swipe Destra -> Torno indietro (Tab precedente)
+        if (activeIndex > 0) {
+            tabs[activeIndex - 1].click();
+        }
     }
     
+    // Reset
     touchStartX = null;
     touchStartY = null;
 }
