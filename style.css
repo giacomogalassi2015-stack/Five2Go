@@ -40,15 +40,6 @@ body {
     padding-bottom: calc(var(--nav-height) + 30px); 
 }
 
-/* Titoli in Font Slab per carattere */
-.card-title-overlay {
-    font-family: 'Roboto Slab', sans-serif; 
-    font-weight: 400; 
-    color: var(--primary-dark);
-    font-size: 1.6rem; 
-    line-height: 1.1;
-}
-
 /* ============================================================
    2. HEADER & NAVIGAZIONE
    ============================================================ */
@@ -98,14 +89,6 @@ main, #app-content {
 .nav-item .material-icons { font-size: 26px; margin-bottom: 3px; }
 .nav-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
 
-/* Sub-Nav & Loading */
-.sub-nav-tabs::-webkit-scrollbar, .sub-nav-tabs { -ms-overflow-style: none; scrollbar-width: none; }
-.sub-nav-bar { padding-top: 15px !important; padding-bottom: 0 !important; align-items: flex-end !important; min-height: 60px; }
-.sub-nav-item { padding: 10px 5px !important; position: relative; font-size: 1rem !important; font-weight: 600 !important; color: #B2BEC3 !important; text-transform: uppercase; letter-spacing: 1px; background: transparent !important; box-shadow: none !important; border-radius: 0 !important; transition: color 0.3s ease; }
-.sub-nav-item::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background-color: var(--primary-col); transform: scaleX(0); transform-origin: center; transition: transform 0.3s ease; border-radius: 3px 3px 0 0; }
-.sub-nav-item.active-sub { color: var(--primary-col) !important; font-weight: 800 !important; transform: none !important; }
-.sub-nav-item.active-sub::after { transform: scaleX(0.8); }
-
 .loading-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
 .loader {
     font-weight: 600; color: var(--primary-col); letter-spacing: 1px;
@@ -116,8 +99,8 @@ main, #app-content {
 /* ============================================================
    3. CLASSI CARD GENERALI
    ============================================================ */
-.card-list-item, .card-product, 
-.card-spiaggia, .village-card {
+.card-list-item, 
+.card-spiaggia {
     background-color: var(--surface) !important;
     border-radius: var(--card-radius); 
     box-shadow: var(--shadow-soft); 
@@ -126,8 +109,7 @@ main, #app-content {
     transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.25s ease;
     border: none; position: relative; overflow: hidden; 
 }
-.card-list-item:active, .card-product:active, 
-.card-spiaggia:active, .village-card:active {
+.card-list-item:active, .card-spiaggia:active {
     transform: scale(0.97); 
     box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
 }
@@ -254,42 +236,68 @@ main, #app-content {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* ============================================================
-   5. SPECIFICHE VISTE (Prodotti, Spiagge, Sentieri)
-   ============================================================ */
+/* === PRODOTTI (Stile Servizi: Dimensioni Contenute) === */
 
-/* Glass Modal & Tag */
-.glass-modal {
-    background: rgba(255, 255, 255, 0.65) !important;
-    backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.8) !important;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important; color: #2D3436;
-}
-.glass-tag {
-    display: inline-block; background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.6); padding: 8px 16px;
-    border-radius: 50px; font-weight: 700; color: var(--primary-dark);
-    margin-top: 10px; font-size: 0.9rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+/* 1. GRIGLIA: Copia esatta della tua .services-grid-modern */
+.products-grid-fixed {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 Colonne */
+    gap: 20px;                             /* Distanza identica ai servizi */
+    padding: 25px;                         
+    max-width: 600px;                      /* FONDAMENTALE: impedisce che diventino enormi */
+    margin: 0 auto;
 }
 
-/* Prodotti Grid */
-.grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 0 10px 0; }
-.village-card { 
-    height: 180px; position: relative; overflow: hidden; background-size: cover; 
-    background-position: center; border: none; border-radius: 24px; 
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); margin-bottom: 0 !important; 
+/* 2. CARD PRODOTTO: Altezza Fissa e Compatta */
+.prod-card-fixed {
+    width: 100%;
+    height: 140px;          /* Altezza ridotta (era 180px all'inizio, ora è più piccola) */
+    
+    position: relative;
+    overflow: hidden;
+    
+    /* Gestione Sfondo */
+    background-size: cover;
+    background-position: center;
+    background-color: #333;
+    
+    /* Stile Bordo identico ai servizi */
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Ombra leggermente ridotta */
+    
+    transition: transform 0.2s ease-out;
+    cursor: pointer;
 }
-.card-title-overlay {
-    position: absolute; bottom: 0; width: 100%; height: 60%;
-    background: linear-gradient(to top, rgba(38, 70, 83, 0.9) 0%, transparent 100%);
-    display: flex; align-items: flex-end; padding: 15px; color: white;
-    font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px;
-}
-.card-product { display: flex; flex-direction: column; overflow: hidden; border: none; border-radius: 24px; box-shadow: 0 15px 35px -10px rgba(0,0,0,0.15); transform: translateZ(0); }
-.prod-thumb { width: 100%; height: 230px; object-fit: cover; background-color: #eee; transition: transform 0.5s ease; }
-.card-product:active .prod-thumb { transform: scale(1.05); }
-.prod-info { padding: 22px; background: white; position: relative; }
 
+.prod-card-fixed:active {
+    transform: scale(0.96);
+}
+
+/* 3. Overlay Testo (Sfumatura scura in basso) */
+.prod-overlay-fixed {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; 
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%);
+    
+    display: flex;
+    align-items: flex-end; /* Testo in basso */
+    justify-content: center;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.prod-title-fixed {
+    color: white;
+    font-size: 1rem;       /* Font contenuto */
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    line-height: 1.2;
+}
 /* Spiaggia */
 .card-spiaggia { padding: 22px 25px; border-left: none; position: relative; }
 .spiaggia-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
@@ -350,31 +358,79 @@ main, #app-content {
 .btn-trail-action:active { transform: scale(0.98); opacity: 0.9; }
 
 /* ============================================================
-   6. INFO CARDS (Farmacie & Numeri Utili - STILE DARK GLASS)
+   INFO CARDS (Farmacie & Numeri Utili - STILE WHITE)
    ============================================================ */
+
 .info-card {
-    background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; 
-    padding: 10px 15px; margin-bottom: 8px; 
-    display: flex; justify-content: space-between; align-items: center; min-height: 70px; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2); color: white;
+    background-color: #ffffff !important; /* Forza sfondo bianco */
+    border-radius: 16px;
+    padding: 15px 20px;
+    margin-bottom: 12px;
+    
+    /* Layout: Icona - Testo - Bottone */
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.05);
 }
-.info-card:active { background-color: rgba(30, 30, 30, 0.8); transform: scale(0.98); }
-.info-card h3 { margin: 0; font-size: 1rem; color: #ffffff; font-weight: 600; line-height: 1.2; }
-.info-card p { margin: 2px 0 0 0; font-size: 0.85rem; color: #cccccc; }
 
-/* Bottoni azione (Quadrati) */
+/* Icona a sinistra (Box Grigio/Verde) */
+.info-icon-box {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: #f0f2f5;
+    color: #546e7a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Colonna Testo Centrale */
+.info-text-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Titolo Scuro (IMPORTANTE: il colore #2c3e50 la rende visibile) */
+.info-text-col h3 {
+    margin: 0 0 4px 0;
+    font-size: 1.1rem;
+    color: #2c3e50 !important; 
+    font-weight: 700;
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.2;
+}
+
+/* Sottotitolo Grigio */
+.info-text-col p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #7f8c8d !important;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Bottone a destra */
 .action-btn {
-    width: 48px; height: 48px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    margin-left: 12px; box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: transform 0.1s, filter 0.2s;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
-.action-btn .material-icons { font-size: 1.6rem; color: white; }
-.btn-call { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); }
-.btn-map { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); }
-.action-btn:active { transform: scale(0.90); filter: brightness(0.8); }
-
+.btn-call { background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); }
+.action-btn .material-icons { color: #fff; font-size: 1.5rem; }
 /* ============================================================
    7. BUS & TRASPORTI (Search Box & Griglia)
    ============================================================ */
@@ -671,7 +727,7 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
 .culture-icon-deco .material-icons {
     font-size: 1.8rem;
     background: -webkit-linear-gradient(#8E2DE2, #4A00E0);
-    -webkit-background-clip: text;
+
     -webkit-text-fill-color: transparent;
 }
 
@@ -1096,4 +1152,197 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
 /* 3. PANORAMI (Verde Acqua) -> Usa icona "fa-mountain-sun" */
 .culture-card.is-view .culture-bg-icon i {
     color: #00897B;
+}
+/* === HEADER LISTE SEMPLICI (Farmacie/Numeri Utili) === */
+
+/* Contenitore Intestazione (Allinea bottone e titolo) */
+.header-simple-list {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Spazio tra bottone e titolo */
+    padding: 10px 5px 20px 5px; /* Un po' di aria sotto */
+}
+
+/* Il Titolo accanto alla freccia */
+.header-simple-list h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50; /* Grigio Scuro elegante */
+    font-family: 'Roboto Slab', serif; /* O il tuo font titoli */
+    text-transform: capitalize;
+}
+
+/* IL NUOVO PULSANTE INDIETRO */
+.btn-back-custom {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%; /* Cerchio Perfetto */
+    background: #ffffff;
+    
+    border: 1px solid rgba(0,0,0,0.05); /* Bordino sottile */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08); /* Ombra morbida */
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    
+    /* Rimuove stili default brutti */
+    padding: 0;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* Icona dentro il bottone */
+.btn-back-custom .material-icons {
+    color: #333;
+    font-size: 1.4rem;
+    transform: translateX(-1px); /* Aggiustamento ottico per centrare la freccia */
+}
+
+/* Effetto Click */
+.btn-back-custom:active {
+    transform: scale(0.92);
+    background: #f5f5f5;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* ============================================================
+   MENU FISSO: STILE "CLEAN AIRBNB" (Niente pulsanti grigi)
+   ============================================================ */
+
+.sub-menu-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    
+    /* Sfondo Vetro pulitissimo */
+    background: rgba(255, 255, 255, 0.96); 
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    
+    /* Vicinissimo al bordo alto come chiedevi */
+    padding: 5px 15px 10px 15px; 
+    margin: 0 -20px 20px -20px;
+    border-bottom: 1px solid rgba(0,0,0,0.05); /* Linea sottilissima */
+    
+    display: flex;
+    align-items: center;
+    height: 60px;
+}
+
+/* Contenitore Scrollabile */
+.sub-menu-scroll {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Meno spazio, più compatti */
+    
+    overflow-x: auto;
+    padding-right: 20px;
+    height: 100%;
+    
+    /* Scroll fluido nativo */
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+}
+.sub-menu-scroll::-webkit-scrollbar { display: none; }
+
+/* --- IL BOTTONE (Stato NORMALE: Solo Testo) --- */
+/* Questo risolve il problema "non mi piacciono i pulsanti" */
+button.sub-tab-btn {
+    background: transparent; /* NESSUNO SFONDO */
+    border: 1px solid transparent; /* NESSUN BORDO */
+    border-radius: 50px;
+    
+    padding: 8px 16px;
+    
+    /* Testo */
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #94a3b8; /* Grigio chiaro elegante */
+    
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* --- STATO ATTIVO (BOLLINO NERO) --- */
+button.sub-tab-btn.active-sub {
+    background-color: #000000; /* Nero Pieno */
+    color: #ffffff !important; /* Bianco */
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Ombra che lo stacca */
+    transform: scale(1.02); /* Leggermente più grande */
+}
+
+/* Tasto Filtro (opzionale) */
+.sub-filter-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: transparent; color: #333;
+    margin-left: auto; /* Lo spinge a destra */
+}
+/* ============================================================
+   STILE VINI (Clone di Prodotti + Badge)
+   ============================================================ */
+
+/* 1. La Card (Identica a prod-card-fixed ma specifica per vini) */
+.wine-card-fixed {
+    width: 100%;
+    height: 140px;          /* Altezza compatta come i prodotti */
+    position: relative;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    background-color: #f0f0f0;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease-out;
+    cursor: pointer;
+}
+
+.wine-card-fixed:active {
+    transform: scale(0.96);
+}
+
+/* 2. Overlay Sfumato in basso per il testo */
+.wine-overlay-fixed {
+    position: absolute;
+    bottom: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 15px;
+}
+
+.wine-title-fixed {
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    line-height: 1.2;
+}
+
+/* 3. Badge TIPO in alto a destra */
+.wine-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    z-index: 10;
+    letter-spacing: 0.5px;
 }

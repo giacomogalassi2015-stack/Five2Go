@@ -158,85 +158,108 @@ function renderHome() {
     </div>`;
 }
 
+// ============================================================
+// 1. RENDER SUB-MENU (Stile Clean)
+// ============================================================
 function renderSubMenu(options, defaultTable) {
     let menuHtml = `
-    <div class="sub-nav-bar" style="display: flex !important; width: 100% !important; align-items: center !important; padding-right: 10px !important; margin-bottom: 5px !important; border-bottom: 1px solid rgba(0,0,0,0.05);">
-        
-        <div class="sub-nav-tabs" style="display: flex !important; flex-wrap: nowrap !important; overflow-x: auto !important; flex: 1 !important; min-width: 0 !important; gap: 15px !important; padding-bottom: 0 !important; -webkit-overflow-scrolling: touch !important; scrollbar-width: none !important;">
+    <div class="sub-menu-sticky animate-fade">
+        <div class="sub-menu-scroll">
             ${options.map(opt => `
-                <button class="sub-nav-item" onclick="loadTableData('${opt.table}', this)" style="flex: 0 0 auto !important; white-space: nowrap !important; background: transparent !important; box-shadow: none !important; border: none !important;">
+                <button class="sub-tab-btn" onclick="loadTableData('${opt.table}', this)">
                     ${opt.label}
                 </button>
             `).join('')}
         </div>
-
-        <button id="filter-toggle-btn" style="display: none; margin-left: 10px; flex-shrink: 0 !important; background: #f0f0f0; border: none; border-radius: 50px; padding: 8px 12px; font-size: 0.75rem; font-weight: bold; color: #333; cursor: pointer; white-space: nowrap;">
-            ⚡
+        
+        <button id="filter-toggle-btn" class="sub-filter-btn" style="display: none;">
+            <span class="material-icons">filter_list</span>
         </button>
-
     </div>
-    <div id="sub-content"></div>`;
+    
+    <div id="sub-content" style="padding-top: 10px;"></div>`;
     
     content.innerHTML = menuHtml;
-    const firstBtn = content.querySelector('.sub-nav-item');
-    if (firstBtn) loadTableData(defaultTable, firstBtn);
+    
+    // Attiva il primo bottone
+    const firstBtn = content.querySelector('.sub-tab-btn');
+    if (firstBtn) {
+        loadTableData(defaultTable, firstBtn); 
+    }
 }
 
-// Funzione globale per essere chiamata dall'HTML
+// ============================================================
+// 2. LOAD DATA (Gestione Attivazione)
+// ============================================================
 window.loadTableData = async function(tableName, btnEl) {
     const subContent = document.getElementById('sub-content');
     const filterBtn = document.getElementById('filter-toggle-btn');
     if (!subContent) return;
 
-    // === AGGIUNGI QUESTE RIGHE QUI PER PULIRE I FILTRI ===
-    const filterContainer = document.getElementById('filters-scroll') || document.getElementById('category-filters');
-    if (filterContainer) filterContainer.innerHTML = '';
-    // ====================================================
+    // --- LOGICA VISIVA (Spegni/Accendi) ---
+    // 1. Spegni TUTTI (Rimuovi sfondo nero)
+    document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+        btn.classList.remove('active-sub');
+        btn.style.color = '#94a3b8'; // Forza grigio
+    });
 
-    // Gestione visuale tab attivo
-    document.querySelectorAll('.sub-nav-item').forEach(b => b.classList.remove('active-sub'));
-    if (btnEl) btnEl.classList.add('active-sub');
+    // 2. Accendi SOLO QUESTO (Metti sfondo nero)
+    if (btnEl) {
+        btnEl.classList.add('active-sub');
+        btnEl.style.color = '#ffffff'; // Forza bianco
+        
+        // Effetto scorrimento automatico per centrare il bottone
+        btnEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    } else {
+        // Fallback se btnEl non è passato (es. caricamento iniziale)
+        // Cerca il bottone che corrisponde al tableName e attivalo
+        /* Opzionale: logica avanzata omessa per semplicità */
+    }
+    // --------------------------------------
+
+    // Reset Filtri
+    const existingFilters = document.getElementById('dynamic-filters');
+    if(existingFilters) existingFilters.remove();
     if(filterBtn) filterBtn.style.display = 'none';
-    subContent.innerHTML = `<div class="loader">${window.t('loading')}</div>`;
+
+    // Loader
+    subContent.innerHTML = `<div class="loader">${window.t('loading')}...</div>`;
     
+    // Mappe
     if (tableName === 'Mappe') {
-        subContent.innerHTML = `<div class="map-container animate-fade"><iframe src="https://www.google.com/maps/d/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F&noprof=1" width="640" height="480"></iframe><div class="map-note">${window.t('map_loaded')}</div></div>`;
+        subContent.innerHTML = `<div class="map-container animate-fade"><iframe src="https://www.google.com/maps/d/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F&noprof=1" width="640" height="480"></iframe></div>`;
         return; 
     }
 
+    // Caricamento Dati
     const { data, error } = await window.supabaseClient.from(tableName).select('*');
-    if (error) { subContent.innerHTML = `<p class="error-msg">${window.t('error')}: ${error.message}</p>`; return; }
-
-    let html = '<div class="list-container animate-fade">';
-
-    if (tableName === 'Sentieri') { 
-        renderGenericFilterableView(data, 'Difficolta', subContent, window.sentieroRenderer); 
+    if (error) { 
+        subContent.innerHTML = `<p class="error-msg">Errore: ${error.message}</p>`; 
         return; 
     }
-    else if (tableName === 'Spiagge') { 
-        renderGenericFilterableView(data, 'Paesi', subContent, window.spiaggiaRenderer); 
-        return; 
+
+    // Routing Renderers
+    if (tableName === 'Prodotti') {
+        let html = '<div class="products-grid-fixed animate-fade">'; 
+        data.forEach(p => { html += window.prodottoRenderer(p); });
+        subContent.innerHTML = html + '</div>';
     }
     else if (tableName === 'Ristoranti') { 
         renderGenericFilterableView(data, 'Paesi', subContent, window.ristoranteRenderer); 
-        return; 
+    }
+    else if (tableName === 'Sentieri') { 
+        renderGenericFilterableView(data, 'Difficolta', subContent, window.sentieroRenderer); 
+    }
+    else if (tableName === 'Spiagge') { 
+        renderGenericFilterableView(data, 'Paesi', subContent, window.spiaggiaRenderer); 
+    }
+    else if (tableName === 'Attrazioni') {
+        renderGenericFilterableView(data, 'Paese', subContent, window.attrazioniRenderer);
     }
     else if (tableName === 'Farmacie') { 
-        renderGenericFilterableView(data, 'Paesi', subContent, window.farmaciaRenderer); 
-        return; 
+        renderGenericFilterableView(data, 'Paesi', subContent, window.farmacieRenderer); 
     } 
-    else if (tableName === 'Attrazioni') {
-        window.tempAttractionsData = data; 
-        data.forEach((item, index) => { item._tempIndex = index; });
-        renderGenericFilterableView(data, 'Paese', subContent, window.attrazioniRenderer);
-        return;
-    }
     else if (tableName === 'Numeri_utili') {
-        data.sort((a, b) => {
-            const isEmergenzaA = a.Nome.includes('112') || a.Nome.toLowerCase().includes('emergenza');
-            const isEmergenzaB = b.Nome.includes('112') || b.Nome.toLowerCase().includes('emergenza');
-            return (isEmergenzaA === isEmergenzaB) ? 0 : isEmergenzaA ? -1 : 1;
-        }); 
         renderGenericFilterableView(data, 'Comune', subContent, window.numeriUtiliRenderer);
         return;
     }else if (tableName === 'Prodotti') { // <--- ERA: tableName === 'Prodotti' || tableName === 'Vini'
@@ -255,22 +278,27 @@ window.loadTableData = async function(tableName, btnEl) {
         });
         html += '</div>';
     }else if (tableName === 'Vini') {
-        // Usa la funzione generica di filtro, filtrando per la colonna 'Tipo'
+        // 1. Usa la funzione generica per avere il tasto FILTRO (imbuto)
+        // Filtriamo in base alla colonna 'Tipo'
         renderGenericFilterableView(data, 'Tipo', subContent, window.vinoRenderer);
         
-        // TRUCCO: Aggiungiamo la classe CSS "grid-container" al contenitore della lista filtrata
-        // così i risultati appariranno a griglia (2 colonne) e non in lista verticale.
+        // 2. FORZATURA GRIGLIA:
+        // La funzione generica crea una lista verticale standard. 
+        // Noi aggiungiamo la classe CSS "products-grid-fixed" al contenitore dinamico
+        // per farlo diventare una griglia 2 colonne identica ai prodotti.
         setTimeout(() => {
             const dynamicList = document.getElementById('dynamic-list');
             if (dynamicList) {
-                dynamicList.classList.add('grid-container');
-                // Rimuoviamo il margine negativo o padding che potrebbe avere la lista standard
+                // Rimuoviamo stili di lista default
+                dynamicList.className = 'products-grid-fixed animate-fade'; 
+                // Assicuriamoci che abbia display grid (sovrascrivendo eventuali flex)
                 dynamicList.style.display = 'grid'; 
-                dynamicList.style.padding = '10px 0';
+                // Margini corretti
+                dynamicList.style.padding = '10px 0'; 
             }
-        }, 50); // Piccolo ritardo per assicurarsi che il DOM sia pronto
+        }, 50); // Piccolo delay per attendere che renderGenericFilterableView crei il DOM
         
-        return; // Esce dalla funzione
+        return; 
     }
     
     if(tableName !== 'Trasporti' && tableName !== 'Prodotti' && tableName !== 'Vini') {
@@ -398,8 +426,26 @@ window.renderServicesGrid = async function() {
     html += '</div>';
     content.innerHTML = html;
 };
+// Funzione per renderizzare liste semplici (Farmacie, Numeri Utili) con Header Bello
 function renderSimpleList(tableName) {
-    content.innerHTML = `<div style="padding: 10px 0; display:flex; align-items:center; gap:10px;"><button onclick="renderServicesGrid()" class="btn-back" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">⬅</button><h2 style="margin:0;">${tableName.replace('_', ' ')}</h2></div><div id="sub-content"></div>`;
+    const cleanTitle = tableName.replace('_', ' '); // Es. "Numeri_utili" -> "Numeri utili"
+
+    // Header con Bottone Custom + Contenitore Contenuto
+    const layout = `
+    <div class="header-simple-list animate-fade">
+        <button onclick="renderServicesGrid()" class="btn-back-custom">
+            <span class="material-icons">arrow_back</span>
+        </button>
+        <h2>${cleanTitle}</h2>
+    </div>
+    
+    <div id="sub-content">
+        <div class="loader">${window.t('loading')}...</div>
+    </div>`;
+
+    content.innerHTML = layout;
+    
+    // Carica effettivamente i dati
     window.loadTableData(tableName, null);
 }
 window.toggleTicketInfo = function() {

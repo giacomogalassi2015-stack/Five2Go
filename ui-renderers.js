@@ -130,56 +130,71 @@ window.sentieroRenderer = (s) => {
         </div>
     </div>`;
 };
-
-// === RENDERER FARMACIA ===
-window.farmaciaRenderer = (f) => {
-    const nome = window.dbCol(f, 'Nome');
-    const paesi = window.dbCol(f, 'Paesi');
-    const indirizzo = f.Indirizzo || '';
-    const safeObj = encodeURIComponent(JSON.stringify(f)).replace(/'/g, "%27");
-    const fullAddress = `${indirizzo}, ${paesi}`;
-    const mapLink = f.Mappa || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Farmacia ' + nome + ' ' + fullAddress)}`;
-
-    return `
-    <div class="info-card" onclick="openModal('farmacia', '${safeObj}')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; text-align: center; padding: 20px;">
-        <h3 style="margin: 0 0 8px 0; font-size: 1.3rem; width: 100%; color: #ffffff;">${nome}</h3>
-        <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.95rem; display: flex; align-items: center; justify-content: center;">
-            <span class="material-icons" style="font-size: 1.1rem; color: #ea4335; margin-right: 5px;">place</span>
-            ${paesi}
-        </p>
-        <p style="margin: 4px 0 15px 0; font-size: 0.85rem; color: rgba(255,255,255,0.5);">${indirizzo}</p>
-        <div style="display: flex; justify-content: center; gap: 25%; width: 100%; padding: 0 10%;">
-            ${f.Numero ? `
-                <div class="action-btn btn-call" style="margin:0;" onclick="event.stopPropagation(); window.location.href='tel:${f.Numero}'">
-                    <span class="material-icons">call</span>
-                </div>` : ''}
-            <div class="action-btn btn-map" style="margin:0;" onclick="event.stopPropagation(); window.open('${mapLink}', '_blank')">
-                <span class="material-icons">map</span>
-            </div>
-        </div>
-    </div>`;
-};
-
 // === RENDERER NUMERI UTILI ===
 window.numeriUtiliRenderer = (n) => {
-    const nome = window.dbCol(n, 'Nome');
-    const paesi = window.dbCol(n, 'Paesi'); 
+    const nome = window.dbCol(n, 'Nome') || 'Numero Utile';
+    const paesi = window.dbCol(n, 'Paesi') || 'Info'; 
     const numero = n.Numero || n.Telefono || '';
 
+    // Logica Icone
+    let icon = 'help_outline'; 
+    const nLower = nome.toLowerCase();
+    if (nLower.includes('carabinieri') || nLower.includes('polizia')) icon = 'security';
+    else if (nLower.includes('medica') || nLower.includes('croce')) icon = 'medical_services';
+    else if (nLower.includes('taxi')) icon = 'local_taxi';
+    else if (nLower.includes('farmacia')) icon = 'local_pharmacy';
+    else if (nLower.includes('info')) icon = 'info';
+
     return `
-    <div class="info-card" onclick="window.location.href='tel:${numero}'" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; text-align: center; padding: 20px;">
-        <h3 style="margin: 0 0 10px 0; font-size: 1.4rem; width: 100%; color: #ffffff; letter-spacing: 0.5px;">${nome}</h3>
-        <p style="margin: 0 0 25px 0; color: rgba(255,255,255,0.7); font-size: 1rem; display: flex; align-items: center; justify-content: center;">
-            <span class="material-icons" style="font-size: 1.2rem; color: #4285f4; margin-right: 6px;">location_on</span>
-            ${paesi}
-        </p>
-        <div class="action-btn btn-call" style="margin: 0; width: 60px; height: 60px;">
-            <span class="material-icons" style="font-size: 1.8rem;">call</span>
+    <div class="info-card animate-fade">
+        <div class="info-icon-box">
+            <span class="material-icons">${icon}</span>
+        </div>
+        <div class="info-text-col">
+            <h3>${nome}</h3>
+            <p>
+                <span class="material-icons" style="font-size: 0.9rem;">place</span>
+                ${paesi}
+            </p>
+        </div>
+        <div class="action-btn btn-call" onclick="window.location.href='tel:${numero}'">
+            <span class="material-icons">call</span>
         </div>
     </div>`;
 };
 
+// === RENDERER FARMACIE (Versione White & Clean) ===
+window.farmacieRenderer = (f) => {
+    // Debug: Controlla in console se i dati arrivano
+    console.log("Render Farmacia:", f);
 
+    // 1. Recupero dati (Massima compatibilità nomi colonne)
+    const nome = window.dbCol(f, 'Farmacia') || window.dbCol(f, 'Nome') || 'Farmacia';
+    const paese = window.dbCol(f, 'Paese') || window.dbCol(f, 'Paesi') || '';
+    const numero = f.Telefono || f.Numero || '';
+
+    // 2. HTML
+    return `
+    <div class="info-card animate-fade">
+        
+        <div class="info-icon-box">
+            <span class="material-icons">local_pharmacy</span>
+        </div>
+
+        <div class="info-text-col">
+            <h3>${nome}</h3>
+            <p>
+                <span class="material-icons" style="font-size: 0.9rem;">place</span>
+                ${paese}
+            </p>
+        </div>
+
+        <div class="action-btn btn-call" onclick="window.location.href='tel:${numero}'">
+            <span class="material-icons">call</span>
+        </div>
+
+    </div>`;
+};
 // === RENDERER ATTRAZIONI (Basato su colonna LABEL) ===
 window.attrazioniRenderer = (item) => {
     const titolo = window.dbCol(item, 'Attrazioni') || 'Attrazione';
@@ -250,20 +265,25 @@ window.attrazioniRenderer = (item) => {
     </div>`;
 };
 
-// === RENDERER PRODOTTO ===
+// === RENDERER PRODOTTO (Compatto: 140px Altezza) ===
 window.prodottoRenderer = (p) => {
     const titolo = window.dbCol(p, 'Prodotti') || window.dbCol(p, 'Nome');
+    
+    // Immagine Sfondo
     const fotoKey = p.Prodotti_foto || titolo;
-    const imgUrl = window.getSmartUrl(fotoKey, '', 800);
+    const imgUrl = window.getSmartUrl(fotoKey, '', 600);
+    
     const safeObj = encodeURIComponent(JSON.stringify(p)).replace(/'/g, "%27");
 
     return `
-    <div class="village-card animate-fade" 
-         style="background-image: url('${imgUrl}'); background-color: #f0f0f0;" 
+    <div class="prod-card-fixed animate-fade" 
+         style="background-image: url('${imgUrl}');" 
          onclick="openModal('product', '${safeObj}')">
-         <div class="card-title-overlay">
-            ${titolo || 'Senza Nome'}
-        </div>
+         
+         <div class="prod-overlay-fixed">
+            <div class="prod-title-fixed">${titolo}</div>
+         </div>
+         
     </div>`;
 };
 
@@ -279,15 +299,8 @@ window.openModal = async function(type, payload) {
     let contentHtml = '';
     let modalClass = 'modal-content'; 
 
-    if (type === 'village') {
-        const bigImg = window.getSmartUrl(payload, '', 1000);
-        const { data } = await window.supabaseClient.from('Cinque_Terre').select('*').eq('Paesi', payload).single();
-        const desc = data ? window.dbCol(data, 'Descrizione') : window.t('loading');
-        contentHtml = `<img src="${bigImg}" style="width:100%; border-radius:12px; height:220px; object-fit:cover;"><h2>${payload}</h2><p>${desc}</p>`;
-    } 
-    
     // --- PRODOTTI ---
-    else if (type === 'product') {
+    if (type === 'product') {
         const p = JSON.parse(decodeURIComponent(payload));
         const nome = window.dbCol(p, 'Prodotti') || window.dbCol(p, 'Nome') || 'Prodotto';
         const desc = window.dbCol(p, 'Descrizione');   
@@ -821,24 +834,24 @@ window.filterDestinations = async function(startId) {
     }
 };
 // === RENDERER VINO (Stile identico a Prodotto) ===
+// === RENDERER VINO (Stile Prodotto + Badge Tipo) ===
 window.vinoRenderer = (v) => {
     const nome = window.dbCol(v, 'Nome') || 'Vino';
-    // Normalizziamo il tipo per i controlli (minuscolo)
     const tipoRaw = window.dbCol(v, 'Tipo') || ''; 
     const tipo = tipoRaw.trim(); 
     const tipoLower = tipo.toLowerCase();
     
-    // Generiamo URL immagine dal nome
+    // Generiamo URL immagine dal NOME (perché manca colonna Foto)
     const imgUrl = window.getSmartUrl(nome, '', 600); 
     const safeObj = encodeURIComponent(JSON.stringify(v)).replace(/'/g, "%27");
 
     // --- LOGICA COLORI BADGE ---
     let badgeBg = '#95a5a6'; // Grigio default
-    let badgeColor = '#ffffff'; // Testo bianco default
+    let badgeColor = '#ffffff'; // Testo bianco
 
     if (tipoLower.includes('bianco')) {
         badgeBg = '#f1c40f'; // Giallo Oro
-        badgeColor = '#2d3436'; // Testo scuro per contrasto
+        badgeColor = '#2d3436'; // Testo scuro
     } 
     else if (tipoLower.includes('rosso')) {
         badgeBg = '#c0392b'; // Rosso Scuro
@@ -847,27 +860,24 @@ window.vinoRenderer = (v) => {
         badgeBg = '#e84393'; // Rosa Intenso
     } 
     else if (tipoLower.includes('frizzante') || tipoLower.includes('bollicine')) {
-        badgeBg = '#00cec9'; // Turchese/Azzurro
+        badgeBg = '#00cec9'; // Turchese
     }
     else if (tipoLower.includes('sciacchetr')) {
-        badgeBg = '#d35400'; // Ambra/Arancio scuro
+        badgeBg = '#d35400'; // Ambra
     }
 
+    // --- HTML IDENTICO A PRODOTTI MA CON BADGE ---
     return `
-    <div class="village-card animate-fade" 
-         style="background-image: url('${imgUrl}'); background-color: #f0f0f0; position: relative;" 
+    <div class="wine-card-fixed animate-fade" 
+         style="background-image: url('${imgUrl}');" 
          onclick="openModal('wine', '${safeObj}')">
          
-         <div style="position: absolute; top: 10px; right: 10px; 
-                     background-color: ${badgeBg}; color: ${badgeColor}; 
-                     padding: 5px 12px; border-radius: 12px; 
-                     font-size: 0.75rem; font-weight: 800; text-transform: uppercase; 
-                     box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 10;">
+         <div class="wine-badge" style="background-color: ${badgeBg}; color: ${badgeColor};">
             ${tipo}
          </div>
 
-         <div class="card-title-overlay">
-            ${nome}
-            </div>
+         <div class="wine-overlay-fixed">
+            <div class="wine-title-fixed">${nome}</div>
+         </div>
     </div>`;
 };
