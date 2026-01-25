@@ -443,7 +443,7 @@ window.openModal = async function(type, payload) {
         if (isBus || isTrain) { contentHtml = customContent; } else { contentHtml = `<h2>${nome}</h2><p style="color:#666;">${desc}</p>${customContent}`; }
     }
 
-    // --- DETTAGLI SENTIERO ---
+ // --- DETTAGLI SENTIERO ---
     else if (type === 'trail') {
         const p = JSON.parse(decodeURIComponent(payload));
         const titolo = window.dbCol(p, 'Paesi') || p.Nome;
@@ -452,33 +452,53 @@ window.openModal = async function(type, payload) {
         const dura = p.Durata || '--';
         const diff = p.Tag || p.Difficolta || 'Media'; 
         const desc = window.dbCol(p, 'Descrizione') || '';
-        const linkGpx = p.Link_Gpx || p.Mappa || '';
+        
+        // --- LOGICA UNIVERSALE PER TROVARE IL LINK ---
+        // Cerchiamo in tutte le chiavi del database se esiste un link .gpx
+        let linkGpx = p.Link_Gpx || p.Link_gpx || p.gpxlink || p.Mappa || p.Gpx;
+        
+        // Se ancora non lo trova, facciamo una scansione forzata di tutte le colonne
+        if (!linkGpx) {
+            const key = Object.keys(p).find(k => k.toLowerCase().includes('gpx') || k.toLowerCase().includes('mappa'));
+            if (key) linkGpx = p[key];
+        }
 
         contentHtml = `
         <div style="padding: 20px 15px;">
             <h2 style="text-align:center; margin: 0 0 5px 0; color:#2c3e50;">${titolo}</h2>
             ${nomeSentiero ? `<p style="text-align:center; color:#7f8c8d; margin:0 0 15px 0; font-size:0.9rem;">${nomeSentiero}</p>` : ''}
+            
             <div class="trail-stats-grid">
                 <div class="trail-stat-box">
-                    <span class="material-icons">straighten</span><span class="stat-value">${dist}</span><span class="stat-label">${window.t('distance')}</span>
+                    <span class="material-icons">straighten</span><span class="stat-value">${dist}</span><span class="stat-label">Distanza</span>
                 </div>
                 <div class="trail-stat-box">
-                    <span class="material-icons">schedule</span><span class="stat-value">${dura}</span><span class="stat-label">${window.t('duration')}</span>
+                    <span class="material-icons">schedule</span><span class="stat-value">${dura}</span><span class="stat-label">Tempo</span>
                 </div>
                 <div class="trail-stat-box">
-                    <span class="material-icons">terrain</span><span class="stat-value">${diff}</span><span class="stat-label">${window.t('level')}</span>
+                    <span class="material-icons">terrain</span><span class="stat-value">${diff}</span><span class="stat-label">Livello</span>
                 </div>
             </div>
-            ${linkGpx ? `
-            <button onclick="openModal('map', '${linkGpx}')" class="btn-trail-action">
-                <span class="material-icons">map</span> ${window.t('details_trail')}
-            </button>
-            ` : ''}
+
+            <div class="trail-actions-group" style="margin: 20px 0; display: flex; flex-direction: column; gap: 12px;">
+                
+                ${linkGpx ? `
+                               
+                <a href="${linkGpx}" download="${nomeSentiero || 'percorso'}.gpx" class="btn-download-gpx" target="_blank">
+                    <span class="material-icons">file_download</span> Scarica file GPX
+                </a>
+                ` : `
+                <div style="padding:15px; background:#fff5f5; border:1px solid #feb2b2; border-radius:10px; text-align:center; color:#c53030; font-size:0.85rem;">
+                    <span class="material-icons" style="vertical-align:middle; font-size:1.2rem;">error_outline</span>
+                    Traccia GPS non presente nel database
+                </div>
+                `}
+                
+            </div>
+
             <div style="margin-top:25px; line-height:1.6; color:#444; font-size:0.95rem; text-align:justify;">${desc}</div>
         </div>`;
-    }
- 
-        // --- MAPPA FULL SCREEN (GPX) ---
+    }// --- MAPPA FULL SCREEN (GPX) ---
     else if (type === 'map') {
         const gpxUrl = payload;
         // Creiamo un ID unico per questa mappa modale

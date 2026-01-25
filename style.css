@@ -39,7 +39,37 @@ body {
     height: 100%; width: 100%;
     padding-bottom: calc(var(--nav-height) + 30px); 
 }
+/* Container per l'immagine Home a tutto schermo */
+.home-hero-fullscreen {
+    position: fixed;    /* Resta bloccata mentre scorri */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;        /* Finisce sotto tutto */
+    overflow: hidden;
+}
 
+.home-hero-fullscreen img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;  /* Copre tutto lo schermo senza deformarsi */
+}
+
+/* Overlay per non far sparire le scritte bianche sullo sfondo */
+.home-hero-fullscreen::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.3); /* Scurisce leggermente lo sfondo */
+}
+
+/* Rende il contenuto trasparente sopra lo sfondo per vedere l'immagine */
+#sub-content:empty + .home-hero-fullscreen,
+.is-home #sub-content {
+    background: transparent;
+}
 /* ============================================================
    2. HEADER & NAVIGAZIONE
    ============================================================ */
@@ -590,6 +620,56 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
 }
 .stat-bubble strong { display: block; font-size: 1.1rem; color: #2D3436; }
 .stat-bubble span { font-size: 0.7rem; text-transform: uppercase; color: #B2BEC3; font-weight: 700; }
+
+/* Container per i bottoni dei sentieri */
+.trail-actions-container {
+    width: 100%;
+}
+
+/* Bottone Mappa (Gia esistente, lo rifiniamo) */
+.btn-trail-action {
+    width: 100%;
+    padding: 14px;
+    background: #2D3436;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+/* NUOVO Bottone Download GPX */
+.btn-download-gpx {
+    width: 100%;
+    padding: 14px;
+    background: #ffffff;
+    color: #27ae60;
+    border: 2px solid #27ae60;
+    border-radius: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    text-decoration: none; /* Rimuove sottolineatura se è un tag <a> */
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.btn-download-gpx:active {
+    background: #eef9f1;
+    transform: scale(0.98);
+}
+
+.btn-download-gpx .material-icons {
+    font-size: 20px;
+}
 /* === NUOVO DESIGN CULTURA (Art Gallery Style) === */
 .culture-card-modern {
     background: #ffffff;
