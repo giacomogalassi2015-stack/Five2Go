@@ -184,84 +184,77 @@ function renderSubMenu(options, defaultTable) {
     }
 }
 
-// ============================================================
-// 2. LOAD DATA (Gestione Click 3D)
-// ============================================================
 window.loadTableData = async function(tableName, btnEl) {
     const subContent = document.getElementById('sub-content');
     if (!subContent) return;
 
-    // --- LOGICA ATTIVAZIONE VISIVA ---
-    // 1. Spegni tutti (Rimuovi effetto attivo)
-    document.querySelectorAll('.btn-3d').forEach(btn => {
-        btn.classList.remove('active-3d');
-    });
-
-    // 2. Accendi quello cliccato
+    // 1. Gestione Visiva Bottoni (Spegni tutti, accendi cliccato)
+    document.querySelectorAll('.nav-chip, .btn-3d').forEach(btn => btn.classList.remove('active-chip', 'active-3d'));
     if (btnEl) {
-        btnEl.classList.add('active-3d');
-        // Centra il bottone nello scroll (Effetto Premium)
-        btnEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        // Supporta entrambi gli stili di bottoni che abbiamo provato
+        if(btnEl.classList.contains('nav-chip')) btnEl.classList.add('active-chip');
+        if(btnEl.classList.contains('btn-3d')) btnEl.classList.add('active-3d');
     }
-    // --------------------------------
 
-    // Reset Vari
+    // 2. Reset Filtri e UI
     const existingFilters = document.getElementById('dynamic-filters');
     if(existingFilters) existingFilters.remove();
     const filterBtn = document.getElementById('filter-toggle-btn');
     if(filterBtn) filterBtn.style.display = 'none';
 
-    // Loader
-    subContent.innerHTML = `<div class="loader" style="margin-top:0;">${window.t('loading')}...</div>`;
+    // 3. Loader
+    subContent.innerHTML = `<div class="loader" style="margin-top:20px;">${window.t('loading')}...</div>`;
     
-    // Mappe
+    // 4. Gestione Mappe (Caso speciale iframe)
     if (tableName === 'Mappe') {
         subContent.innerHTML = `<div class="map-container animate-fade"><iframe src="https://www.google.com/maps/d/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F&noprof=1" width="640" height="480"></iframe></div>`;
         return; 
     }
 
-    // Database Call
+    // 5. Caricamento Dati dal DB
     const { data, error } = await window.supabaseClient.from(tableName).select('*');
     if (error) { 
         subContent.innerHTML = `<p class="error-msg">${error.message}</p>`; 
         return; 
     }
 
-    // --- ROUTING RENDERERS ---
-    if (tableName === 'Prodotti') {
+    // *** FONDAMENTALE: Salva i dati per il modale ***
+    window.currentTableData = data; 
+    // ************************************************
+
+    // 6. Routing Renderers (Come mostrare i dati)
+    
+    // VINI (Usa renderer lista filtrabile, lo stile è nel CSS)
+    if (tableName === 'Vini') {
+        renderGenericFilterableView(data, 'Tipo', subContent, window.vinoRenderer);
+    }
+    // SPIAGGE
+    else if (tableName === 'Spiagge') {
+        renderGenericFilterableView(data, 'Paesi', subContent, window.spiaggiaRenderer);
+    }
+    // PRODOTTI (Griglia)
+    else if (tableName === 'Prodotti') {
         let html = '<div class="products-grid-fixed animate-fade">'; 
         data.forEach(p => { html += window.prodottoRenderer(p); });
         subContent.innerHTML = html + '</div>';
     }
-    else if (tableName === 'Ristoranti') { 
-        renderGenericFilterableView(data, 'Paesi', subContent, window.ristoranteRenderer); 
+    // TRASPORTI (Salva dati temp e mostra card)
+    else if (tableName === 'Trasporti') {
+        window.tempTransportData = data; // Serve per il modale trasporti
+        let html = '<div class="list-container animate-fade">';
+        data.forEach((t, index) => {
+            const nomeDisplay = window.dbCol(t, 'Località') || window.dbCol(t, 'Mezzo');
+            const imgUrl = window.getSmartUrl(t.Mezzo, '', 400);
+            html += `<div class="card-product" onclick="openModal('transport', '${index}')"><div class="prod-info"><div class="prod-title">${nomeDisplay}</div></div><img src="${imgUrl}" class="prod-thumb" loading="lazy"></div>`;
+        });
+        subContent.innerHTML = html + '</div>';
     }
-    else if (tableName === 'Sentieri') { 
-        renderGenericFilterableView(data, 'Difficolta', subContent, window.sentieroRenderer); 
-    }
-    else if (tableName === 'Spiagge') { 
-        renderGenericFilterableView(data, 'Paesi', subContent, window.spiaggiaRenderer); 
-    }
-    else if (tableName === 'Attrazioni') {
-        renderGenericFilterableView(data, 'Paese', subContent, window.attrazioniRenderer);
-    }
-    else if (tableName === 'Farmacie') { 
-        renderGenericFilterableView(data, 'Paesi', subContent, window.farmacieRenderer); 
-    } 
-    else if (tableName === 'Numeri_utili') {
-        renderGenericFilterableView(data, 'Comune', subContent, window.numeriUtiliRenderer);
-    }
-    // Gestione Vini (se presente)
-    else if (tableName === 'Vini') {
-        const renderer = window.vinoRenderer || window.prodottoRenderer;
-        renderGenericFilterableView(data, 'Tipo', subContent, window.vinoRenderer);
-    
-  
-        setTimeout(() => {
-            const list = document.getElementById('dynamic-list');
-            if(list) { list.className = 'products-grid-fixed animate-fade'; list.style.display='grid'; }
-        }, 50);
-    }
+    // ALTRE CATEGORIE
+    else if (tableName === 'Attrazioni') { renderGenericFilterableView(data, 'Paese', subContent, window.attrazioniRenderer); }
+    else if (tableName === 'Ristoranti') { renderGenericFilterableView(data, 'Paesi', subContent, window.ristoranteRenderer); }
+    else if (tableName === 'Sentieri') { renderGenericFilterableView(data, 'Difficolta', subContent, window.sentieroRenderer); }
+    else if (tableName === 'Farmacie') { renderGenericFilterableView(data, 'Paesi', subContent, window.farmacieRenderer); } 
+    else if (tableName === 'Numeri_utili') { renderGenericFilterableView(data, 'Comune', subContent, window.numeriUtiliRenderer); }
 };
 
 // ... (Resto funzioni swipe, servizi grid, ecc... invariate) ...
