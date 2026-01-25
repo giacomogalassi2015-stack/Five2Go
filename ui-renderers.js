@@ -72,24 +72,19 @@ window.spiaggiaRenderer = function(item) {
     `;
 };
 
-// === RENDERER SENTIERO (Centrato e Adattivo) ===
+// === RENDERER SENTIERO (Correzione Spaziature) ===
 window.sentieroRenderer = (s) => {
     const paese = window.dbCol(s, 'Paesi');
-    // Se c'è un nome specifico lo usiamo, altrimenti usiamo il paese
     const titoloMostrato = s.Nome || paese; 
-    const distanza = s.Distanza || '--';
-    const durata = s.Durata || '--';
     const diff = s.Tag || s.Difficolta || 'Media';
     const gpxUrl = s.Gpxlink || s.gpxlink;
     const uniqueMapId = `map-trail-${Math.random().toString(36).substr(2, 9)}`;
     const safeObj = encodeURIComponent(JSON.stringify(s)).replace(/'/g, "%27");
 
-    // Calcolo Colore Testo Difficoltà (Invece del badge)
-    let diffColor = '#f39c12'; // Default (Media - Arancio)
-    if (diff.toLowerCase().includes('facile') || diff.toLowerCase().includes('easy')) diffColor = '#27ae60'; // Verde
-    if (diff.toLowerCase().includes('difficile') || diff.toLowerCase().includes('expert') || diff.toLowerCase().includes('hard')) diffColor = '#c0392b'; // Rosso
+    let diffColor = '#f39c12';
+    if (diff.toLowerCase().includes('facile') || diff.toLowerCase().includes('easy')) diffColor = '#27ae60';
+    if (diff.toLowerCase().includes('difficile') || diff.toLowerCase().includes('expert') || diff.toLowerCase().includes('hard')) diffColor = '#c0392b';
 
-    // Inizializza mappa
     if (gpxUrl) { window.mapsToInit.push({ id: uniqueMapId, gpx: gpxUrl }); }
 
     return `
@@ -98,27 +93,19 @@ window.sentieroRenderer = (s) => {
              onclick="event.stopPropagation(); openModal('map', '${gpxUrl}')">
         </div>
 
-        <div class="trail-info-overlay" onclick="openModal('trail', '${safeObj}')" style="text-align: center;"> <h3 style="margin:0 0 5px 0; font-family:'Roboto Slab'; font-size: clamp(1.2rem, 5vw, 1.5rem); color:#222; line-height:1.2;">
+        <div class="trail-info-overlay" style="text-align: center; cursor: default; padding: 25px 15px 15px 15px;"> 
+            
+            <h3 style="margin: 5px 0 5px 0; font-family:'Roboto Slab'; font-size: 1.25rem; color:#222; line-height:1.2;">
                 ${titoloMostrato}
             </h3>
 
-            <div style="font-size:0.9rem; font-weight:700; color:${diffColor}; text-transform:uppercase; letter-spacing:1px; margin-bottom:15px;">
+            <div style="font-size:0.75rem; font-weight:700; color:${diffColor}; text-transform:uppercase; letter-spacing:1px; margin-bottom:18px;">
                 ${diff}
             </div>
 
-            <div class="trail-stats-row">
-                <div class="stat-bubble">
-                    <strong>${distanza}</strong>
-                    <span>Distanza</span>
-                </div>
-                <div class="stat-bubble">
-                    <strong>${durata}</strong>
-                    <span>Tempo</span>
-                </div>
-            </div>
-
-            <button style="width:100%; padding:14px; border:none; background:#2D3436; color:white; border-radius:14px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
-                Vedi Dettagli <span class="material-icons" style="font-size:1rem;">arrow_forward</span>
+            <button onclick="openModal('trail', '${safeObj}')" 
+                    style="width:100%; padding:14px; border:none; background:#2D3436; color:white; border-radius:12px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px; cursor: pointer; transition: background 0.2s;">
+                Vedi Dettagli <span class="material-icons" style="font-size:1.1rem;">arrow_forward</span>
             </button>
 
         </div>
