@@ -1211,95 +1211,96 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
 }
 
 /* ============================================================
-   MENU DI NAVIGAZIONE MODERNO (Swiper Chips)
+   MENU 3D "PREMIUM" & SPAZIO COMPATTO
    ============================================================ */
 
-/* 1. La Barra Fissa in alto (Effetto Vetro) */
+/* 1. BARRA FISSA (Spazio ridotto al minimo) */
 .nav-sticky-header {
     position: sticky;
     top: 0;
     z-index: 999;
     
-    background: rgba(255, 255, 255, 0.96); /* Bianco quasi puro */
-    backdrop-filter: blur(20px);           /* Sfocatura sfondo */
+    /* Sfondo Vetro */
+    background: rgba(255, 255, 255, 0.98); 
+    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     
-    /* Bordo sottilissimo sotto */
+    /* ELIMINA SPAZI INUTILI */
+    padding: 8px 0 8px 0;    /* Padding verticale minimo */
+    margin: 0 -20px 0 -20px; /* Margine sotto a 0! Attacca il contenuto */
     border-bottom: 1px solid rgba(0,0,0,0.05);
     
-    /* Spaziatura */
-    padding: 10px 0;
-    margin: 0 -20px 20px -20px; /* Si allarga fino ai bordi dello schermo */
-    
-    overflow: hidden; /* Fondamentale per Swiper */
+    /* Ombra che cade SOPRA il contenuto per staccarlo */
+    box-shadow: 0 5px 15px -5px rgba(0,0,0,0.1); 
 }
 
-/* 2. Configurazione Swiper */
-.swiper-container {
-    width: 100%;
-    padding: 0 20px; /* Padding laterale interno */
-    box-sizing: border-box;
-}
-
-/* Le slide devono adattarsi alla larghezza del testo */
-.swiper-slide {
-    width: auto !important;
-    margin-right: 10px; /* Spazio tra le pillole */
-}
-
-/* 3. LO STILE DELLA PILLOLA (Chip) */
-.nav-chip {
-    /* Forma */
-    display: inline-flex;
+/* 2. CONTENITORE SCORREVOLE */
+.nav-scroll-container {
+    display: flex;
+    gap: 12px; /* Spazio tra i bottoni */
+    overflow-x: auto;
+    padding: 0 20px; /* Padding laterale */
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; /* Scroll fluido nativo */
     align-items: center;
-    justify-content: center;
+    height: 55px; /* Altezza fissa per contenere i bottoni 3D */
+}
+.nav-scroll-container::-webkit-scrollbar { display: none; }
+
+/* 3. IL BOTTONE 3D (Stato Normale) */
+.btn-3d {
+    flex-shrink: 0; /* Non si schiaccia */
     
+    /* Forma */
     padding: 10px 20px;
-    border-radius: 50px; /* Capsula perfetta */
-    border: 1px solid rgba(0,0,0,0.05); /* Bordo impercettibile */
+    border-radius: 16px; /* Arrotondato moderno */
+    border: none;
     
-    /* Colore Sfondo SPENTO (Grigio chiarissimo) */
-    background-color: #F3F4F6;
-    color: #64748B; /* Testo Grigio scuro */
+    /* EFFETTO 3D (Luce sopra, ombra sotto) */
+    background: linear-gradient(145deg, #ffffff, #e6e6e6);
+    box-shadow: 3px 3px 6px #d1d9e6, 
+               -3px -3px 6px #ffffff;
     
     /* Testo */
     font-family: 'Roboto', sans-serif;
     font-size: 0.95rem;
-    font-weight: 600;
-    white-space: nowrap;
+    font-weight: 700;
+    color: #6c7a89; /* Grigio metallico */
     
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-    
-    /* Reset pulsanti browser */
-    outline: none;
+    transition: all 0.1s ease; /* Scatto veloce meccanico */
     -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
 
-/* Effetto Pressione */
-.nav-chip:active {
-    transform: scale(0.95); /* Si rimpicciolisce al tocco */
+/* EFFETTO PRESSIONE (Quando tocchi col dito) */
+.btn-3d:active {
+    background: #e6e6e6;
+    /* L'ombra si inverte -> Sembra premuto dentro */
+    box-shadow: inset 3px 3px 6px #d1d9e6, 
+                inset -3px -3px 6px #ffffff;
+    transform: translateY(1px);
 }
 
-/* 4. STATO ATTIVO (La pillola selezionata) */
-.nav-chip.active-chip {
-    background-color: #111827; /* NERO PRO */
-    color: #FFFFFF !important; /* Bianco */
-    border-color: #111827;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2); /* Ombra elegante */
-    transform: translateY(-1px);
+/* 4. STATO ATTIVO (Il bottone selezionato) */
+.btn-3d.active-3d {
+    /* Colore Scuro Premium */
+    background: linear-gradient(145deg, #2c3e50, #000000);
+    color: #ffffff;
+    
+    /* Ombra scura profonda */
+    box-shadow: 4px 4px 10px rgba(0,0,0,0.3), 
+               -2px -2px 5px rgba(255,255,255,0.1);
+               
+    transform: translateY(-1px); /* Resta leggermente sollevato */
 }
 
-/* Icona Tasto Filtro (opzionale) */
-.filter-btn-floating {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: white;
-    box-shadow: -10px 0 20px white; /* Sfuma il menu sotto */
-    z-index: 10;
+/* 5. CONTENITORE DATI (Attaccato sopra) */
+#sub-content {
+    padding-top: 15px !important; /* Solo 15px di aria dal menu */
+    min-height: 300px;
 }
+
 /* ============================================================
    STILE VINI (Clone di Prodotti + Badge)
    ============================================================ */

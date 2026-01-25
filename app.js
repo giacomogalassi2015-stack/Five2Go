@@ -159,90 +159,75 @@ function renderHome() {
 }
 
 // ============================================================
-// 1. GENERAZIONE MENU (Con Swiper.js)
+// 1. RENDER MENU (Stile 3D)
 // ============================================================
 function renderSubMenu(options, defaultTable) {
-    // Creiamo la struttura HTML specifica che Swiper richiede
     let menuHtml = `
     <div class="nav-sticky-header animate-fade">
-        <div class="swiper swiper-container" id="menuSwiper">
-            <div class="swiper-wrapper">
-                ${options.map(opt => `
-                    <div class="swiper-slide">
-                        <button class="nav-chip" onclick="loadTableData('${opt.table}', this)">
-                            ${opt.label}
-                        </button>
-                    </div>
-                `).join('')}
-            </div>
+        <div class="nav-scroll-container">
+            ${options.map(opt => `
+                <button class="btn-3d" onclick="loadTableData('${opt.table}', this)">
+                    ${opt.label}
+                </button>
+            `).join('')}
         </div>
     </div>
     
-    <div id="sub-content" style="padding-top: 5px; min-height: 300px;"></div>`;
+    <div id="sub-content"></div>`;
     
     content.innerHTML = menuHtml;
-
-    // --- ATTIVAZIONE SWIPER (Il motore fluido) ---
-    // Usiamo un piccolo ritardo per assicurarci che l'HTML sia renderizzato
-    setTimeout(() => {
-        new Swiper('#menuSwiper', {
-            slidesPerView: 'auto',  // La larghezza dipende dal testo
-            freeMode: true,         // Scorrimento libero (inerzia)
-            spaceBetween: 0,        // Spazio gestito dal CSS
-            grabCursor: true,       // Cursore manina su PC
-        });
-    }, 10);
     
-    // Attiva il primo bottone automaticamente
-    const firstBtn = content.querySelector('.nav-chip');
+    // Attiva il primo bottone
+    const firstBtn = content.querySelector('.btn-3d');
     if (firstBtn) {
         loadTableData(defaultTable, firstBtn);
     }
 }
 
 // ============================================================
-// 2. CARICAMENTO DATI (Gestione Click)
+// 2. LOAD DATA (Gestione Click 3D)
 // ============================================================
 window.loadTableData = async function(tableName, btnEl) {
     const subContent = document.getElementById('sub-content');
     if (!subContent) return;
 
-    // --- GESTIONE VISIVA (Spegni/Accendi) ---
-    // 1. Togli la classe 'active-chip' a TUTTI i bottoni
-    document.querySelectorAll('.nav-chip').forEach(btn => {
-        btn.classList.remove('active-chip');
+    // --- LOGICA ATTIVAZIONE VISIVA ---
+    // 1. Spegni tutti (Rimuovi effetto attivo)
+    document.querySelectorAll('.btn-3d').forEach(btn => {
+        btn.classList.remove('active-3d');
     });
 
-    // 2. Aggiungi la classe 'active-chip' SOLO a quello cliccato
+    // 2. Accendi quello cliccato
     if (btnEl) {
-        btnEl.classList.add('active-chip');
+        btnEl.classList.add('active-3d');
+        // Centra il bottone nello scroll (Effetto Premium)
+        btnEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
-    // ----------------------------------------
+    // --------------------------------
 
-    // Reset Filtri
+    // Reset Vari
     const existingFilters = document.getElementById('dynamic-filters');
     if(existingFilters) existingFilters.remove();
     const filterBtn = document.getElementById('filter-toggle-btn');
     if(filterBtn) filterBtn.style.display = 'none';
 
     // Loader
-    subContent.innerHTML = `<div class="loader" style="margin-top:20px;">${window.t('loading')}...</div>`;
+    subContent.innerHTML = `<div class="loader" style="margin-top:0;">${window.t('loading')}...</div>`;
     
-    // Gestione Mappe (Caso speciale)
+    // Mappe
     if (tableName === 'Mappe') {
         subContent.innerHTML = `<div class="map-container animate-fade"><iframe src="https://www.google.com/maps/d/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F&noprof=1" width="640" height="480"></iframe></div>`;
         return; 
     }
 
-    // Caricamento Dati Reali
+    // Database Call
     const { data, error } = await window.supabaseClient.from(tableName).select('*');
-    
     if (error) { 
-        subContent.innerHTML = `<p class="error-msg">Errore connessione: ${error.message}</p>`; 
+        subContent.innerHTML = `<p class="error-msg">${error.message}</p>`; 
         return; 
     }
 
-    // --- ROUTING RENDERER (I tuoi layout) ---
+    // --- ROUTING RENDERERS ---
     if (tableName === 'Prodotti') {
         let html = '<div class="products-grid-fixed animate-fade">'; 
         data.forEach(p => { html += window.prodottoRenderer(p); });
@@ -265,51 +250,16 @@ window.loadTableData = async function(tableName, btnEl) {
     } 
     else if (tableName === 'Numeri_utili') {
         renderGenericFilterableView(data, 'Comune', subContent, window.numeriUtiliRenderer);
-        return;
-    }else if (tableName === 'Prodotti') { // <--- ERA: tableName === 'Prodotti' || tableName === 'Vini'
-        html = '<div class="grid-container animate-fade">'; 
-        data.forEach(p => {
-            html += window.prodottoRenderer(p);
-        });
-        html += '</div>';
     }
-    else if (tableName === 'Trasporti') {
-        window.tempTransportData = data; 
-        data.forEach((t, index) => {
-            const nomeDisplay = window.dbCol(t, 'Località') || window.dbCol(t, 'Mezzo');
-            const imgUrl = window.getSmartUrl(t.Mezzo, '', 400);
-            html += `<div class="card-product" onclick="openModal('transport', ${index})"><div class="prod-info"><div class="prod-title">${nomeDisplay}</div></div><img src="${imgUrl}" class="prod-thumb" loading="lazy" onerror="this.style.display='none'"></div>`;
-        });
-        html += '</div>';
-    }else if (tableName === 'Vini') {
-        // 1. Usa la funzione generica per avere il tasto FILTRO (imbuto)
-        // Filtriamo in base alla colonna 'Tipo'
-        renderGenericFilterableView(data, 'Tipo', subContent, window.vinoRenderer);
-        
-        // 2. FORZATURA GRIGLIA:
-        // La funzione generica crea una lista verticale standard. 
-        // Noi aggiungiamo la classe CSS "products-grid-fixed" al contenitore dinamico
-        // per farlo diventare una griglia 2 colonne identica ai prodotti.
+    // Gestione Vini (se presente)
+    else if (tableName === 'Vini') {
+        const renderer = window.vinoRenderer || window.prodottoRenderer;
+        renderGenericFilterableView(data, 'Tipo', subContent, renderer);
         setTimeout(() => {
-            const dynamicList = document.getElementById('dynamic-list');
-            if (dynamicList) {
-                // Rimuoviamo stili di lista default
-                dynamicList.className = 'products-grid-fixed animate-fade'; 
-                // Assicuriamoci che abbia display grid (sovrascrivendo eventuali flex)
-                dynamicList.style.display = 'grid'; 
-                // Margini corretti
-                dynamicList.style.padding = '10px 0'; 
-            }
-        }, 50); // Piccolo delay per attendere che renderGenericFilterableView crei il DOM
-        
-        return; 
+            const list = document.getElementById('dynamic-list');
+            if(list) { list.className = 'products-grid-fixed animate-fade'; list.style.display='grid'; }
+        }, 50);
     }
-    
-    if(tableName !== 'Trasporti' && tableName !== 'Prodotti' && tableName !== 'Vini') {
-   subContent.innerHTML = html + '</div>';
-        } else {
-   subContent.innerHTML = html;
-}
 };
 
 // ... (Resto funzioni swipe, servizi grid, ecc... invariate) ...
