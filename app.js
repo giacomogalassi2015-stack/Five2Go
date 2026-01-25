@@ -3,6 +3,7 @@ console.log("✅ 3. app.js caricato");
 const content = document.getElementById('app-content');
 const viewTitle = document.getElementById('view-title');
 
+const globalFooter = `<footer class="app-footer"><p>&copy; 2026 Five2Go. Tutti i diritti riservati.</p></footer>`;
 // --- 1. SETUP LINGUA & HEADER (Logic Condizionale) ---
 function setupHeaderElements() {
     const header = document.querySelector('header');
@@ -395,6 +396,7 @@ window.renderServicesGrid = async function() {
     </div>`;
 
     html += '</div>';
+    html += globalFooter;
     content.innerHTML = html;
 };
 // Funzione per renderizzare liste semplici (Farmacie, Numeri Utili) con Header Bello
@@ -509,6 +511,7 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
     function updateList(items) {
         if (!items || items.length === 0) { 
             listContainer.innerHTML = `<p style="text-align:center; padding:20px; color:#999;">${window.t('no_results')}</p>`; 
+            if (typeof initPendingMaps === 'function') setTimeout(() => initPendingMaps(), 100);
             return; 
         }
         listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
