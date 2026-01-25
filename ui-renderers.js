@@ -130,56 +130,71 @@ window.sentieroRenderer = (s) => {
         </div>
     </div>`;
 };
-
-// === RENDERER FARMACIA ===
-window.farmaciaRenderer = (f) => {
-    const nome = window.dbCol(f, 'Nome');
-    const paesi = window.dbCol(f, 'Paesi');
-    const indirizzo = f.Indirizzo || '';
-    const safeObj = encodeURIComponent(JSON.stringify(f)).replace(/'/g, "%27");
-    const fullAddress = `${indirizzo}, ${paesi}`;
-    const mapLink = f.Mappa || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Farmacia ' + nome + ' ' + fullAddress)}`;
-
-    return `
-    <div class="info-card" onclick="openModal('farmacia', '${safeObj}')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; text-align: center; padding: 20px;">
-        <h3 style="margin: 0 0 8px 0; font-size: 1.3rem; width: 100%; color: #ffffff;">${nome}</h3>
-        <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.95rem; display: flex; align-items: center; justify-content: center;">
-            <span class="material-icons" style="font-size: 1.1rem; color: #ea4335; margin-right: 5px;">place</span>
-            ${paesi}
-        </p>
-        <p style="margin: 4px 0 15px 0; font-size: 0.85rem; color: rgba(255,255,255,0.5);">${indirizzo}</p>
-        <div style="display: flex; justify-content: center; gap: 25%; width: 100%; padding: 0 10%;">
-            ${f.Numero ? `
-                <div class="action-btn btn-call" style="margin:0;" onclick="event.stopPropagation(); window.location.href='tel:${f.Numero}'">
-                    <span class="material-icons">call</span>
-                </div>` : ''}
-            <div class="action-btn btn-map" style="margin:0;" onclick="event.stopPropagation(); window.open('${mapLink}', '_blank')">
-                <span class="material-icons">map</span>
-            </div>
-        </div>
-    </div>`;
-};
-
 // === RENDERER NUMERI UTILI ===
 window.numeriUtiliRenderer = (n) => {
-    const nome = window.dbCol(n, 'Nome');
-    const paesi = window.dbCol(n, 'Paesi'); 
+    const nome = window.dbCol(n, 'Nome') || 'Numero Utile';
+    const paesi = window.dbCol(n, 'Paesi') || 'Info'; 
     const numero = n.Numero || n.Telefono || '';
 
+    // Logica Icone
+    let icon = 'help_outline'; 
+    const nLower = nome.toLowerCase();
+    if (nLower.includes('carabinieri') || nLower.includes('polizia')) icon = 'security';
+    else if (nLower.includes('medica') || nLower.includes('croce')) icon = 'medical_services';
+    else if (nLower.includes('taxi')) icon = 'local_taxi';
+    else if (nLower.includes('farmacia')) icon = 'local_pharmacy';
+    else if (nLower.includes('info')) icon = 'info';
+
     return `
-    <div class="info-card" onclick="window.location.href='tel:${numero}'" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; text-align: center; padding: 20px;">
-        <h3 style="margin: 0 0 10px 0; font-size: 1.4rem; width: 100%; color: #ffffff; letter-spacing: 0.5px;">${nome}</h3>
-        <p style="margin: 0 0 25px 0; color: rgba(255,255,255,0.7); font-size: 1rem; display: flex; align-items: center; justify-content: center;">
-            <span class="material-icons" style="font-size: 1.2rem; color: #4285f4; margin-right: 6px;">location_on</span>
-            ${paesi}
-        </p>
-        <div class="action-btn btn-call" style="margin: 0; width: 60px; height: 60px;">
-            <span class="material-icons" style="font-size: 1.8rem;">call</span>
+    <div class="info-card animate-fade">
+        <div class="info-icon-box">
+            <span class="material-icons">${icon}</span>
+        </div>
+        <div class="info-text-col">
+            <h3>${nome}</h3>
+            <p>
+                <span class="material-icons" style="font-size: 0.9rem;">place</span>
+                ${paesi}
+            </p>
+        </div>
+        <div class="action-btn btn-call" onclick="window.location.href='tel:${numero}'">
+            <span class="material-icons">call</span>
         </div>
     </div>`;
 };
 
+// === RENDERER FARMACIE (Versione White & Clean) ===
+window.farmacieRenderer = (f) => {
+    // Debug: Controlla in console se i dati arrivano
+    console.log("Render Farmacia:", f);
 
+    // 1. Recupero dati (Massima compatibilità nomi colonne)
+    const nome = window.dbCol(f, 'Farmacia') || window.dbCol(f, 'Nome') || 'Farmacia';
+    const paese = window.dbCol(f, 'Paese') || window.dbCol(f, 'Paesi') || '';
+    const numero = f.Telefono || f.Numero || '';
+
+    // 2. HTML
+    return `
+    <div class="info-card animate-fade">
+        
+        <div class="info-icon-box">
+            <span class="material-icons">local_pharmacy</span>
+        </div>
+
+        <div class="info-text-col">
+            <h3>${nome}</h3>
+            <p>
+                <span class="material-icons" style="font-size: 0.9rem;">place</span>
+                ${paese}
+            </p>
+        </div>
+
+        <div class="action-btn btn-call" onclick="window.location.href='tel:${numero}'">
+            <span class="material-icons">call</span>
+        </div>
+
+    </div>`;
+};
 // === RENDERER ATTRAZIONI (Basato su colonna LABEL) ===
 window.attrazioniRenderer = (item) => {
     const titolo = window.dbCol(item, 'Attrazioni') || 'Attrazione';

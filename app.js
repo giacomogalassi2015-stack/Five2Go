@@ -217,7 +217,7 @@ window.loadTableData = async function(tableName, btnEl) {
         return; 
     }
     else if (tableName === 'Farmacie') { 
-        renderGenericFilterableView(data, 'Paesi', subContent, window.farmaciaRenderer); 
+        renderGenericFilterableView(data, 'Paesi', subContent, window.farmacieRenderer); 
         return; 
     } 
     else if (tableName === 'Attrazioni') {
