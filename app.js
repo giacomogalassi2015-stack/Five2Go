@@ -154,86 +154,90 @@ function renderHome() {
 }
 
 // ============================================================
-// 1. RENDER SUB-MENU (Stile Clean)
+// 1. GENERAZIONE MENU (Con Swiper.js)
 // ============================================================
 function renderSubMenu(options, defaultTable) {
+    // Creiamo la struttura HTML specifica che Swiper richiede
     let menuHtml = `
-    <div class="sub-menu-sticky animate-fade">
-        <div class="sub-menu-scroll">
-            ${options.map(opt => `
-                <button class="sub-tab-btn" onclick="loadTableData('${opt.table}', this)">
-                    ${opt.label}
-                </button>
-            `).join('')}
+    <div class="nav-sticky-header animate-fade">
+        <div class="swiper swiper-container" id="menuSwiper">
+            <div class="swiper-wrapper">
+                ${options.map(opt => `
+                    <div class="swiper-slide">
+                        <button class="nav-chip" onclick="loadTableData('${opt.table}', this)">
+                            ${opt.label}
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
         </div>
-        
-        <button id="filter-toggle-btn" class="sub-filter-btn" style="display: none;">
-            <span class="material-icons">filter_list</span>
-        </button>
     </div>
     
-    <div id="sub-content" style="padding-top: 10px;"></div>`;
+    <div id="sub-content" style="padding-top: 5px; min-height: 300px;"></div>`;
     
     content.innerHTML = menuHtml;
+
+    // --- ATTIVAZIONE SWIPER (Il motore fluido) ---
+    // Usiamo un piccolo ritardo per assicurarci che l'HTML sia renderizzato
+    setTimeout(() => {
+        new Swiper('#menuSwiper', {
+            slidesPerView: 'auto',  // La larghezza dipende dal testo
+            freeMode: true,         // Scorrimento libero (inerzia)
+            spaceBetween: 0,        // Spazio gestito dal CSS
+            grabCursor: true,       // Cursore manina su PC
+        });
+    }, 10);
     
-    // Attiva il primo bottone
-    const firstBtn = content.querySelector('.sub-tab-btn');
+    // Attiva il primo bottone automaticamente
+    const firstBtn = content.querySelector('.nav-chip');
     if (firstBtn) {
-        loadTableData(defaultTable, firstBtn); 
+        loadTableData(defaultTable, firstBtn);
     }
 }
 
 // ============================================================
-// 2. LOAD DATA (Gestione Attivazione)
+// 2. CARICAMENTO DATI (Gestione Click)
 // ============================================================
 window.loadTableData = async function(tableName, btnEl) {
     const subContent = document.getElementById('sub-content');
-    const filterBtn = document.getElementById('filter-toggle-btn');
     if (!subContent) return;
 
-    // --- LOGICA VISIVA (Spegni/Accendi) ---
-    // 1. Spegni TUTTI (Rimuovi sfondo nero)
-    document.querySelectorAll('.sub-tab-btn').forEach(btn => {
-        btn.classList.remove('active-sub');
-        btn.style.color = '#94a3b8'; // Forza grigio
+    // --- GESTIONE VISIVA (Spegni/Accendi) ---
+    // 1. Togli la classe 'active-chip' a TUTTI i bottoni
+    document.querySelectorAll('.nav-chip').forEach(btn => {
+        btn.classList.remove('active-chip');
     });
 
-    // 2. Accendi SOLO QUESTO (Metti sfondo nero)
+    // 2. Aggiungi la classe 'active-chip' SOLO a quello cliccato
     if (btnEl) {
-        btnEl.classList.add('active-sub');
-        btnEl.style.color = '#ffffff'; // Forza bianco
-        
-        // Effetto scorrimento automatico per centrare il bottone
-        btnEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    } else {
-        // Fallback se btnEl non è passato (es. caricamento iniziale)
-        // Cerca il bottone che corrisponde al tableName e attivalo
-        /* Opzionale: logica avanzata omessa per semplicità */
+        btnEl.classList.add('active-chip');
     }
-    // --------------------------------------
+    // ----------------------------------------
 
     // Reset Filtri
     const existingFilters = document.getElementById('dynamic-filters');
     if(existingFilters) existingFilters.remove();
+    const filterBtn = document.getElementById('filter-toggle-btn');
     if(filterBtn) filterBtn.style.display = 'none';
 
     // Loader
-    subContent.innerHTML = `<div class="loader">${window.t('loading')}...</div>`;
+    subContent.innerHTML = `<div class="loader" style="margin-top:20px;">${window.t('loading')}...</div>`;
     
-    // Mappe
+    // Gestione Mappe (Caso speciale)
     if (tableName === 'Mappe') {
         subContent.innerHTML = `<div class="map-container animate-fade"><iframe src="https://www.google.com/maps/d/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F&noprof=1" width="640" height="480"></iframe></div>`;
         return; 
     }
 
-    // Caricamento Dati
+    // Caricamento Dati Reali
     const { data, error } = await window.supabaseClient.from(tableName).select('*');
+    
     if (error) { 
-        subContent.innerHTML = `<p class="error-msg">Errore: ${error.message}</p>`; 
+        subContent.innerHTML = `<p class="error-msg">Errore connessione: ${error.message}</p>`; 
         return; 
     }
 
-    // Routing Renderers
+    // --- ROUTING RENDERER (I tuoi layout) ---
     if (tableName === 'Prodotti') {
         let html = '<div class="products-grid-fixed animate-fade">'; 
         data.forEach(p => { html += window.prodottoRenderer(p); });

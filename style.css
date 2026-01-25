@@ -1211,80 +1211,92 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
 }
 
 /* ============================================================
-   MENU FISSO: STILE "CLEAN AIRBNB" (Niente pulsanti grigi)
+   MENU DI NAVIGAZIONE MODERNO (Swiper Chips)
    ============================================================ */
 
-.sub-menu-sticky {
+/* 1. La Barra Fissa in alto (Effetto Vetro) */
+.nav-sticky-header {
     position: sticky;
     top: 0;
     z-index: 999;
     
-    /* Sfondo Vetro pulitissimo */
-    background: rgba(255, 255, 255, 0.96); 
-    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.96); /* Bianco quasi puro */
+    backdrop-filter: blur(20px);           /* Sfocatura sfondo */
     -webkit-backdrop-filter: blur(20px);
     
-    /* Vicinissimo al bordo alto come chiedevi */
-    padding: 5px 15px 10px 15px; 
-    margin: 0 -20px 20px -20px;
-    border-bottom: 1px solid rgba(0,0,0,0.05); /* Linea sottilissima */
+    /* Bordo sottilissimo sotto */
+    border-bottom: 1px solid rgba(0,0,0,0.05);
     
-    display: flex;
-    align-items: center;
-    height: 60px;
+    /* Spaziatura */
+    padding: 10px 0;
+    margin: 0 -20px 20px -20px; /* Si allarga fino ai bordi dello schermo */
+    
+    overflow: hidden; /* Fondamentale per Swiper */
 }
 
-/* Contenitore Scrollabile */
-.sub-menu-scroll {
-    display: flex;
-    align-items: center;
-    gap: 5px; /* Meno spazio, più compatti */
-    
-    overflow-x: auto;
-    padding-right: 20px;
-    height: 100%;
-    
-    /* Scroll fluido nativo */
-    scroll-behavior: smooth;
-    scrollbar-width: none;
+/* 2. Configurazione Swiper */
+.swiper-container {
+    width: 100%;
+    padding: 0 20px; /* Padding laterale interno */
+    box-sizing: border-box;
 }
-.sub-menu-scroll::-webkit-scrollbar { display: none; }
 
-/* --- IL BOTTONE (Stato NORMALE: Solo Testo) --- */
-/* Questo risolve il problema "non mi piacciono i pulsanti" */
-button.sub-tab-btn {
-    background: transparent; /* NESSUNO SFONDO */
-    border: 1px solid transparent; /* NESSUN BORDO */
-    border-radius: 50px;
+/* Le slide devono adattarsi alla larghezza del testo */
+.swiper-slide {
+    width: auto !important;
+    margin-right: 10px; /* Spazio tra le pillole */
+}
+
+/* 3. LO STILE DELLA PILLOLA (Chip) */
+.nav-chip {
+    /* Forma */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     
-    padding: 8px 16px;
+    padding: 10px 20px;
+    border-radius: 50px; /* Capsula perfetta */
+    border: 1px solid rgba(0,0,0,0.05); /* Bordo impercettibile */
+    
+    /* Colore Sfondo SPENTO (Grigio chiarissimo) */
+    background-color: #F3F4F6;
+    color: #64748B; /* Testo Grigio scuro */
     
     /* Testo */
     font-family: 'Roboto', sans-serif;
     font-size: 0.95rem;
     font-weight: 600;
-    color: #94a3b8; /* Grigio chiaro elegante */
-    
     white-space: nowrap;
+    
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    
+    /* Reset pulsanti browser */
     outline: none;
     -webkit-tap-highlight-color: transparent;
 }
 
-/* --- STATO ATTIVO (BOLLINO NERO) --- */
-button.sub-tab-btn.active-sub {
-    background-color: #000000; /* Nero Pieno */
-    color: #ffffff !important; /* Bianco */
-    font-weight: 700;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Ombra che lo stacca */
-    transform: scale(1.02); /* Leggermente più grande */
+/* Effetto Pressione */
+.nav-chip:active {
+    transform: scale(0.95); /* Si rimpicciolisce al tocco */
 }
 
-/* Tasto Filtro (opzionale) */
-.sub-filter-btn {
-    width: 40px; height: 40px;
-    display: flex; align-items: center; justify-content: center;
-    border: none; background: transparent; color: #333;
-    margin-left: auto; /* Lo spinge a destra */
+/* 4. STATO ATTIVO (La pillola selezionata) */
+.nav-chip.active-chip {
+    background-color: #111827; /* NERO PRO */
+    color: #FFFFFF !important; /* Bianco */
+    border-color: #111827;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2); /* Ombra elegante */
+    transform: translateY(-1px);
+}
+
+/* Icona Tasto Filtro (opzionale) */
+.filter-btn-floating {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: white;
+    box-shadow: -10px 0 20px white; /* Sfuma il menu sotto */
+    z-index: 10;
 }
