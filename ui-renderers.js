@@ -34,39 +34,39 @@ window.ristoranteRenderer = (r) => {
     </div>`;
 };
 
-// === RENDERER SPIAGGIA (Ocean Vibe) ===
+// === RENDERER SPIAGGIA (Clean & CSS-Based) ===
 window.spiaggiaRenderer = (s) => {
     const nome = window.dbCol(s, 'Nome') || 'Spiaggia';
     const paesi = window.dbCol(s, 'Paesi');
     const desc = window.dbCol(s, 'Descrizione') || '';
     
-    // Sicurezza stringhe
-    const safePaesi = paesi.replace(/'/g, "\\'").replace(/"/g, '"');
-    const safeDesc = desc.replace(/'/g, "\\'").replace(/"/g, '"');
+    // Sicurezza stringhe per onclick
+    const safePaesi = paesi.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const safeDesc = desc.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+    
     const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nome + ' ' + paesi + ' beach')}`;
 
     return `
-    <div class="beach-card-modern animate-fade" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
-        <div class="beach-gradient-header">
-            <div style="font-size:0.8rem; opacity:0.8; text-transform:uppercase; font-weight:700; letter-spacing:1px;">
-                <span class="material-icons" style="font-size:1rem; vertical-align:text-top;">place</span> ${paesi}
+    <div class="beach-card animate-fade" onclick="simpleAlert('${safePaesi}', '${safeDesc}')">
+        
+        <div class="beach-header">
+            <div class="beach-location">
+                <span class="material-icons" style="font-size:1rem;">place</span> ${paesi}
             </div>
-            <svg class="beach-wave-shape" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
-                <path fill="#ffffff" fill-opacity="1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,250.7C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            
+            <svg class="beach-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+                <path fill-opacity="1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,250.7C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
             </svg>
         </div>
 
-        <div class="beach-content-body">
-
-            <div class="beach-title">${nome}</div>
+        <div class="beach-body">
             
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
-                <span style="font-size:0.85rem; color:#888;">Tocca per info</span>
-                <button onclick="event.stopPropagation(); window.open('${mapLink}', '_blank')" 
-                        style="background:#0288D1; color:white; border:none; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 5px 15px rgba(2, 136, 209, 0.4);">
-                    <span class="material-icons">near_me</span>
-                </button>
-            </div>
+            <div class="beach-title">${nome}</div>
+
+            <button class="btn-beach-map" onclick="event.stopPropagation(); window.open('${mapLink}', '_blank')">
+                <span class="material-icons">near_me</span>
+            </button>
+
         </div>
     </div>`;
 };
@@ -172,49 +172,66 @@ window.numeriUtiliRenderer = (n) => {
     </div>`;
 };
 
-// === RENDERER ATTRAZIONI (Museum/Art Style) ===
+
+// === RENDERER ATTRAZIONI (Con FontAwesome) ===
 window.attrazioniRenderer = (item) => {
     const titolo = window.dbCol(item, 'Attrazioni') || 'Attrazione';
     const paese = window.dbCol(item, 'Paese');
     const myId = (item._tempIndex !== undefined) ? item._tempIndex : 0;
+    const tempo = item.Tempo_visita || '--'; 
     const diff = window.dbCol(item, 'Difficoltà Accesso') || 'Accessibile';
-    const tempo = item["Tempo Visita"] || '--';
 
-    // Logica Colori Difficoltà
-    const isHard = diff.toLowerCase().match(/alta|hard|difficile/);
-    const diffColor = isHard ? 'background:#FFEBEE; color:#D32F2F;' : 'background:#E8F5E9; color:#2E7D32;'; // Rosso o Verde chiaro
+    const tLower = titolo.toLowerCase();
 
-    // Logica Icona Intelligente (Se il titolo contiene "Chiesa" cambia icona)
-    let icon = 'museum'; // Default
-    if (titolo.toLowerCase().includes('chiesa') || titolo.toLowerCase().includes('santuario')) icon = 'church';
-    if (titolo.toLowerCase().includes('castello') || titolo.toLowerCase().includes('torre')) icon = 'castle';
-    if (titolo.toLowerCase().includes('panorama') || titolo.toLowerCase().includes('vista')) icon = 'visibility';
+    // Variabili per CSS e Icona
+    let themeClass = 'is-monument';
+    let iconClass = 'fa-landmark'; // Default (Monumento generico)
+
+    // 1. RELIGIONE (Viola)
+    if (tLower.includes('chiesa') || tLower.includes('santuario') || tLower.includes('convento') || tLower.includes('oratorio')) {
+        themeClass = 'is-church';
+        iconClass = 'fa-church'; // Icona Chiesa FontAwesome
+    }
+    // 2. PANORAMI (Verde Acqua)
+    else if (tLower.includes('panorama') || tLower.includes('vista') || tLower.includes('belvedere') || tLower.includes('punta') || tLower.includes('via')) {
+        themeClass = 'is-view';
+        iconClass = 'fa-mountain-sun'; // Icona Montagne e Sole
+    }
+    // 3. CASTELLI / TORRI (Terracotta)
+    else {
+        themeClass = 'is-monument';
+        // Se è specificamente un castello o torre usiamo la Torre, altrimenti Monumento generico
+        if (tLower.includes('castello') || tLower.includes('torre') || tLower.includes('bastione')) {
+             iconClass = 'fa-chess-rook'; // Torre medievale
+        } else {
+             iconClass = 'fa-landmark';   // Pantheon/Museo
+        }
+    }
 
     return `
-    <div class="culture-card-modern animate-fade" onclick="openModal('attrazione', ${myId})">
+    <div class="culture-card ${themeClass} animate-fade" onclick="openModal('attrazione', ${myId})">
         
-        <div class="culture-accent-strip"></div>
-        
-        <div class="culture-content">
+        <div class="culture-info">
             <div class="culture-location">
                 <span class="material-icons" style="font-size:0.9rem;">place</span> ${paese}
             </div>
             
             <div class="culture-title">${titolo}</div>
             
-            <div style="margin-top: 12px;" class="culture-meta-tags">
-                <span class="culture-pill pill-time">
+            <div class="culture-tags">
+                <span class="c-pill">
                     <span class="material-icons" style="font-size:0.8rem;">schedule</span> ${tempo}
                 </span>
-                <span class="culture-pill" style="${diffColor}">
+                <span class="c-pill">
                     ${diff}
                 </span>
             </div>
         </div>
 
-        <div class="culture-icon-deco">
-            <span class="material-icons">${icon}</span>
+        <div class="culture-bg-icon">
+            <i class="fa-solid ${iconClass}"></i>
         </div>
+
     </div>`;
 };
 
