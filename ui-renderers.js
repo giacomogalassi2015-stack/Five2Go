@@ -124,6 +124,38 @@ window.sentieroRenderer = (s) => {
         </div>
     </div>`;
 };
+
+window.vinoRenderer = function(item) {
+    // 1. Cerca l'ID in tutti i modi possibili (id minuscolo o ID maiuscolo)
+    const safeId = item.id || item.ID; 
+    
+    // Dati esatti dalle tue colonne
+    const nome = item.Nome || 'Vino';
+    const cantina = item.Produttore || ''; 
+    const tipo = (item.Tipo || '').toLowerCase().trim();
+
+    // Logica Colori
+    let themeClass = 'is-wine-red'; 
+    if (tipo.includes('bianco')) themeClass = 'is-wine-white';
+    if (tipo.includes('rosato') || tipo.includes('orange')) themeClass = 'is-wine-orange';
+
+    return `
+    <div class="culture-card ${themeClass} animate-fade" onclick="openModal('Vini', '${safeId}')">
+        <div class="culture-info">
+            ${cantina ? `<div class="culture-location"><span class="material-icons" style="font-size:0.9rem">storefront</span> ${cantina}</div>` : ''}
+            
+            <div class="culture-title">${nome}</div>
+            
+            <div class="culture-tags">
+                 <span class="c-pill" style="text-transform: capitalize;">${item.Tipo || 'Vino'}</span>
+            </div>
+        </div>
+        
+        <div class="culture-bg-icon">
+            <i class="fa-solid fa-wine-bottle"></i>
+        </div>
+    </div>`;
+};
 // === RENDERER NUMERI UTILI ===
 window.numeriUtiliRenderer = (n) => {
     const nome = window.dbCol(n, 'Nome') || 'Numero Utile';
@@ -191,6 +223,8 @@ window.farmacieRenderer = (f) => {
 };
 // === RENDERER ATTRAZIONI (Basato su colonna LABEL) ===
 window.attrazioniRenderer = (item) => {
+    
+const safeId = item.POI_ID || item.id;
     const titolo = window.dbCol(item, 'Attrazioni') || 'Attrazione';
     const paese = window.dbCol(item, 'Paese');
     const myId = (item._tempIndex !== undefined) ? item._tempIndex : 0;
@@ -292,7 +326,13 @@ window.openModal = async function(type, payload) {
 
     let contentHtml = '';
     let modalClass = 'modal-content'; 
-
+// --- INCOLLA QUESTO SUBITO DOPO AVER CREATO IL DIV MODAL ---
+    let item = null; 
+    // Tentativo di recupero standard per Vini e Attrazioni
+    if (window.currentTableData && (type === 'Vini' || type === 'Attrazioni' || type === 'Spiagge')) {
+        // Cerca per ID standard o POI_ID
+        item = window.currentTableData.find(i => i.id == payload || i.ID == payload || i.POI_ID == payload);
+    }
     // --- PRODOTTI ---
     if (type === 'product') {
         const p = JSON.parse(decodeURIComponent(payload));
@@ -517,63 +557,127 @@ window.openModal = async function(type, payload) {
         const paesi = window.dbCol(item, 'Paesi');
         contentHtml = `<h2>${nome}</h2><p>📍 ${item.Indirizzo}, ${paesi}</p><p>📞 <a href="tel:${item.Numero}">${item.Numero}</a></p>`;
     }
-    // --- DETTAGLI ATTRAZIONE ---
-    else if (type === 'attrazione') {
-         const item = (window.tempAttractionsData && typeof payload === 'number') ? window.tempAttractionsData[payload] : null;
-         if(item) {
-             const titolo = window.dbCol(item, 'Attrazioni');
-             const paese = window.dbCol(item, 'Paese');
-             contentHtml = `<h2>${titolo}</h2><p>📍 ${paese}</p><p>${window.dbCol(item, 'Descrizione')}</p>`;
-         }
-    }// --- MODALE VINI ---
-    else if (type === 'wine') {
-        const v = JSON.parse(decodeURIComponent(payload));
-        
-        // Mappatura esatta con le tue colonne
-        const nome = window.dbCol(v, 'Nome');
-        const produttore = window.dbCol(v, 'Produttore');
-        const tipo = window.dbCol(v, 'Tipo');
-        const uve = window.dbCol(v, 'Uve');
-        const gradi = window.dbCol(v, 'Gradi'); // È text, quindi lo prendiamo così com'è
-        const abbinamenti = window.dbCol(v, 'Abbinamenti');
-        const desc = window.dbCol(v, 'Descrizione');
-        
-        // Anche qui usiamo il Nome per l'immagine
-        const bigImg = window.getSmartUrl(nome, '', 800);
-        modalClass = 'modal-content glass-modal';
+  // ... (inizio funzione openModal invariato fino al recupero item) ...
 
-        // Logica colori per il badge Tipo
-        let tipoColor = '#7f8c8d'; 
-        if (tipo && tipo.toLowerCase().includes('bianco')) tipoColor = '#f1c40f'; // Giallo
-        if (tipo && tipo.toLowerCase().includes('rosso')) tipoColor = '#c0392b'; // Rosso
-        if (tipo && tipo.toLowerCase().includes('sciacchetr')) tipoColor = '#e67e22'; // Ambra
+// --- MODALE VINI (Colonne Corrette: Nome, Tipo, Produttore, Uve, Foto, Gradi, Abbinamenti, Descrizione) ---
+    if (type === 'Vini' || type === 'wine') {
+        
+        // 1. RECUPERO ITEM (Più robusto)
+        if (!item && window.currentTableData) {
+            // Cerca confrontando stringhe e numeri (== invece di ===)
+            item = window.currentTableData.find(i => i.id == payload || i.ID == payload);
+        }
 
+        // Se ancora non lo trova, stampa errore in console per capire
+        if (!item) { 
+            console.error("Vino non trovato. Payload:", payload, "Dati:", window.currentTableData);
+            modal.innerHTML = `<div class="modal-content"><p style="padding:20px">Errore: Vino non trovato (ID: ${payload})</p></div>`; 
+            return; 
+        }
+
+        // 2. MAPPATURA VARIABILI (Esattamente le tue colonne)
+        const nome = window.dbCol(item, 'Nome');
+        const tipo = window.dbCol(item, 'Tipo');
+        const produttore = window.dbCol(item, 'Produttore');
+        const uve = window.dbCol(item, 'Uve');
+        const gradi = window.dbCol(item, 'Gradi');
+        const abbinamenti = window.dbCol(item, 'Abbinamenti');
+        const desc = window.dbCol(item, 'Descrizione');
+        const foto = window.dbCol(item, 'Foto'); // Nuova colonna
+
+        // 3. COLORI
+        const t = String(tipo).toLowerCase();
+        let color = '#9B2335'; // Rosso
+        if (t.includes('bianco')) color = '#F4D03F'; 
+        if (t.includes('rosato') || t.includes('orange')) color = '#E67E22'; 
+
+        // 4. HTML
         contentHtml = `
-            <div style="position: relative;">
-                <img src="${bigImg}" style="width:100%; border-radius: 0 0 24px 24px; height:300px; object-fit:cover; margin-bottom: 15px; mask-image: linear-gradient(to bottom, black 80%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);" onerror="this.style.display='none'">
+            <div style="padding-bottom: 20px;">
                 
-                ${gradi ? `<div style="position:absolute; bottom:20px; right:20px; background:rgba(255,255,255,0.9); padding:5px 10px; border-radius:12px; font-weight:bold; color:#333; box-shadow:0 4px 10px rgba(0,0,0,0.2);">${gradi}</div>` : ''}
-            </div>
+                ${foto ? 
+                /* SE C'È LA FOTO: Mostra Immagine Grande */
+                `<img src="${foto}" style="width:100%; height:280px; object-fit:cover; border-radius:24px 24px 0 0;">` 
+                : 
+                /* ALTRIMENTI: Mostra Icona Bottiglia */
+                `<div style="text-align:center; padding: 30px 20px 20px; background: #fff; border-bottom: 1px dashed #eee;">
+                    <i class="fa-solid fa-wine-bottle" style="font-size: 4.5rem; color: ${color}; margin-bottom:15px; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.1));"></i>
+                </div>`
+                }
 
-            <div style="padding: 0 25px 30px 25px;">
-                <div style="font-size: 0.85rem; text-transform:uppercase; letter-spacing:1px; color:${tipoColor}; font-weight:700; margin-bottom:5px;">
-                    ${tipo || 'Vino'}
+                <div style="padding: ${foto ? '25px 25px 0' : '0 25px'};">
+                    <h2 style="font-family:'Roboto Slab'; font-size:2rem; margin:0 0 5px 0; line-height:1.1; color:#2c3e50;">${nome}</h2>
+                    <div style="font-weight:700; color:#7f8c8d; text-transform:uppercase; font-size:0.9rem; margin-bottom:20px;">
+                        <span class="material-icons" style="vertical-align:text-bottom; font-size:1.1rem;">storefront</span> ${produttore}
+                    </div>
                 </div>
-                
-                <h2 style="font-size: 2.2rem; margin: 0 0 5px 0; color: #222; line-height:1.1;">${nome}</h2>
-                
-                ${produttore ? `<div style="font-size: 1.1rem; color: #555; font-family:'Roboto Slab'; margin-bottom:20px;">Cantina <strong>${produttore}</strong></div>` : ''}
 
-                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:25px;">
-                    ${uve ? `<span class="glass-tag" style="font-size:0.8rem;">🍇 ${uve}</span>` : ''}
-                    ${abbinamenti ? `<span class="glass-tag" style="font-size:0.8rem;">🍽️ ${abbinamenti}</span>` : ''}
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px 25px; background: #fafafa;">
+                    <div style="background:#fff; border:1px solid #eee; border-radius:12px; padding:10px; text-align:center;">
+                        <div style="font-size:0.7rem; text-transform:uppercase; color:#999; font-weight:700;">Tipologia</div>
+                        <div style="font-size:1rem; font-weight:700; color:${color}">${tipo || '--'}</div>
+                    </div>
+                    <div style="background:#fff; border:1px solid #eee; border-radius:12px; padding:10px; text-align:center;">
+                        <div style="font-size:0.7rem; text-transform:uppercase; color:#999; font-weight:700;">Gradi</div>
+                        <div style="font-size:1rem; font-weight:700;">${gradi || '--'}</div>
+                    </div>
+                    ${uve ? `<div style="grid-column:1/-1; background:#fff; border:1px solid #eee; border-radius:12px; padding:12px; text-align:center; font-size:0.95rem;"><strong>🍇 Uve:</strong> ${uve}</div>` : ''}
                 </div>
 
-                <div style="font-size: 1.05rem; line-height: 1.8; color: #444; text-align:justify;">
-                    ${desc || ''}
+                <div style="padding: 25px;">
+                    <p style="color:#555; font-size:1.05rem; line-height:1.6; margin:0;">${desc}</p>
+                    ${abbinamenti ? `
+                    <div style="background: #FFF8E1; border-left: 4px solid #FFB74D; padding: 15px; border-radius: 8px; margin-top: 25px; color: #5D4037;">
+                        <div style="font-weight:bold; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">🍽️ Abbinamenti</div>
+                        ${abbinamenti}
+                    </div>` : ''}
                 </div>
             </div>`;
     }
+    // --- MODALE ATTRAZIONI / MONUMENTI (Funzionante & Stile Curato) ---
+    else if (type === 'Attrazioni' || type === 'attrazione') {
+        
+        // 1. Cerca l'item (FIX: Cerca per POI_ID se il payload è una stringa tipo 'P01')
+        if (!item && window.currentTableData) {
+            item = window.currentTableData.find(i => i.POI_ID == payload || i.id == payload);
+        }
+        // Fallback per l'indice numerico (se il vecchio renderer manda un numero)
+        if (!item && typeof payload === 'number' && window.currentTableData) {
+            item = window.currentTableData[payload];
+        }
+        
+        if (!item) { modal.innerHTML = `<div class="modal-content"><p style="padding:20px">Errore: Monumento non trovato.</p></div>`; return; }
+
+        // 2. Dati
+        const titolo = window.dbCol(item, 'Attrazioni') || window.dbCol(item, 'Titolo');
+        const curiosita = window.dbCol(item, 'Curiosita');
+        const desc = window.dbCol(item, 'Descrizione');
+        const img = window.dbCol(item, 'Immagine') || window.dbCol(item, 'Foto'); // Opzionale
+
+        contentHtml = `
+            ${img ? 
+                `<img src="${img}" class="monument-header-img">` : 
+                `<div class="monument-header-icon"><i class="fa-solid fa-landmark" style="font-size:4rem; color:#546e7a;"></i></div>`
+            }
+
+            <div style="padding: 0 25px 30px;">
+                <h2 style="font-family:'Roboto Slab'; font-size:2rem; margin: ${img ? '0' : '20px'} 0 10px 0; color:#2c3e50; line-height:1.1;">${titolo}</h2>
+                
+                <div style="width:50px; height:4px; background:#e74c3c; margin-bottom:20px; border-radius:2px;"></div>
+
+                ${curiosita ? `
+                <div class="curiosity-box animate-fade">
+                    <div class="curiosity-title">
+                        <span class="material-icons" style="font-size:1rem;">lightbulb</span> Curiosità
+                    </div>
+                    <div style="font-style:italic; line-height:1.5;">${curiosita}</div>
+                </div>` : ''}
+                
+                <p style="color:#374151; font-size:1.05rem; line-height:1.7; text-align:justify;">${desc || 'Descrizione non disponibile.'}</p>
+            </div>`;
+    }
+
+    // ... (lascia gli altri else if invariati) ...
     modal.innerHTML = `<div class="${modalClass}"><span class="close-modal" onclick="this.parentElement.parentElement.remove()">×</span>${contentHtml}</div>`;
 };
 
@@ -826,49 +930,4 @@ window.filterDestinations = async function(startId) {
         console.error("Errore filtro destinazioni:", err);
         selArr.innerHTML = `<option>Errore</option>`;
     }
-};
-
-
-window.vinoRenderer = function(item) {
-    // Dati
-    const nome = item.Nome || item.Vino || 'Vino';
-    const cantina = item.Cantina || item.Produttore || '';
-    
-    // Leggiamo la colonna 'Tipo' e puliamo il testo (minuscolo, senza spazi extra)
-    // Es. "Bianco " diventa "bianco"
-    const tipo = (item.Tipo || '').toLowerCase().trim();
-    
-    // LOGICA ASSEGNAZIONE CLASSI
-    let themeClass = 'is-wine-red'; // Default (Rosso) se non trova corrispondenze
-    
-    if (tipo === 'bianco') {
-        themeClass = 'is-wine-white';   // Stile ORO
-    } 
-    else if (tipo === 'rosato' || tipo.includes('orange')) {
-        themeClass = 'is-wine-orange';  // Stile ARANCIONE (per Rosato/Orange)
-    }
-    else if (tipo === 'rosso') {
-        themeClass = 'is-wine-red';     // Stile BORDEAUX
-    }
-
-    // HTML Scheda (Rettangolare stile Monumenti)
-    return `
-    <div class="culture-card ${themeClass} animate-fade" onclick="openModal('Vini', '${item.id}')">
-        <div class="culture-info">
-            ${cantina ? `<div class="culture-location"><span class="material-icons" style="font-size:0.9rem">storefront</span> ${cantina}</div>` : ''}
-            
-            <h3 class="culture-title">${nome}</h3>
-            
-            <div class="culture-tags">
-                 <span class="c-pill" style="text-transform: capitalize;">
-                    ${item.Tipo || 'Vino'}
-                 </span>
-            </div>
-        </div>
-        
-        <div class="culture-bg-icon">
-            <i class="fa-solid fa-wine-bottle"></i>
-        </div>
-    </div>
-    `;
 };
