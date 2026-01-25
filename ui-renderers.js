@@ -57,7 +57,7 @@ window.spiaggiaRenderer = (s) => {
         </div>
 
         <div class="beach-content-body">
-            <div class="beach-tag">🌊 Relax & Sole</div>
+
             <div class="beach-title">${nome}</div>
             
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
