@@ -252,7 +252,24 @@ window.loadTableData = async function(tableName, btnEl) {
         subContent.innerHTML = html + '</div>';
     }
     // ALTRE CATEGORIE
-    else if (tableName === 'Attrazioni') { renderGenericFilterableView(data, 'Paese', subContent, window.attrazioniRenderer); }
+    // CULTURA / ATTRAZIONI (Usa il nuovo filtro doppio)
+    // CULTURA / ATTRAZIONI (Configurazione Specifica)
+    else if (tableName === 'Attrazioni') { 
+        
+        const culturaConfig = {
+            primary: {
+                key: 'Paese',                // Nome Colonna DB
+                title: '📍 ' + (window.t('nav_villages') || 'Borgo'), // Titolo Sezione UI
+                customOrder: ["Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso"] // Ordine (opzionale)
+            },
+            secondary: {
+                key: 'Label',                // Nome Colonna DB
+                title: '🏷️ Categoria'        // Titolo Sezione UI
+            }
+        };
+
+        renderDoubleFilterView(data, culturaConfig, subContent, window.attrazioniRenderer); 
+    }
     else if (tableName === 'Ristoranti') { renderGenericFilterableView(data, 'Paesi', subContent, window.ristoranteRenderer); }
     else if (tableName === 'Sentieri') { renderGenericFilterableView(data, 'Difficolta', subContent, window.sentieroRenderer); }
     else if (tableName === 'Farmacie') { renderGenericFilterableView(data, 'Paesi', subContent, window.farmacieRenderer); } 
@@ -427,7 +444,6 @@ window.toggleTicketInfo = function() {
     if (box) { box.style.display = (box.style.display === 'none') ? 'block' : 'none'; }
 };
 
-// --- LOGICA FILTRI (Tasto Galleggiante in Basso) ---
 // --- LOGICA FILTRI (Bottom Sheet / Cassetto) ---
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
     // 1. Prepara i contenitori base
@@ -546,6 +562,152 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
         if (typeof initPendingMaps === 'function') setTimeout(() => initPendingMaps(), 100);
     }
     
+    updateList(allData);
+}
+// --- LOGICA FILTRO DOPPIO GENERICO (Agnostica) ---
+function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer) {
+
+    // 1. Setup Container
+    container.innerHTML = `<div class="list-container animate-fade" id="dynamic-list" style="padding-bottom: 80px;"></div>`;
+    const listContainer = container.querySelector('#dynamic-list');
+
+    // 2. Pulizia UI Filtri
+    const oldSheet = document.getElementById('filter-sheet');
+    if (oldSheet) oldSheet.remove();
+    const oldOverlay = document.getElementById('filter-overlay');
+    if (oldOverlay) oldOverlay.remove();
+    const oldBtn = document.getElementById('filter-toggle-btn');
+    if (oldBtn) oldBtn.remove();
+
+    // 3. ESTRAZIONE DATI DINAMICA
+    // Helper per ottenere valori unici da una colonna
+    const getUniqueValues = (key, customOrder = []) => {
+        const raw = allData.map(i => window.dbCol(i, key)).filter(x => x).map(x => x.trim());
+        let unique = [...new Set(raw)];
+        
+        if (customOrder && customOrder.length > 0) {
+            // Ordina secondo la lista custom, mettendo in fondo quelli non presenti
+            return unique.sort((a, b) => {
+                const idxA = customOrder.indexOf(a);
+                const idxB = customOrder.indexOf(b);
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                if (idxA !== -1) return -1;
+                if (idxB !== -1) return 1;
+                return a.localeCompare(b);
+            });
+        } else {
+            return unique.sort();
+        }
+    };
+
+    // Genera le opzioni per i due livelli
+    const values1 = getUniqueValues(filtersConfig.primary.key, filtersConfig.primary.customOrder);
+    const values2 = getUniqueValues(filtersConfig.secondary.key, filtersConfig.secondary.customOrder);
+
+    // STATO INTERNO (Generico)
+    let activeVal1 = 'Tutti';
+    let activeVal2 = 'Tutti';
+
+    // 4. CREAZIONE HTML
+    const overlay = document.createElement('div');
+    overlay.className = 'sheet-overlay';
+    
+    const sheet = document.createElement('div');
+    sheet.className = 'bottom-sheet';
+    
+    // Titoli dinamici presi dalla config (o fallback generici)
+    const title1 = filtersConfig.primary.title || 'Filtro 1';
+    const title2 = filtersConfig.secondary.title || 'Filtro 2';
+
+    sheet.innerHTML = `
+        <div class="sheet-header">
+            <div class="sheet-title">Filtri</div>
+            <div class="material-icons sheet-close" onclick="closeFilterSheet()">close</div>
+        </div>
+        
+        <div class="filter-section-title">${title1}</div>
+        <div class="filter-grid" id="section-1-options"></div>
+
+        <div class="filter-section-title" style="margin-top: 25px;">${title2}</div>
+        <div class="filter-grid" id="section-2-options"></div>
+
+        <button class="btn-apply-filters" onclick="closeFilterSheet()">
+            ${window.t('show_results') || 'Mostra Risultati'}
+        </button>
+    `;
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(sheet);
+
+    // 5. RENDER CHIPS (Generico)
+    function renderChips() {
+        // Render Gruppo 1
+        const c1 = sheet.querySelector('#section-1-options');
+        c1.innerHTML = '';
+        c1.appendChild(createChip('Tutti', activeVal1 === 'Tutti', () => { activeVal1 = 'Tutti'; applyFilters(); renderChips(); }));
+        
+        values1.forEach(v => {
+            c1.appendChild(createChip(v, activeVal1 === v, () => { activeVal1 = v; applyFilters(); renderChips(); }));
+        });
+
+        // Render Gruppo 2
+        const c2 = sheet.querySelector('#section-2-options');
+        c2.innerHTML = '';
+        c2.appendChild(createChip('Tutti', activeVal2 === 'Tutti', () => { activeVal2 = 'Tutti'; applyFilters(); renderChips(); }));
+
+        values2.forEach(v => {
+            const label = v.charAt(0).toUpperCase() + v.slice(1); // Capitalize estetico
+            c2.appendChild(createChip(label, activeVal2 === v, () => { activeVal2 = v; applyFilters(); renderChips(); }));
+        });
+    }
+
+    function createChip(text, isActive, onClick) {
+        const btn = document.createElement('button');
+        btn.className = 'sheet-chip';
+        if (isActive) btn.classList.add('active-filter');
+        btn.innerText = text;
+        btn.onclick = onClick;
+        return btn;
+    }
+
+    // 6. LOGICA DI FILTRAGGIO AGNOSTICA
+    function applyFilters() {
+        const filtered = allData.filter(item => {
+            const val1 = window.dbCol(item, filtersConfig.primary.key) || '';
+            const val2 = window.dbCol(item, filtersConfig.secondary.key) || '';
+
+            const match1 = (activeVal1 === 'Tutti') || val1.includes(activeVal1);
+            // Match parziale (case insensitive) per il secondo filtro (es. Label)
+            const match2 = (activeVal2 === 'Tutti') || val2.toLowerCase().includes(activeVal2.toLowerCase());
+
+            return match1 && match2;
+        });
+
+        updateList(filtered);
+    }
+
+    function updateList(items) {
+        if (!items || items.length === 0) { 
+            listContainer.innerHTML = `<p style="text-align:center; padding:40px; color:#999;">${window.t('no_results')}</p>`; 
+        } else {
+            listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
+        }
+    }
+
+    // 7. GESTIONE EVENTI
+    const filterBtn = document.createElement('button');
+    filterBtn.id = 'filter-toggle-btn';
+    filterBtn.innerHTML = '<span class="material-icons">filter_list</span>';
+    filterBtn.style.display = 'block';
+    document.body.appendChild(filterBtn);
+
+    window.openFilterSheet = () => { overlay.classList.add('active'); sheet.classList.add('active'); };
+    window.closeFilterSheet = () => { overlay.classList.remove('active'); sheet.classList.remove('active'); };
+
+    filterBtn.onclick = window.openFilterSheet;
+    overlay.onclick = window.closeFilterSheet;
+
+    renderChips();
     updateList(allData);
 }
 document.addEventListener('DOMContentLoaded', () => {

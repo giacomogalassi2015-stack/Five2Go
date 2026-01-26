@@ -596,7 +596,43 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
 .filter-grid {
     display: flex; flex-wrap: wrap; gap: 10px;
 }
+/* ============================================================
+   FILTRI AVANZATI (Doppia Sezione)
+   ============================================================ */
 
+/* Titoli delle sezioni nel filtro (es. "Scegli il Paese") */
+.filter-section-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #90A4AE;
+    font-weight: 700;
+    margin: 20px 0 10px 0;
+    letter-spacing: 1px;
+}
+
+/* Rimuovi margine al primo titolo */
+.filter-section-title:first-of-type {
+    margin-top: 0;
+}
+
+/* Bottone grande "Mostra Risultati" */
+.btn-apply-filters {
+    width: 100%;
+    background: #2A9D8F;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    margin-top: 30px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(42, 157, 143, 0.3);
+    transition: transform 0.2s;
+}
+.btn-apply-filters:active {
+    transform: scale(0.98);
+}
 /* Stile dei Pallini nel cassetto */
 .sheet-chip {
     padding: 10px 18px;
