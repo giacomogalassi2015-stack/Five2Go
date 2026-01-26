@@ -1,5 +1,5 @@
 import { supabaseClient } from './supabaseClient.js';
-import { t, isItalianHoliday } from './utils.js';
+import { t, isItalianHoliday } from '../utils.js';
 import { state } from './state.js';
 import { initBusMap } from './mapLogic.js';
 import { FERRY_STOPS } from './config.js';
