@@ -7,6 +7,9 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // RENDIAMO SUPABASE GLOBALE
 window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// --- MODIFICA: INIZIALIZZAZIONE CACHE ---
+window.appCache = {};
+
 const CLOUDINARY_CLOUD_NAME = 'dkg0jfady'; 
 const CLOUDINARY_BASE_URL = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/`;
 

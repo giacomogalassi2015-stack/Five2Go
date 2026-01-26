@@ -187,7 +187,6 @@ window.loadTableData = async function(tableName, btnEl) {
     // 1. Gestione Visiva Bottoni (Spegni tutti, accendi cliccato)
     document.querySelectorAll('.nav-chip, .btn-3d').forEach(btn => btn.classList.remove('active-chip', 'active-3d'));
     if (btnEl) {
-        // Supporta entrambi gli stili di bottoni che abbiamo provato
         if(btnEl.classList.contains('nav-chip')) btnEl.classList.add('active-chip');
         if(btnEl.classList.contains('btn-3d')) btnEl.classList.add('active-3d');
     }
@@ -198,8 +197,10 @@ window.loadTableData = async function(tableName, btnEl) {
     const filterBtn = document.getElementById('filter-toggle-btn');
     if(filterBtn) filterBtn.style.display = 'none';
 
-    // 3. Loader
-    subContent.innerHTML = `<div class="loader" style="margin-top:20px;">${window.t('loading')}...</div>`;
+    // 3. Loader (Solo se non abbiamo la cache, altrimenti è istantaneo!)
+    if (!window.appCache[tableName]) {
+        subContent.innerHTML = `<div class="loader" style="margin-top:20px;">${window.t('loading')}...</div>`;
+    }
     
     // 4. Gestione Mappe (Caso speciale iframe)
     if (tableName === 'Mappe') {
@@ -207,37 +208,47 @@ window.loadTableData = async function(tableName, btnEl) {
         return; 
     }
 
-    // 5. Caricamento Dati dal DB
-    const { data, error } = await window.supabaseClient.from(tableName).select('*');
-    if (error) { 
-        subContent.innerHTML = `<p class="error-msg">${error.message}</p>`; 
-        return; 
-    }
-
-    // *** FONDAMENTALE: Salva i dati per il modale ***
-    window.currentTableData = data; 
-    // ************************************************
-
-    // 6. Routing Renderers (Come mostrare i dati)
+    // --- MODIFICA: LOGICA CACHE INTELLIGENTE ---
+    let data;
     
-    // VINI (Usa renderer lista filtrabile, lo stile è nel CSS)
+    // CASO A: Abbiamo già i dati in memoria? Usiamoli!
+    if (window.appCache[tableName]) {
+        console.log(`⚡ Cache hit: recupero dati per ${tableName} dalla memoria.`);
+        data = window.appCache[tableName];
+    } 
+    // CASO B: Non li abbiamo? Scarichiamoli da Supabase.
+    else {
+        console.log(`🌐 Cache miss: scarico dati per ${tableName} dal server...`);
+        const response = await window.supabaseClient.from(tableName).select('*');
+        
+        if (response.error) { 
+            subContent.innerHTML = `<p class="error-msg">${response.error.message}</p>`; 
+            return; 
+        }
+        
+        data = response.data;
+        // SALVA IN CACHE PER LA PROSSIMA VOLTA
+        window.appCache[tableName] = data; 
+    }
+    // ---------------------------------------------
+
+    // Salva i dati correnti per il modale
+    window.currentTableData = data; 
+
+    // 6. Routing Renderers (Logica invariata)
     if (tableName === 'Vini') {
         renderGenericFilterableView(data, 'Tipo', subContent, window.vinoRenderer);
     }
-    // SPIAGGE
     else if (tableName === 'Spiagge') {
         renderGenericFilterableView(data, 'Paesi', subContent, window.spiaggiaRenderer);
     }
-   // PRODOTTI (Lista Verticale)
     else if (tableName === 'Prodotti') {
-        // IMPORTANTE: Usa 'list-container' e NON 'products-grid-fixed'
         let html = '<div class="list-container animate-fade" style="padding-bottom:20px;">'; 
         data.forEach(p => { html += window.prodottoRenderer(p); });
         subContent.innerHTML = html + '</div>';
     }
-    // TRASPORTI (Salva dati temp e mostra card)
     else if (tableName === 'Trasporti') {
-        window.tempTransportData = data; // Serve per il modale trasporti
+        window.tempTransportData = data;
         let html = '<div class="list-container animate-fade">';
         data.forEach((t, index) => {
             const nomeDisplay = window.dbCol(t, 'Località') || window.dbCol(t, 'Mezzo');
@@ -246,23 +257,11 @@ window.loadTableData = async function(tableName, btnEl) {
         });
         subContent.innerHTML = html + '</div>';
     }
-    // ALTRE CATEGORIE
-    // CULTURA / ATTRAZIONI (Usa il nuovo filtro doppio)
-    // CULTURA / ATTRAZIONI (Configurazione Specifica)
     else if (tableName === 'Attrazioni') { 
-        
         const culturaConfig = {
-            primary: {
-                key: 'Paese',                // Nome Colonna DB
-                title: '📍 ' + (window.t('nav_villages') || 'Borgo'), // Titolo Sezione UI
-                customOrder: ["Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso"] // Ordine (opzionale)
-            },
-            secondary: {
-                key: 'Label',                // Nome Colonna DB
-                title: '🏷️ Categoria'        // Titolo Sezione UI
-            }
+            primary: { key: 'Paese', title: '📍 ' + (window.t('nav_villages') || 'Borgo'), customOrder: ["Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso"] },
+            secondary: { key: 'Label', title: '🏷️ Categoria' }
         };
-
         renderDoubleFilterView(data, culturaConfig, subContent, window.attrazioniRenderer); 
     }
     else if (tableName === 'Ristoranti') { renderGenericFilterableView(data, 'Paesi', subContent, window.ristoranteRenderer); }
