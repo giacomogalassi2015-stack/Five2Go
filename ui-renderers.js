@@ -10,7 +10,8 @@ window.ristoranteRenderer = (r) => {
     const paesi = window.dbCol(r, 'Paesi') || '';
     const numero = r.Numero || r.Telefono || '';
     const safeObj = encodeURIComponent(JSON.stringify(r)).replace(/'/g, "%27");
-    const mapLink = r.Mappa || `https://www.google.com/maps/search/?api=1&query=$?q=${encodeURIComponent(nome + ' ' + paesi)}`;
+    // FIX: Corretto il link mappe che aveva un errore di sintassi
+    const mapLink = r.Mappa || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nome + ' ' + paesi)}`;
 
     return `
     <div class="restaurant-glass-card"> 
@@ -225,7 +226,7 @@ window.prodottoRenderer = (p) => {
 };
 
 // ============================================================
-// 2. LOGICA MODALE (LA PARTE CHE ERA ROTTA)
+// 2. LOGICA MODALE (CORRETTA)
 // ============================================================
 window.openModal = async function(type, payload) {
     console.log("Opening Modal:", type, payload); // Debug
@@ -240,10 +241,9 @@ window.openModal = async function(type, payload) {
     let modalClass = 'modal-content'; 
     let item = null; 
 
-    // Helper per recuperare l'item dalle liste globali se necessario
+    // Helper per recuperare l'item dalle liste globali
     if (window.currentTableData && (type === 'Vini' || type === 'Attrazioni' || type === 'Spiagge' || type === 'attrazione' || type === 'wine')) {
         item = window.currentTableData.find(i => i.id == payload || i.ID == payload || i.POI_ID == payload);
-        // Fallback per indice numerico
         if (!item && typeof payload === 'number') item = window.currentTableData[payload];
     }
 
@@ -268,24 +268,36 @@ window.openModal = async function(type, payload) {
             </div>`;
     }
 
-    // --- CASO 2: TRASPORTI (Complesso) ---
+    // --- CASO 2: TRASPORTI (CORRETTO RILEVAMENTO) ---
     else if (type === 'transport') {
         const item = window.tempTransportData[payload];
         if (!item) { console.error("Trasporto non trovato"); modal.remove(); return; }
         
+        // Titolo da mostrare
         const nome = window.dbCol(item, 'Nome') || window.dbCol(item, 'Località') || window.dbCol(item, 'Mezzo') || 'Trasporto';
         const desc = window.dbCol(item, 'Descrizione') || '';
         
-        const infoSms = window.dbCol(item, 'Info_SMS');
-        const infoApp = window.dbCol(item, 'Info_App');
-        const infoAvvisi = window.dbCol(item, 'Info_Avvisi');
-        const hasTicketInfo = infoSms || infoApp || infoAvvisi;
-        
-        const isBus = nome.toLowerCase().includes('bus') || nome.toLowerCase().includes('autobus') || nome.toLowerCase().includes('atc');
-        const isTrain = nome.toLowerCase().includes('tren') || nome.toLowerCase().includes('ferrovi') || nome.toLowerCase().includes('stazione');
+        // FIX RILEVAMENTO: Creiamo una stringa unica con tutti i campi per cercare le parole chiave
+        const searchStr = (
+            (window.dbCol(item, 'Nome') || '') + ' ' + 
+            (window.dbCol(item, 'Località') || '') + ' ' + 
+            (window.dbCol(item, 'Mezzo') || '')
+        ).toLowerCase();
+
+        // Rilevamento basato sulla stringa completa
+        const isBus = searchStr.includes('bus') || searchStr.includes('autobus') || searchStr.includes('atc');
+        const isFerry = searchStr.includes('battello') || searchStr.includes('traghetto') || searchStr.includes('navigazione');
+        const isTrain = searchStr.includes('tren') || searchStr.includes('ferrovi') || searchStr.includes('stazione');
+
         let customContent = '';
 
+        // --- INTERFACCIA BUS ---
         if (isBus) {
+            const infoSms = window.dbCol(item, 'Info_SMS');
+            const infoApp = window.dbCol(item, 'Info_App');
+            const infoAvvisi = window.dbCol(item, 'Info_Avvisi');
+            const hasTicketInfo = infoSms || infoApp || infoAvvisi;
+
             let ticketSection = '';
             if (hasTicketInfo) {
                 ticketSection = `
@@ -317,10 +329,8 @@ window.openModal = async function(type, payload) {
                 <div class="bus-title" style="margin-bottom: 0px; padding-bottom: 15px;">
                     <span class="material-icons">directions_bus</span> ${window.t('plan_trip')}
                 </div>
-                
                 ${ticketSection}
                 ${mapToggleSection}
-
                 <div class="bus-inputs">
                     <div style="flex:1;">
                         <label style="font-size:0.7rem; color:#666; font-weight:bold;">${window.t('departure')}</label>
@@ -335,14 +345,11 @@ window.openModal = async function(type, payload) {
                         </select>
                     </div>
                 </div>
-
                 <div class="bus-inputs">
                     <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">${window.t('date_trip')}</label><input type="date" id="selData" class="bus-select" value="${todayISO}"></div>
                     <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">${window.t('time_trip')}</label><input type="time" id="selOra" class="bus-select" value="${nowTime}"></div>
                 </div>
-                
                 <button id="btnSearchBus" onclick="eseguiRicercaBus()" class="btn-yellow" style="width:100%; font-weight:bold; margin-top:5px; opacity: 0.5; pointer-events: none;">${window.t('find_times')}</button>
-                
                 <div id="busResultsContainer" style="display:none; margin-top:20px;">
                     <div id="nextBusCard" class="bus-result-main"></div>
                     <div style="font-size:0.8rem; font-weight:bold; color:#666; margin-top:15px;">${window.t('next_runs')}:</div>
@@ -350,30 +357,81 @@ window.openModal = async function(type, payload) {
                 </div>
             </div>`;
             
-            // Ritarda caricamento fermate
             setTimeout(() => { if(window.loadAllStops) window.loadAllStops(); }, 100);
+        } 
+        
+        // --- INTERFACCIA BATTELLO / TRAGHETTO ---
+        else if (isFerry) {
+            const now = new Date();
+            const todayISO = now.toISOString().split('T')[0];
+            const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
 
-        } else if (isTrain) {
+            customContent = `
+            <div class="bus-search-box animate-fade">
+                <div class="bus-title" style="margin-bottom: 0px; padding-bottom: 15px;">
+                    <span class="material-icons" style="background: linear-gradient(135deg, #0288D1, #0277BD); box-shadow: 0 4px 6px rgba(2, 119, 189, 0.3);">directions_boat</span> 
+                    ${window.t('plan_trip')} (Battello)
+                </div>
+
+                <button onclick="toggleTicketInfo()" style="width:100%; margin-bottom:15px; background:#e1f5fe; color:#01579b; border:1px solid #b3e5fc; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    🎟️ ${window.t('how_to_ticket')} ▾
+                </button>
+                <div id="ticket-info-box" style="display:none; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px; font-size:0.9rem; color:#333; line-height:1.5;">
+                    <p>I biglietti sono acquistabili presso le biglietterie al molo di ogni borgo prima dell'imbarco.</p>
+                    <div style="background:#fff3cd; color:#856404; padding:10px; border-radius:6px; font-size:0.85rem; border:1px solid #ffeeba; margin-top:10px;">
+                        <strong>⚠️ INFO METEO:</strong> In caso di mare mosso il servizio è sospeso.
+                    </div>
+                </div>
+
+                <div class="bus-inputs">
+                    <div style="flex:1;">
+                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">${window.t('departure')}</label>
+                        <select id="selPartenzaFerry" class="bus-select">
+                            <option value="" disabled selected>${window.t('loading')}...</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">${window.t('arrival')}</label>
+                        <select id="selArrivoFerry" class="bus-select">
+                            <option value="" disabled selected>${window.t('select_start')}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bus-inputs">
+                    <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">${window.t('date_trip')}</label><input type="date" id="selDataFerry" class="bus-select" value="${todayISO}"></div>
+                    <div style="flex:1;"><label style="font-size:0.7rem; color:#666; font-weight:bold;">${window.t('time_trip')}</label><input type="time" id="selOraFerry" class="bus-select" value="${nowTime}"></div>
+                </div>
+                
+                <button onclick="eseguiRicercaTraghetto()" class="btn-yellow" style="background: linear-gradient(135deg, #0288D1 0%, #01579b 100%); color:white; width:100%; font-weight:bold; margin-top:5px; box-shadow: 0 10px 25px -5px rgba(2, 136, 209, 0.4);">
+                    ${window.t('find_times')}
+                </button>
+                
+                <div id="ferryResultsContainer" style="display:none; margin-top:20px;">
+                    <div id="nextFerryCard" class="bus-result-main" style="background: linear-gradient(135deg, #0277BD 0%, #01579b 100%); box-shadow: 0 15px 30px -5px rgba(1, 87, 155, 0.3);"></div>
+                    <div style="font-size:0.8rem; font-weight:bold; color:#666; margin-top:15px;">${window.t('next_runs')}:</div>
+                    <div id="otherFerryList" class="bus-list-container"></div>
+                </div>
+            </div>`;
+
+            setTimeout(() => window.initFerrySearch(), 50);
+        }
+        
+        // --- INTERFACCIA TRENO ---
+        else if (isTrain) {
             const now = new Date();
             const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
             if (window.trainSearchRenderer) { customContent = window.trainSearchRenderer(null, nowTime); } 
             else { customContent = "<p>Errore interfaccia Treni.</p>"; }
-        } else {
-            // Caso traghetti/altro
-            if (hasTicketInfo) {
-                 customContent = `
-                 <button onclick="toggleTicketInfo()" style="width:100%; margin-top:15px; background:#e0f7fa; color:#006064; border:1px solid #b2ebf2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">
-                    🎟️ ${window.t('how_to_ticket')}
-                 </button>
-                 <div id="ticket-info-box" style="display:none; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-top:10px;">
-                    ${infoSms ? `<p><strong>SMS:</strong> ${infoSms}</p>` : ''}
-                    ${infoApp ? `<p><strong>APP:</strong> ${infoApp}</p>` : ''}
-                    ${infoAvvisi ? `<p style="color:#856404; background:#fff3cd; padding:5px;">${infoAvvisi}</p>` : ''}
-                 </div>`;
-            } else { customContent = `<div style="text-align:center; padding:30px; background:#f9f9f9; border-radius:12px; margin-top:20px; color:#999;">Info coming soon</div>`; }
+        } 
+        
+        // --- FALLBACK (Se non è nessuno dei precedenti) ---
+        else {
+            customContent = `<p style="color:#666;">${desc}</p>`;
         }
         
-        if (isBus || isTrain) { contentHtml = customContent; } else { contentHtml = `<h2>${nome}</h2><p style="color:#666;">${desc}</p>${customContent}`; }
+        if (isBus || isTrain || isFerry) { contentHtml = customContent; } 
+        else { contentHtml = `<h2>${nome}</h2><p style="color:#666;">${desc}</p>${customContent}`; }
     }
 
     // --- CASO 3: SENTIERI ---
@@ -685,8 +743,6 @@ window.toggleBusMap = function() {
 // 4. Logica ricerca dei mezzi di trasporto
 // ============================================================
 
-
-
 window.trainSearchRenderer = (data, nowTime) => {
     return `
     <div class="bus-search-box animate-fade" style="border-top: 4px solid #c0392b; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); color: white; border-radius: 20px;">
@@ -808,7 +864,7 @@ window.filterDestinations = async function(startId) {
     }
 };
 
-// 3. ESECUZIONE RICERCA ORARI
+// 3. ESECUZIONE RICERCA ORARI BUS
 window.eseguiRicercaBus = async function() {
     const selPartenza = document.getElementById('selPartenza');
     const selArrivo = document.getElementById('selArrivo');
@@ -883,4 +939,132 @@ window.eseguiRicercaBus = async function() {
     
     // Autoscroll
     setTimeout(() => { resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
+};
+
+// ============================================================
+// 5. LOGICA RICERCA TRAGHETTI (Battello) - FIXATO
+// ============================================================
+
+// Assicuriamoci che FERRY_STOPS sia disponibile qui per evitare errori di riferimento
+const FERRY_STOPS_UI = [
+    { id: 'levanto', label: 'Levanto' },
+    { id: 'monterosso', label: 'Monterosso' },
+    { id: 'vernazza', label: 'Vernazza' },
+    { id: 'corniglia', label: 'Corniglia' },
+    { id: 'manarola', label: 'Manarola' },
+    { id: 'riomaggiore', label: 'Riomaggiore' },
+    { id: 'portovenere', label: 'Portovenere' },
+    { id: 'la spezia', label: 'La Spezia' },
+    { id: 'lerici', label: 'Lerici' }
+];
+
+window.initFerrySearch = function() {
+    const selPart = document.getElementById('selPartenzaFerry');
+    const selArr = document.getElementById('selArrivoFerry');
+    if (!selPart || !selArr) return;
+
+    // Popola Partenza (Tutte le fermate)
+    selPart.innerHTML = `<option value="" disabled selected>${window.t('select_placeholder')}</option>` + 
+        FERRY_STOPS_UI.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+
+    // Listener: Quando cambio partenza, abilito arrivo
+    selPart.addEventListener('change', function() {
+        const startVal = this.value;
+        // Filtra destinazioni (tutte tranne la partenza)
+        const destOpts = FERRY_STOPS_UI.filter(s => s.id !== startVal);
+        
+        selArr.innerHTML = `<option value="" disabled selected>${window.t('select_placeholder')}</option>` + 
+            destOpts.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+        selArr.disabled = false;
+    });
+};
+
+window.eseguiRicercaTraghetto = async function() {
+    const selPart = document.getElementById('selPartenzaFerry');
+    const selArr = document.getElementById('selArrivoFerry');
+    const selOra = document.getElementById('selOraFerry');
+
+    const resultsContainer = document.getElementById('ferryResultsContainer');
+    const nextCard = document.getElementById('nextFerryCard');
+    const list = document.getElementById('otherFerryList');
+
+    if (!selPart.value || !selArr.value || !selOra.value) return;
+
+    // UI Loading
+    resultsContainer.style.display = 'block';
+    nextCard.innerHTML = `<div style="text-align:center; padding:20px;">${window.t('loading')} <span class="material-icons spin">sync</span></div>`;
+    list.innerHTML = '';
+
+    const startCol = selPart.value; // es. 'monterosso'
+    const endCol = selArr.value;    // es. 'vernazza'
+    const timeFilter = selOra.value; // es. '14:30'
+
+    // 1. Fetch Dati (Prendiamo tutto e filtriamo in JS per semplicità)
+    // Selezioniamo solo le colonne che ci interessano + id
+    const { data, error } = await window.supabaseClient
+        .from('Orari_traghetti')
+        .select(`id, direzione, validita, "${startCol}", "${endCol}"`); 
+
+    if (error || !data) {
+        nextCard.innerHTML = `<p style="padding:15px; text-align:center;">${window.t('error')}: ${error ? error.message : 'Nessun dato'}</p>`;
+        return;
+    }
+
+    // 2. Filtro Logico JS
+    let validRuns = data.filter(row => {
+        const tStart = row[startCol]; // Orario partenza
+        const tEnd = row[endCol];     // Orario arrivo
+
+        // A. Devono esistere entrambi gli orari (il battello ferma in entrambi)
+        if (!tStart || !tEnd) return false;
+
+        // B. Controllo orario: L'orario di partenza deve essere minore dell'arrivo
+        // (Questo gestisce implicitamente la Direzione Andata/Ritorno senza guardare la colonna 'direzione')
+        if (tStart >= tEnd) return false;
+
+        // C. Filtro orario utente: La partenza deve essere futura rispetto alla selezione
+        if (tStart < timeFilter) return false;
+
+        return true;
+    });
+
+    // 3. Ordinamento (Per orario di partenza)
+    validRuns.sort((a, b) => a[startCol].localeCompare(b[startCol]));
+
+    // 4. Render Risultati
+    if (validRuns.length === 0) {
+        nextCard.innerHTML = `
+            <div style="text-align:center; padding:15px; color:#c62828;">
+                <span class="material-icons">directions_boat_filled</span><br>
+                <strong>${window.t('bus_not_found')}</strong><br>
+                <small style="display:block; margin-top:5px;">Verifica che la tratta sia diretta.</small>
+            </div>`;
+        return;
+    }
+
+    // Primo Risultato (Highlight)
+    const primo = validRuns[0];
+    nextCard.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <span style="font-size:0.75rem; color:#e1f5fe; text-transform:uppercase; font-weight:bold;">${window.t('next_departure')}</span>
+            <span class="badge-weekday" style="background:#0288D1">Navigazione</span>
+        </div>
+        <div class="bus-time-big">${primo[startCol].slice(0,5)}</div>
+        <div style="font-size:1rem; color:#e1f5fe;">${window.t('arrival')}: <strong>${primo[endCol].slice(0,5)}</strong></div>
+        <div style="font-size:0.75rem; color:#b3e5fc; margin-top:5px;">Direzione: ${primo.direzione || '--'}</div>
+    `;
+
+    // Lista successivi
+    const successivi = validRuns.slice(1);
+    list.innerHTML = successivi.map(run => `
+        <div class="bus-list-item">
+            <span style="font-weight:bold; color:#01579b;">${run[startCol].slice(0,5)}</span>
+            <span style="color:#666;">➜ ${run[endCol].slice(0,5)}</span>
+        </div>
+    `).join('');
+
+    // Autoscroll
+    setTimeout(() => { 
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+    }, 150);
 };

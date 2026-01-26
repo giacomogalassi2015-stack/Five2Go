@@ -194,7 +194,7 @@ const UI_TEXT = {
     zh: {
         loading: "加载中...", error: "错误", no_results: "无结果",
         home_title: "欢迎", nav_villages: "村庄", nav_food: "美食", nav_outdoor: "户外", nav_services: "服务",
-        menu_prod: "产品", menu_rest: "餐厅", menu_trail: "步道", menu_beach: "海滩", menu_wine: "葡萄酒",
+        menu_prod: "产品", menu_rest: "餐厅", menu_trail: "步道", menu_beach: "海滩", 
         menu_trans: "交通", menu_num: "常用号码", menu_pharm: "药房", menu_map: "地图", menu_monu: "景点",
         footer_rights: "版权所有。",
         filter_title: "筛选", filter_all: "全部", show_results: "显示结果", 
@@ -223,6 +223,17 @@ const UI_TEXT = {
         welcome_app_name: "5 Terre Guide", welcome_desc: "探索五渔村的必备指南。"
     }
 };
+const FERRY_STOPS = [
+    { id: 'levanto', label: 'Levanto' },
+    { id: 'monterosso', label: 'Monterosso' },
+    { id: 'vernazza', label: 'Vernazza' },
+    { id: 'corniglia', label: 'Corniglia' },
+    { id: 'manarola', label: 'Manarola' },
+    { id: 'riomaggiore', label: 'Riomaggiore' },
+    { id: 'portovenere', label: 'Portovenere' },
+    { id: 'la spezia', label: 'La Spezia' },
+    { id: 'lerici', label: 'Lerici' }
+];
 
 // 5. HELPER FUNCTIONS GLOBALI
 window.t = function(key) {
@@ -349,56 +360,3 @@ function isItalianHoliday(dateObj) {
     
     return false;
 }
-// 6. MOTORE DI RICERCA BUS (Cervello)
-// =========================================================
-window.eseguiRicercaBus = async function() {
-    // ... (Recupero dati) ...
-    const resultsContainer = document.getElementById('busResultsContainer');
-    const nextCard = document.getElementById('nextBusCard');
-    
-    // ... (Validazione e isFestivo) ...
-
-    const dayTypeLabel = isFestivo 
-        ? `<span class="badge-holiday">${window.t('badge_holiday')}</span>` 
-        : `<span class="badge-weekday">${window.t('badge_weekday')}</span>`;
-
-    const { data, error } = await window.supabaseClient.rpc('trova_bus', { /* ... */ });
-
-    if (!data || data.length === 0) { 
-        nextCard.innerHTML = `
-            <div style="text-align:center; padding:15px; color:#c62828;">
-                <span class="material-icons">event_busy</span><br>
-                <strong>${window.t('bus_not_found')}</strong><br>
-                <div style="margin-top:5px;">${dayTypeLabel}</div>
-                <small style="display:block; margin-top:5px;">${window.t('bus_try_change')}</small>
-            </div>`; 
-        return; 
-    }
-
-    const primo = data[0];
-    nextCard.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-            <span style="font-size:0.75rem; color:#e0f7fa; text-transform:uppercase; font-weight:bold;">${window.t('next_departure')}</span>
-            ${dayTypeLabel}
-        </div>
-        <div class="bus-time-big">${primo.ora_partenza.slice(0,5)}</div>
-        <div style="font-size:1rem; color:#e0f7fa;">${window.t('arrival')}: <strong>${primo.ora_arrivo.slice(0,5)}</strong></div>
-        <div style="font-size:0.8rem; color:#b2ebf2; margin-top:5px;">${primo.nome_linea || 'Linea ATC'}</div>
-    `;
-
-    const successivi = data.slice(1);
-    list.innerHTML = successivi.map(b => `
-        <div class="bus-list-item">
-            <span style="font-weight:bold; color:#333;">${b.ora_partenza.slice(0,5)}</span>
-            <span style="color:#666;">➜ ${b.ora_arrivo.slice(0,5)}</span>
-        </div>
-    `).join('');
-
-    // === 3. NUOVO CODICE PER AUTOSCROLL ===
-    setTimeout(() => {
-        resultsContainer.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' // Cerca di mettere l'inizio del box in alto
-        });
-    }, 150); // Ritardo leggero per permettere al browser di disegnare il box
-};
