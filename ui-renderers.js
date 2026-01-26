@@ -681,6 +681,11 @@ window.toggleBusMap = function() {
         btn.style.backgroundColor = '#EDE7F6'; 
     }
 };
+// ============================================================
+// 4. Logica ricerca dei mezzi di trasporto
+// ============================================================
+
+
 
 window.trainSearchRenderer = (data, nowTime) => {
     return `
@@ -710,4 +715,172 @@ window.trainSearchRenderer = (data, nowTime) => {
         </button>
         <p style="font-size:0.75rem; text-align:center; color:#888; margin-top:10px;">${window.t('check_site')}</p>
     </div>`;
+};
+
+// 1. CARICAMENTO INIZIALE (Fermate e Mappa)
+window.loadAllStops = async function() {
+    const selPart = document.getElementById('selPartenza');
+    if(!selPart) return;
+
+    // Se non abbiamo la cache, scarichiamo dal DB
+    if (!window.cachedStops) {
+        // Nota: Scarichiamo LAT e LONG per la mappa
+        const { data, error } = await window.supabaseClient
+            .from('Fermate_bus')
+            .select('ID, NOME_FERMATA, LAT, LONG') 
+            .order('NOME_FERMATA', { ascending: true });
+        
+        if (error) { console.error("Errore fermate:", error); return; }
+        window.cachedStops = data;
+    }
+
+    // Popola il menu a tendina
+    const options = window.cachedStops.map(f => `<option value="${f.ID}">${f.NOME_FERMATA}</option>`).join('');
+    selPart.innerHTML = `<option value="" disabled selected>${window.t('select_placeholder')}</option>` + options;
+
+    // *** PUNTO CRUCIALE: INIZIALIZZA LA MAPPA ***
+    // Ora che abbiamo i dati (LAT/LONG), creiamo i pin sulla mappa
+    if (window.cachedStops && window.initBusMap) {
+        window.initBusMap(window.cachedStops);
+    }
+};
+
+// 2. FILTRO DESTINAZIONI (Quando selezioni la partenza)
+window.filterDestinations = async function(startId) {
+    const selArr = document.getElementById('selArrivo');
+    const btnSearch = document.getElementById('btnSearchBus');
+    
+    if(!startId || !selArr) return;
+
+    // Feedback UI
+    selArr.innerHTML = `<option>${window.t('bus_searching')}</option>`;
+    selArr.disabled = true;
+    btnSearch.style.opacity = '0.5';
+    btnSearch.style.pointerEvents = 'none';
+
+    try {
+        // Trova le corse che passano per la fermata di partenza
+        const { data: corsePassanti } = await window.supabaseClient
+            .from('Orari_bus')
+            .select('ID_CORSA')
+            .eq('ID_FERMATA', startId);
+        
+        const runIds = corsePassanti.map(c => c.ID_CORSA);
+        
+        if (runIds.length === 0) {
+            selArr.innerHTML = `<option disabled>${window.t('bus_no_conn')}</option>`;
+            return;
+        }
+
+        // Trova le altre fermate di quelle corse
+        const { data: fermateCollegate } = await window.supabaseClient
+            .from('Orari_bus')
+            .select('ID_FERMATA')
+            .in('ID_CORSA', runIds);
+
+        // Filtra ID unici escludendo la partenza
+        const destIds = [...new Set(fermateCollegate.map(x => x.ID_FERMATA))].filter(id => id != startId);
+
+        // Recupera i nomi dalla cache locale
+        let validDestinations = [];
+        if (window.cachedStops) {
+            validDestinations = window.cachedStops.filter(s => destIds.includes(s.ID));
+        }
+
+        // Popola Select Arrivo
+        if (validDestinations.length > 0) {
+            validDestinations.sort((a, b) => a.NOME_FERMATA.localeCompare(b.NOME_FERMATA));
+            
+            selArr.innerHTML = `<option value="" disabled selected>${window.t('select_placeholder')}</option>` + 
+                               validDestinations.map(f => `<option value="${f.ID}">${f.NOME_FERMATA}</option>`).join('');
+            selArr.disabled = false;
+            
+            // Riattiva bottone cerca
+            btnSearch.style.opacity = '1';
+            btnSearch.style.pointerEvents = 'auto';
+        } else {
+            selArr.innerHTML = `<option disabled>${window.t('bus_no_dest')}</option>`;
+        }
+
+    } catch (err) {
+        console.error(err);
+        selArr.innerHTML = `<option>${window.t('error')}</option>`;
+    }
+};
+
+// 3. ESECUZIONE RICERCA ORARI
+window.eseguiRicercaBus = async function() {
+    const selPartenza = document.getElementById('selPartenza');
+    const selArrivo = document.getElementById('selArrivo');
+    const selData = document.getElementById('selData');
+    const selOra = document.getElementById('selOra');
+    const nextCard = document.getElementById('nextBusCard');
+    const list = document.getElementById('otherBusList');
+    const resultsContainer = document.getElementById('busResultsContainer');
+
+    if (!selPartenza || !selArrivo || !selData || !selOra) return;
+
+    const partenzaId = parseInt(selPartenza.value);
+    const arrivoId = parseInt(selArrivo.value);
+    const dataScelta = selData.value;
+    const oraScelta = selOra.value;
+
+    if (!partenzaId || !arrivoId) return;
+
+    // UI Loading
+    resultsContainer.style.display = 'block';
+    nextCard.innerHTML = `<div style="text-align:center; padding:20px;">${window.t('loading')} <span class="material-icons spin">sync</span></div>`;
+    list.innerHTML = '';
+
+    // Calcolo Festivo
+    const parts = dataScelta.split('-');
+    const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    // Usa la funzione helper definita in data-logic.js (assicurati che esista o copiala qui se serve)
+    const isFestivo = (typeof isItalianHoliday === 'function') ? isItalianHoliday(dateObj) : (dateObj.getDay() === 0);
+
+    const dayTypeLabel = isFestivo 
+        ? `<span class="badge-holiday">${window.t('badge_holiday')}</span>` 
+        : `<span class="badge-weekday">${window.t('badge_weekday')}</span>`;
+
+    // Chiamata RPC
+    const { data, error } = await window.supabaseClient.rpc('trova_bus', { 
+        p_partenza_id: partenzaId, 
+        p_arrivo_id: arrivoId, 
+        p_orario_min: oraScelta, 
+        p_is_festivo: isFestivo 
+    });
+
+    if (error || !data || data.length === 0) { 
+        nextCard.innerHTML = `
+            <div style="text-align:center; padding:15px; color:#c62828;">
+                <span class="material-icons">event_busy</span><br>
+                <strong>${window.t('bus_not_found')}</strong><br>
+                <div style="margin-top:5px;">${dayTypeLabel}</div>
+                <small style="display:block; margin-top:5px;">${window.t('bus_try_change')}</small>
+            </div>`; 
+        return; 
+    }
+
+    // Risultati
+    const primo = data[0];
+    nextCard.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <span style="font-size:0.75rem; color:#e0f7fa; text-transform:uppercase; font-weight:bold;">${window.t('next_departure')}</span>
+            ${dayTypeLabel}
+        </div>
+        <div class="bus-time-big">${primo.ora_partenza.slice(0,5)}</div>
+        <div style="font-size:1rem; color:#e0f7fa;">${window.t('arrival')}: <strong>${primo.ora_arrivo.slice(0,5)}</strong></div>
+        <div style="font-size:0.8rem; color:#b2ebf2; margin-top:5px;">${primo.nome_linea || 'Linea ATC'}</div>
+    `;
+
+    const successivi = data.slice(1);
+    list.innerHTML = successivi.map(b => `
+        <div class="bus-list-item">
+            <span style="font-weight:bold; color:#333;">${b.ora_partenza.slice(0,5)}</span>
+            <span style="color:#666;">➜ ${b.ora_arrivo.slice(0,5)}</span>
+        </div>
+    `).join('');
+    
+    // Autoscroll
+    setTimeout(() => { resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
 };
