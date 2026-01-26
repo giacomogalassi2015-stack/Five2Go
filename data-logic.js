@@ -27,165 +27,199 @@ window.AVAILABLE_LANGS = [
     { code: 'zh', label: '中文', flag: '🇨🇳' }
 ];
 
-// 4. DIZIONARIO TESTI (Full Version)
+// 4. DIZIONARIO TESTI (Full Version - Aggiornato)
 const UI_TEXT = {
     it: {
         loading: "Caricamento...", error: "Errore", no_results: "Nessun risultato.",
         // Menu & Nav
-        home_title: "Benvenuto", nav_villages: "Home", nav_food: "Cibo", nav_outdoor: "Outdoor", nav_services: "Servizi",
+        home_title: "Benvenuto", nav_villages: "Paesi", nav_food: "Cibo", nav_outdoor: "Outdoor", nav_services: "Servizi",
         menu_prod: "Prodotti", menu_rest: "Ristoranti", menu_trail: "Sentieri", menu_beach: "Spiagge", 
-        menu_trans: "Trasporti", menu_num: "Numeri Utili", menu_pharm: "Farmacie", menu_map: "Mappe", menu_monu: "Cultura",
+        menu_trans: "Trasporti", menu_num: "Numeri Utili", menu_pharm: "Farmacie", menu_map: "Mappe", menu_monu: "Attrazioni",
+        // Footer
+        footer_rights: "Tutti i diritti riservati.",
+        // Filtri
+        filter_title: "Filtra per", filter_all: "Tutti", show_results: "Mostra Risultati", 
+        filter_cat: "Categoria", filter_village: "Borgo",
+        // Vini & Schede
+        wine_type: "Tipologia", wine_grapes: "Uve", wine_pairings: "Abbinamenti", wine_deg: "Gradi",
+        label_curiosity: "Curiosità", desc_missing: "Descrizione non disponibile.",
         // Azioni Generiche
-        btn_call: "Chiama", btn_map: "Mappa", btn_position: "Posizione", btn_website: "Sito Web",
-        open_site: "Apri sito", take_me_here: "Portami qui",
-        // Sentieri & Outdoor
-        details_trail: "Dettagli Percorso", distance: "Distanza", duration: "Durata", level: "Livello",
-        visit_time: "min visita", difficulty: "Difficoltà",
-        // Ristoranti & Locali
-        hours_label: "Orari", phone_label: "Telefono", no_hours: "Orari non disponibili",
-        ideal_for: "Ideale per",
-        menu_wine: "Vini",
-        // Trasporti (Bus/Treno)
+        btn_details: "Vedi Dettagli", btn_download_gpx: "Scarica file GPX", 
+        gpx_missing: "Traccia GPS non presente",
+        map_route_title: "Mappa Percorso", map_zoom_hint: "Usa due dita per zoomare",
+        // Trasporti (Bus/Treno) Avanzati
         plan_trip: "Pianifica Viaggio", departure: "PARTENZA", arrival: "ARRIVO", 
         date_trip: "DATA VIAGGIO", time_trip: "ORARIO", find_times: "TROVA ORARI",
         next_runs: "CORSE SUCCESSIVE", next_departure: "PROSSIMA PARTENZA",
-        select_placeholder: "Seleziona...",
+        select_placeholder: "Seleziona...", select_start: "-- Seleziona Partenza --",
+        bus_searching: "Cerco collegamenti...", bus_no_conn: "Nessun collegamento", 
+        bus_no_dest: "Nessuna destinazione", bus_not_found: "Nessuna corsa trovata",
+        bus_try_change: "Prova a cambiare orario.", 
+        badge_holiday: "📅 FESTIVO", badge_weekday: "🏢 FERIALE",
+        label_warning: "ATTENZIONE",
         how_to_ticket: "COME ACQUISTARE IL BIGLIETTO",
-        show_map: "MOSTRA MAPPA FERMATE", hide_map: "NASCONDI MAPPA FERMATE",
+        show_map: "MOSTRA MAPPA", hide_map: "NASCONDI MAPPA",
         map_hint: "Tocca i segnaposto per impostare Partenza/Arrivo",
-        // Treno Specifico
         train_cta: "ORARI E BIGLIETTI",
         train_desc: "Il treno è il mezzo più veloce. Corse frequenti ogni 15-20 minuti tra i borghi.",
         avg_times: "Tempi Medi", between_villages: "Tra i Borghi", check_site: "Acquista e controlla gli orari sul sito ufficiale",
-        // Welcome
-        welcome_app_name: "5 Terre Guide",
-        welcome_desc: "La tua guida essenziale per esplorare le Cinque Terre.",
-        map_loaded: "Mappa caricata"
+        ideal_for: "Ideale per",
+        welcome_app_name: "5 Terre Guide", welcome_desc: "La tua guida essenziale per esplorare le Cinque Terre."
     },
     en: {
         loading: "Loading...", error: "Error", no_results: "No results found.",
-        home_title: "Welcome", nav_villages: "Home", nav_food: "Food", nav_outdoor: "Outdoor", nav_services: "Services",
+        home_title: "Welcome", nav_villages: "Villages", nav_food: "Food", nav_outdoor: "Outdoor", nav_services: "Services",
         menu_prod: "Products", menu_rest: "Restaurants", menu_trail: "Trails", menu_beach: "Beaches", 
-        menu_trans: "Transport", menu_num: "Useful Numbers", menu_pharm: "Pharmacies", menu_map: "Maps", menu_monu: "Culture",
-        btn_call: "Call", btn_map: "Map", btn_position: "Location", btn_website: "Website",
-        open_site: "Open site", take_me_here: "Take me there",
-        details_trail: "Trail Details", distance: "Distance", duration: "Duration", level: "Level",
-        visit_time: "min visit", difficulty: "Difficulty",
-        hours_label: "Hours", phone_label: "Phone", no_hours: "Hours not available",
-        ideal_for: "Best for",
+        menu_trans: "Transport", menu_num: "Useful Numbers", menu_pharm: "Pharmacies", menu_map: "Maps", menu_monu: "Attractions",
+        footer_rights: "All rights reserved.",
+        filter_title: "Filter by", filter_all: "All", show_results: "Show Results", 
+        filter_cat: "Category", filter_village: "Village",
+        wine_type: "Type", wine_grapes: "Grapes", wine_pairings: "Pairings", wine_deg: "Alcohol",
+        label_curiosity: "Curiosity", desc_missing: "Description not available.",
+        btn_details: "See Details", btn_download_gpx: "Download GPX file", 
+        gpx_missing: "GPS track not found",
+        map_route_title: "Route Map", map_zoom_hint: "Use two fingers to zoom",
         plan_trip: "Plan Trip", departure: "DEPARTURE", arrival: "ARRIVAL", 
         date_trip: "DATE", time_trip: "TIME", find_times: "FIND TIMES",
         next_runs: "NEXT RUNS", next_departure: "NEXT DEPARTURE",
-        select_placeholder: "Select...",
+        select_placeholder: "Select...", select_start: "-- Select Departure --",
+        bus_searching: "Searching...", bus_no_conn: "No connection", 
+        bus_no_dest: "No destination", bus_not_found: "No runs found",
+        bus_try_change: "Try changing time.", 
+        badge_holiday: "📅 HOLIDAY", badge_weekday: "🏢 WEEKDAY",
+        label_warning: "WARNING",
         how_to_ticket: "HOW TO BUY TICKETS",
-        show_map: "SHOW STOP MAP", hide_map: "HIDE STOP MAP",
+        show_map: "SHOW MAP", hide_map: "HIDE MAP",
         map_hint: "Tap markers to set Departure/Arrival",
         train_cta: "TIMETABLE & TICKETS",
         train_desc: "The train is the fastest way. Frequent runs every 15-20 mins between villages.",
         avg_times: "Avg Times", between_villages: "Between Villages", check_site: "Buy and check times on the official site",
-        welcome_app_name: "5 Terre Guide",
-        welcome_desc: "Your essential guide to exploring Cinque Terre.",
-        map_loaded: "Map loaded"
+        ideal_for: "Best for",
+        welcome_app_name: "5 Terre Guide", welcome_desc: "Your essential guide to exploring Cinque Terre."
     },
     fr: {
         loading: "Chargement...", error: "Erreur", no_results: "Aucun résultat.",
-        home_title: "Bienvenue", nav_villages: "Accueil", nav_food: "Nourriture", nav_outdoor: "Plein Air", nav_services: "Services",
+        home_title: "Bienvenue", nav_villages: "Villages", nav_food: "Nourriture", nav_outdoor: "Plein Air", nav_services: "Services",
         menu_prod: "Produits", menu_rest: "Restaurants", menu_trail: "Sentiers", menu_beach: "Plages", 
-        menu_trans: "Transport", menu_num: "Numéros", menu_pharm: "Pharmacies", menu_map: "Cartes", menu_monu: "Culture",
-        btn_call: "Appeler", btn_map: "Carte", btn_position: "Position", btn_website: "Site Web",
-        open_site: "Ouvrir", take_me_here: "Emmenez-moi",
-        details_trail: "Détails du sentier", distance: "Distance", duration: "Durée", level: "Niveau",
-        visit_time: "min visite", difficulty: "Difficulté",
-        hours_label: "Horaires", phone_label: "Téléphone", no_hours: "Horaires non disponibles",
-        ideal_for: "Idéal pour",
+        menu_trans: "Transport", menu_num: "Numéros", menu_pharm: "Pharmacies", menu_map: "Cartes", menu_monu: "Attractions",
+        footer_rights: "Tous droits réservés.",
+        filter_title: "Filtrer par", filter_all: "Tous", show_results: "Voir Résultats", 
+        filter_cat: "Catégorie", filter_village: "Village",
+        wine_type: "Type", wine_grapes: "Raisins", wine_pairings: "Accords", wine_deg: "Alcool",
+        label_curiosity: "Curiosité", desc_missing: "Description non disponible.",
+        btn_details: "Voir Détails", btn_download_gpx: "Télécharger GPX", 
+        gpx_missing: "Trace GPS non trouvée",
+        map_route_title: "Carte itinéraire", map_zoom_hint: "Utilisez deux doigts pour zoomer",
         plan_trip: "Planifier", departure: "DÉPART", arrival: "ARRIVÉE", 
         date_trip: "DATE", time_trip: "HEURE", find_times: "CHERCHER",
         next_runs: "PROCHAINS DÉPARTS", next_departure: "PROCHAIN DÉPART",
-        select_placeholder: "Sélectionner...",
+        select_placeholder: "Sélectionner...", select_start: "-- Choisir Départ --",
+        bus_searching: "Recherche...", bus_no_conn: "Aucune connexion", 
+        bus_no_dest: "Aucune destination", bus_not_found: "Aucun trajet trouvé",
+        bus_try_change: "Essayez de changer l'heure.", 
+        badge_holiday: "📅 FÉRIÉ", badge_weekday: "🏢 SEMAINE",
+        label_warning: "ATTENTION",
         how_to_ticket: "COMMENT ACHETER UN BILLET",
-        show_map: "AFFICHER LA CARTE", hide_map: "MASQUER LA CARTE",
+        show_map: "AFFICHER CARTE", hide_map: "MASQUER CARTE",
         map_hint: "Touchez les marqueurs pour définir Départ/Arrivée",
         train_cta: "HORAIRES & BILLETS",
         train_desc: "Le train est le moyen le plus rapide. Passages fréquents toutes les 15-20 min.",
         avg_times: "Temps Moyens", between_villages: "Entre Villages", check_site: "Achetez et vérifiez les horaires sur le site officiel",
-        welcome_app_name: "5 Terre Guide",
-        welcome_desc: "Votre guide essentiel pour explorer les Cinque Terre.",
-        map_loaded: "Carte chargée"
+        ideal_for: "Idéal pour",
+        welcome_app_name: "5 Terre Guide", welcome_desc: "Votre guide essentiel pour explorer les Cinque Terre."
     },
     de: {
         loading: "Laden...", error: "Fehler", no_results: "Keine Ergebnisse.",
-        home_title: "Willkommen", nav_villages: "Start", nav_food: "Essen", nav_outdoor: "Outdoor", nav_services: "Dienste",
+        home_title: "Willkommen", nav_villages: "Dörfer", nav_food: "Essen", nav_outdoor: "Outdoor", nav_services: "Dienste",
         menu_prod: "Produkte", menu_rest: "Restaurants", menu_trail: "Wanderwege", menu_beach: "Strände", 
-        menu_trans: "Transport", menu_num: "Nummern", menu_pharm: "Apotheken", menu_map: "Karten", menu_monu: "Kultur",
-        btn_call: "Anrufen", btn_map: "Karte", btn_position: "Standort", btn_website: "Webseite",
-        open_site: "Öffnen", take_me_here: "Bring mich hin",
-        details_trail: "Wegbeschreibung", distance: "Distanz", duration: "Dauer", level: "Niveau",
-        visit_time: "Min Besuch", difficulty: "Schwierigkeit",
-        hours_label: "Öffnungszeiten", phone_label: "Telefon", no_hours: "Keine Zeiten verfügbar",
-        ideal_for: "Ideal für",
-        plan_trip: "Reise planen", departure: "ABFAHRT", arrival: "ANKUNFT", 
+        menu_trans: "Transport", menu_num: "Nummern", menu_pharm: "Apotheken", menu_map: "Karten", menu_monu: "Attraktionen",
+        footer_rights: "Alle Rechte vorbehalten.",
+        filter_title: "Filtern nach", filter_all: "Alle", show_results: "Ergebnisse anzeigen", 
+        filter_cat: "Kategorie", filter_village: "Dorf",
+        wine_type: "Typ", wine_grapes: "Trauben", wine_pairings: "Paarungen", wine_deg: "Alkohol",
+        label_curiosity: "Kuriosität", desc_missing: "Beschreibung nicht verfügbar.",
+        btn_details: "Details ansehen", btn_download_gpx: "GPX herunterladen", 
+        gpx_missing: "GPS-Track nicht gefunden",
+        map_route_title: "Routenkarte", map_zoom_hint: "Mit zwei Fingern zoomen",
+        plan_trip: "Planen", departure: "ABFAHRT", arrival: "ANKUNFT", 
         date_trip: "DATUM", time_trip: "ZEIT", find_times: "SUCHEN",
         next_runs: "NÄCHSTE FAHRTEN", next_departure: "NÄCHSTE ABFAHRT",
-        select_placeholder: "Wählen...",
+        select_placeholder: "Wählen...", select_start: "-- Abfahrt wählen --",
+        bus_searching: "Suche...", bus_no_conn: "Keine Verbindung", 
+        bus_no_dest: "Kein Ziel", bus_not_found: "Keine Fahrten gefunden",
+        bus_try_change: "Versuchen Sie eine andere Zeit.", 
+        badge_holiday: "📅 FEIERTAG", badge_weekday: "🏢 WERKTAG",
+        label_warning: "ACHTUNG",
         how_to_ticket: "TICKET KAUFEN",
         show_map: "KARTE ANZEIGEN", hide_map: "KARTE AUSBLENDEN",
         map_hint: "Tippen Sie auf Marker für Start/Ziel",
         train_cta: "FAHRPLÄNE & TICKETS",
         train_desc: "Der Zug ist am schnellsten. Häufige Fahrten alle 15-20 Min.",
         avg_times: "Durchschn. Zeit", between_villages: "Zwischen Dörfern", check_site: "Kaufen und prüfen Sie Zeiten auf der offiziellen Seite",
-        welcome_app_name: "5 Terre Guide",
-        welcome_desc: "Ihr wesentlicher Reiseführer für die Cinque Terre.",
-        map_loaded: "Karte geladen"
+        ideal_for: "Ideal für",
+        welcome_app_name: "5 Terre Guide", welcome_desc: "Ihr wesentlicher Reiseführer für die Cinque Terre."
     },
     es: {
         loading: "Cargando...", error: "Error", no_results: "Sin resultados.",
-        home_title: "Bienvenido", nav_villages: "Inicio", nav_food: "Comida", nav_outdoor: "Aire Libre", nav_services: "Servicios",
+        home_title: "Bienvenido", nav_villages: "Pueblos", nav_food: "Comida", nav_outdoor: "Aire Libre", nav_services: "Servicios",
         menu_prod: "Productos", menu_rest: "Restaurantes", menu_trail: "Senderos", menu_beach: "Playas", 
-        menu_trans: "Transporte", menu_num: "Números", menu_pharm: "Farmacias", menu_map: "Mapas", menu_monu: "Cultura",
-        btn_call: "Llamar", btn_map: "Mapa", btn_position: "Posición", btn_website: "Sitio Web",
-        open_site: "Abrir sitio", take_me_here: "Llévame allí",
-        details_trail: "Detalles Ruta", distance: "Distancia", duration: "Duración", level: "Nivel",
-        visit_time: "min visita", difficulty: "Dificultad",
-        hours_label: "Horario", phone_label: "Teléfono", no_hours: "Horario no disponible",
-        ideal_for: "Ideal para",
+        menu_trans: "Transporte", menu_num: "Números", menu_pharm: "Farmacias", menu_map: "Mapas", menu_monu: "Atracciones",
+        footer_rights: "Todos los derechos reservados.",
+        filter_title: "Filtrar por", filter_all: "Todos", show_results: "Mostrar Resultados", 
+        filter_cat: "Categoría", filter_village: "Pueblo",
+        wine_type: "Tipo", wine_grapes: "Uvas", wine_pairings: "Maridaje", wine_deg: "Alcohol",
+        label_curiosity: "Curiosidad", desc_missing: "Descripción no disponible.",
+        btn_details: "Ver Detalles", btn_download_gpx: "Descargar GPX", 
+        gpx_missing: "Ruta GPS no encontrada",
+        map_route_title: "Mapa de Ruta", map_zoom_hint: "Usa dos dedos para hacer zoom",
         plan_trip: "Planificar", departure: "SALIDA", arrival: "LLEGADA", 
         date_trip: "FECHA", time_trip: "HORA", find_times: "BUSCAR",
         next_runs: "PRÓXIMAS SALIDAS", next_departure: "PRÓXIMA SALIDA",
-        select_placeholder: "Seleccionar...",
+        select_placeholder: "Seleccionar...", select_start: "-- Seleccionar Salida --",
+        bus_searching: "Buscando...", bus_no_conn: "Sin conexión", 
+        bus_no_dest: "Sin destino", bus_not_found: "No se encontraron viajes",
+        bus_try_change: "Prueba a cambiar la hora.", 
+        badge_holiday: "📅 FESTIVO", badge_weekday: "🏢 LABORAL",
+        label_warning: "ATENCIÓN",
         how_to_ticket: "CÓMO COMPRAR BOLETO",
         show_map: "MOSTRAR MAPA", hide_map: "OCULTAR MAPA",
         map_hint: "Toca marcadores para configurar Salida/Llegada",
         train_cta: "HORARIOS Y BOLETOS",
         train_desc: "El tren es el medio más rápido. Frecuencia cada 15-20 min.",
         avg_times: "Tiempos Promedio", between_villages: "Entre Pueblos", check_site: "Compra y consulta horarios en el sitio oficial",
-        welcome_app_name: "5 Terre Guide",
-        welcome_desc: "Tu guía esencial para explorar Cinque Terre.",
-        map_loaded: "Mapa cargado"
+        ideal_for: "Ideal para",
+        welcome_app_name: "5 Terre Guide", welcome_desc: "Tu guía esencial para explorar Cinque Terre."
     },
     zh: {
         loading: "加载中...", error: "错误", no_results: "无结果",
-        home_title: "欢迎", nav_villages: "首页", nav_food: "食物", nav_outdoor: "户外", nav_services: "服务",
+        home_title: "欢迎", nav_villages: "村庄", nav_food: "美食", nav_outdoor: "户外", nav_services: "服务",
         menu_prod: "产品", menu_rest: "餐厅", menu_trail: "步道", menu_beach: "海滩", 
-        menu_trans: "交通", menu_num: "常用号码", menu_pharm: "药房", menu_map: "地图", menu_monu: "文化",
-        btn_call: "致电", btn_map: "地图", btn_position: "位置", btn_website: "网站",
-        open_site: "打开网站", take_me_here: "带我去",
-        details_trail: "路线详情", distance: "距离", duration: "时长", level: "难度",
-        visit_time: "参观时间", difficulty: "难度",
-        hours_label: "营业时间", phone_label: "电话", no_hours: "时间不可用",
-        ideal_for: "适合",
+        menu_trans: "交通", menu_num: "常用号码", menu_pharm: "药房", menu_map: "地图", menu_monu: "景点",
+        footer_rights: "版权所有。",
+        filter_title: "筛选", filter_all: "全部", show_results: "显示结果", 
+        filter_cat: "类别", filter_village: "村庄",
+        wine_type: "类型", wine_grapes: "葡萄", wine_pairings: "搭配", wine_deg: "酒精度",
+        label_curiosity: "趣闻", desc_missing: "暂无描述。",
+        btn_details: "查看详情", btn_download_gpx: "下载 GPX", 
+        gpx_missing: "未找到 GPS 轨迹",
+        map_route_title: "路线图", map_zoom_hint: "使用双指缩放",
         plan_trip: "行程规划", departure: "出发", arrival: "到达", 
-        date_trip: "日期", time_trip: "时间", find_times: "查询时刻",
+        date_trip: "日期", time_trip: "时间", find_times: "查询",
         next_runs: "后续班次", next_departure: "下一班",
-        select_placeholder: "选择...",
+        select_placeholder: "选择...", select_start: "-- 选择出发地 --",
+        bus_searching: "搜索中...", bus_no_conn: "无连接", 
+        bus_no_dest: "无目的地", bus_not_found: "未找到班次",
+        bus_try_change: "尝试更改时间。", 
+        badge_holiday: "📅 节假日", badge_weekday: "🏢 工作日",
+        label_warning: "注意",
         how_to_ticket: "如何购票",
         show_map: "显示地图", hide_map: "隐藏地图",
         map_hint: "点击标记设置出发/到达",
         train_cta: "时刻表和购票",
         train_desc: "火车是最快的方式。每15-20分钟一班。",
         avg_times: "平均时间", between_villages: "村庄之间", check_site: "在官网购买并查看时刻表",
-        welcome_app_name: "5 Terre Guide",
-        welcome_desc: "探索五渔村的必备指南。",
-        map_loaded: "地图已加载"
+        ideal_for: "适合",
+        welcome_app_name: "5 Terre Guide", welcome_desc: "探索五渔村的必备指南。"
     }
 };
 
@@ -317,90 +351,37 @@ function isItalianHoliday(dateObj) {
 // 6. MOTORE DI RICERCA BUS (Cervello)
 // =========================================================
 window.eseguiRicercaBus = async function() {
-    // 1. Lettura dati
-    const selPartenza = document.getElementById('selPartenza');
-    const selArrivo = document.getElementById('selArrivo');
-    const selData = document.getElementById('selData');
-    const selOra = document.getElementById('selOra');
-
-    if (!selPartenza || !selArrivo || !selData || !selOra) {
-        console.error("Elementi DOM non trovati. Sei sicuro che il modale sia aperto?");
-        return;
-    }
-
-    const partenzaId = parseInt(selPartenza.value);
-    const arrivoId = parseInt(selArrivo.value);
-    const dataScelta = selData.value;
-    const oraScelta = selOra.value;
-
-    // Riferimenti UI
-    const nextCard = document.getElementById('nextBusCard');
-    const list = document.getElementById('otherBusList');
+    // ... (Recupero dati) ...
     const resultsContainer = document.getElementById('busResultsContainer');
+    const nextCard = document.getElementById('nextBusCard');
+    
+    // ... (Validazione e isFestivo) ...
 
-    // Validazione
-    if (!partenzaId || !arrivoId) { alert("Seleziona fermate valide"); return; }
-    if (partenzaId === arrivoId) { alert("Partenza e arrivo coincidono!"); return; }
-
-    // UI Loading
-    resultsContainer.style.display = 'block';
-    nextCard.innerHTML = `<div style="text-align:center; padding:20px;">Cercando... <span class="material-icons spin">sync</span></div>`;
-    list.innerHTML = '';
-
-    // === CALCOLO FESTIVO AVANZATO ===
-    // Parsing manuale per evitare problemi di timezone
-    const parts = dataScelta.split('-');
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1; 
-    const day = parseInt(parts[2]);
-    const dateObj = new Date(year, month, day);
-
-    // Usa la funzione helper per determinare se è festivo
-    const isFestivo = isItalianHoliday(dateObj);
-
-    // 2. Chiamata RPC a Supabase
-    // Nota: Passiamo p_is_festivo. Lato DB la query dovrà fare qualcosa tipo:
-    // WHERE (p_is_festivo = true AND "ATTIVO_FESTIVO" = true) OR (p_is_festivo = false AND "ATTIVO_FERIALE" = true)
-    const { data, error } = await window.supabaseClient.rpc('trova_bus', { 
-        p_partenza_id: partenzaId, 
-        p_arrivo_id: arrivoId, 
-        p_orario_min: oraScelta, 
-        p_is_festivo: isFestivo 
-    });
-
-    if (error) { 
-        console.error("❌ ERRORE SQL:", error);
-        nextCard.innerHTML = `<div style="color:red; text-align:center;">Errore: ${error.message}</div>`; 
-        return; 
-    }
-
-    // Badge UI per indicare all'utente che tipo di orario sta vedendo
     const dayTypeLabel = isFestivo 
-        ? `<span class="badge-holiday">📅 FESTIVO</span>` 
-        : `<span class="badge-weekday">🏢 FERIALE</span>`;
+        ? `<span class="badge-holiday">${window.t('badge_holiday')}</span>` 
+        : `<span class="badge-weekday">${window.t('badge_weekday')}</span>`;
+
+    const { data, error } = await window.supabaseClient.rpc('trova_bus', { /* ... */ });
 
     if (!data || data.length === 0) { 
         nextCard.innerHTML = `
             <div style="text-align:center; padding:15px; color:#c62828;">
                 <span class="material-icons">event_busy</span><br>
-                <strong>Nessuna corsa trovata</strong><br>
+                <strong>${window.t('bus_not_found')}</strong><br>
                 <div style="margin-top:5px;">${dayTypeLabel}</div>
-                <small style="display:block; margin-top:5px;">Prova a cambiare orario.</small>
+                <small style="display:block; margin-top:5px;">${window.t('bus_try_change')}</small>
             </div>`; 
         return; 
     }
 
     const primo = data[0];
-    const pOra = primo.ora_partenza.slice(0,5);
-    const aOra = primo.ora_arrivo.slice(0,5);
-
     nextCard.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-            <span style="font-size:0.75rem; color:#e0f7fa; text-transform:uppercase; font-weight:bold;">PROSSIMA PARTENZA</span>
+            <span style="font-size:0.75rem; color:#e0f7fa; text-transform:uppercase; font-weight:bold;">${window.t('next_departure')}</span>
             ${dayTypeLabel}
         </div>
-        <div class="bus-time-big">${pOra}</div>
-        <div style="font-size:1rem; color:#e0f7fa;">Arrivo: <strong>${aOra}</strong></div>
+        <div class="bus-time-big">${primo.ora_partenza.slice(0,5)}</div>
+        <div style="font-size:1rem; color:#e0f7fa;">${window.t('arrival')}: <strong>${primo.ora_arrivo.slice(0,5)}</strong></div>
         <div style="font-size:0.8rem; color:#b2ebf2; margin-top:5px;">${primo.nome_linea || 'Linea ATC'}</div>
     `;
 

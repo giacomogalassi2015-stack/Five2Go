@@ -3,7 +3,8 @@ console.log("✅ 3. app.js caricato");
 const content = document.getElementById('app-content');
 const viewTitle = document.getElementById('view-title');
 
-const globalFooter = `<footer class="app-footer"><p>&copy; 2026 Five2Go. Tutti i diritti riservati.</p></footer>`;
+// --- MODIFICA 1: Footer Dinamico (funzione invece di costante) ---
+const getGlobalFooter = () => `<footer class="app-footer"><p>© 2026 Five2Go. ${window.t('footer_rights')}</p></footer>`;
 // --- 1. SETUP LINGUA & HEADER (Logic Condizionale) ---
 function setupHeaderElements() {
     const header = document.querySelector('header');
@@ -90,36 +91,29 @@ window.addEventListener('click', () => {
 
 
 // --- 2. NAVIGAZIONE PRINCIPALE ---
+// --- 2. NAVIGAZIONE PRINCIPALE ---
 window.switchView = async function(view, el) {
     if (!content) return;
-    window.currentViewName = view; // Salva stato vista corrente
+    window.currentViewName = view; 
 
-     // === FIX BUG FILTRO: Rimuovi il tasto filtro globale se esiste ===
     const globalFilterBtn = document.querySelector('body > #filter-toggle-btn');
-    if (globalFilterBtn) {
-        globalFilterBtn.remove();
-    }
-    // ================================================================
+    if (globalFilterBtn) { globalFilterBtn.remove(); }
 
-    // Aggiorna menu in basso (UI Attiva)
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     if (el) el.classList.add('active');
     else if (view === 'home') {
-         // Fallback: se chiamo switchView('home', null), attivo il primo tasto
          const homeBtn = document.querySelector('.nav-item[onclick*="home"]');
          if(homeBtn) homeBtn.classList.add('active');
     }
-  
 
-    // Routing Viste
     try {
         if (view === 'home') renderHome();
-       else if (view === 'cibo') {
+        else if (view === 'cibo') {
             renderSubMenu([
-        { label: window.t('menu_rest'), table: "Ristoranti" },
-        { label: window.t('menu_prod'), table: "Prodotti" },
-        { label: window.t('menu_wine'), table: "Vini" } // <--- NUOVO TAB
-                 ], 'Ristoranti');
+                { label: window.t('menu_rest'), table: "Ristoranti" },
+                { label: window.t('menu_prod'), table: "Prodotti" },
+                { label: window.t('menu_wine'), table: "Vini" } 
+            ], 'Ristoranti');
         } else if (view === 'outdoor') {
             renderSubMenu([
                 { label: window.t('menu_trail'), table: "Sentieri" },
@@ -128,6 +122,7 @@ window.switchView = async function(view, el) {
             ], 'Sentieri');
         }
         else if (view === 'servizi') await renderServicesGrid();
+        // Mappe tradotto
         else if (view === 'mappe_monumenti') renderSubMenu([{ label: window.t('menu_map'), table: "Mappe" }], 'Mappe');
     } catch (err) {
         console.error(err);
@@ -360,21 +355,20 @@ function handlePageSwipe() {
     touchStartY = null;
 }
 
-// --- RENDER SERVIZI (Versione Vetro Nero & Icone) ---
+// --- RENDER SERVIZI (Modificato per usare getGlobalFooter) ---
 window.renderServicesGrid = async function() {
     const content = document.getElementById('app-content');
     
-    // 1. Recupero dati dal DB
     const { data, error } = await window.supabaseClient.from('Trasporti').select('*');
     if (error) { 
         console.error(error);
-        content.innerHTML = `<p class="error-msg">Errore caricamento servizi.</p>`; 
+        content.innerHTML = `<p class="error-msg">${window.t('error')}</p>`; 
         return;
     }
     window.tempTransportData = data;
 
-    // 2. Helper Semplice: Solo Icone (I colori sono gestiti dal CSS ora)
     function getServiceIcon(name, type) {
+        // ... (logica icone invariata) ...
         const n = name.toLowerCase();
         if (n.includes('treno') || n.includes('stazione')) return 'train';
         if (n.includes('battello') || n.includes('traghetto')) return 'directions_boat';
@@ -382,17 +376,14 @@ window.renderServicesGrid = async function() {
         if (n.includes('taxi')) return 'local_taxi';
         if (type === 'farmacia') return 'local_pharmacy';
         if (type === 'info') return 'phonelink_ring';
-        return 'confirmation_number'; // Icona default
+        return 'confirmation_number';
     }
 
     let html = '<div class="services-grid-modern animate-fade">';
 
-    // 3. Generazione Card Trasporti
     data.forEach((t, index) => {
         const nome = t.Mezzo || t.Località || 'Trasporto';
         const icon = getServiceIcon(nome, 'trasporto');
-        
-        // NOTA: Ho rimosso style="background..." -> Ora è tutto nero dal CSS
         html += `
         <div class="service-widget" onclick="openModal('transport', ${index})">
             <span class="material-icons widget-icon">${icon}</span>
@@ -400,21 +391,20 @@ window.renderServicesGrid = async function() {
         </div>`;
     });
 
-    // 4. Generazione Card Statiche
     html += `
     <div class="service-widget" onclick="renderSimpleList('Numeri_utili')">
         <span class="material-icons widget-icon">phonelink_ring</span>
-        <span class="widget-label">${window.t('menu_num') || 'Numeri Utili'}</span>
+        <span class="widget-label">${window.t('menu_num')}</span>
     </div>`;
     
     html += `
     <div class="service-widget" onclick="renderSimpleList('Farmacie')">
         <span class="material-icons widget-icon">medical_services</span>
-        <span class="widget-label">${window.t('menu_pharm') || 'Farmacie'}</span>
+        <span class="widget-label">${window.t('menu_pharm')}</span>
     </div>`;
 
     html += '</div>';
-    html += globalFooter;
+    html += getGlobalFooter(); // MODIFICA: Chiamata a funzione
     content.innerHTML = html;
 };
 // Funzione per renderizzare liste semplici (Farmacie, Numeri Utili) con Header Bello
@@ -445,12 +435,12 @@ window.toggleTicketInfo = function() {
 };
 
 // --- LOGICA FILTRI (Bottom Sheet / Cassetto) ---
+// --- LOGICA FILTRI (Tradotta e Sistemata) ---
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
-    // 1. Prepara i contenitori base
     container.innerHTML = `<div class="list-container animate-fade" id="dynamic-list" style="padding-bottom: 80px;"></div>`;
     const listContainer = container.querySelector('#dynamic-list');
 
-    // 2. Pulizia vecchi elementi filtro (se cambi pagina)
+    // Pulizia vecchi elementi
     const oldSheet = document.getElementById('filter-sheet');
     if (oldSheet) oldSheet.remove();
     const oldOverlay = document.getElementById('filter-overlay');
@@ -458,16 +448,13 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
     const oldBtn = document.getElementById('filter-toggle-btn');
     if (oldBtn) oldBtn.remove();
 
-    // 3. Generazione valori unici per i filtri
+    // Valori unici
     let rawValues = allData.map(item => item[filterKey] ? item[filterKey].trim() : null).filter(x => x);
-    
-    // Split per gestire casi con virgole (es. "Manarola, Riomaggiore") se serve, altrimenti lascia così
-    // rawValues = rawValues.flatMap(v => v.split(',').map(s => s.trim())); 
-
     let tagsRaw = [...new Set(rawValues)];
     
-    // Ordine personalizzato
+    // Ordine: "Tutti" va sempre per primo
     const customOrder = ["Tutti", "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso", "Facile", "Media", "Difficile"];
+    
     if (!tagsRaw.includes('Tutti')) tagsRaw.unshift('Tutti');
 
     const uniqueTags = tagsRaw.sort((a, b) => {
@@ -478,7 +465,7 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
         return a.localeCompare(b);
     });
 
-    // 4. CREAZIONE STRUTTURA BOTTOM SHEET (HTML)
+    // CREAZIONE BOTTOM SHEET
     const overlay = document.createElement('div');
     overlay.id = 'filter-overlay';
     overlay.className = 'sheet-overlay';
@@ -488,7 +475,7 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
     sheet.className = 'bottom-sheet';
     sheet.innerHTML = `
         <div class="sheet-header">
-            <div class="sheet-title">Filtra per</div>
+            <div class="sheet-title">${window.t('filter_title')}</div> 
             <div class="material-icons sheet-close" onclick="closeFilterSheet()">close</div>
         </div>
         <div class="filter-grid" id="sheet-options"></div>
@@ -497,68 +484,51 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
     document.body.appendChild(overlay);
     document.body.appendChild(sheet);
 
-    // 5. RIEMPIMENTO OPZIONI (PALLINI)
     const optionsContainer = sheet.querySelector('#sheet-options');
-    let activeTag = 'Tutti'; // Stato interno
+    let activeTag = 'Tutti'; 
 
     uniqueTags.forEach(tag => {
         const chip = document.createElement('button');
         chip.className = 'sheet-chip';
         if (tag === 'Tutti') chip.classList.add('active-filter');
-        chip.innerText = tag;
+        
+        // --- MODIFICA CHIAVE: Traduci "Tutti" ma mantieni i nomi dei paesi ---
+        chip.innerText = (tag === 'Tutti') ? window.t('filter_all') : tag; 
 
         chip.onclick = () => {
-            // UI Update
             document.querySelectorAll('.sheet-chip').forEach(c => c.classList.remove('active-filter'));
             chip.classList.add('active-filter');
             activeTag = tag;
             
-            // Logica Filtro
             const filtered = tag === 'Tutti' ? allData : allData.filter(item => {
                 const valDB = item[filterKey] ? item[filterKey].trim() : '';
-                // Include supporta anche stringhe parziali o liste
                 return valDB.includes(tag) || (item.Nome && item.Nome.toLowerCase().includes('emergenza'));
             });
 
             updateList(filtered);
-            
-            // Chiudi automaticamente il cassetto dopo la scelta (UX fluida)
             closeFilterSheet();
         };
         optionsContainer.appendChild(chip);
     });
 
-    // 6. TASTO FAB (Galleggiante)
     const filterBtn = document.createElement('button');
     filterBtn.id = 'filter-toggle-btn';
     filterBtn.innerHTML = '<span class="material-icons">filter_list</span>';
-    // Nota: lo stile base #filter-toggle-btn è già nel CSS, assicurati sia visibile
     filterBtn.style.display = 'block'; 
     document.body.appendChild(filterBtn);
 
-    // Eventi Apertura/Chiusura
-    window.openFilterSheet = () => {
-        overlay.classList.add('active');
-        sheet.classList.add('active');
-    };
-
-    window.closeFilterSheet = () => {
-        overlay.classList.remove('active');
-        sheet.classList.remove('active');
-    };
+    window.openFilterSheet = () => { overlay.classList.add('active'); sheet.classList.add('active'); };
+    window.closeFilterSheet = () => { overlay.classList.remove('active'); sheet.classList.remove('active'); };
 
     filterBtn.onclick = window.openFilterSheet;
     overlay.onclick = window.closeFilterSheet;
 
-    // 7. Render Iniziale
     function updateList(items) {
         if (!items || items.length === 0) { 
             listContainer.innerHTML = `<p style="text-align:center; padding:40px; color:#999;">${window.t('no_results')}</p>`; 
             return; 
         }
         listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
-        
-        // Init mappe se necessario
         if (typeof initPendingMaps === 'function') setTimeout(() => initPendingMaps(), 100);
     }
     
@@ -566,12 +536,9 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
 }
 // --- LOGICA FILTRO DOPPIO GENERICO (Agnostica) ---
 function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer) {
-
-    // 1. Setup Container
     container.innerHTML = `<div class="list-container animate-fade" id="dynamic-list" style="padding-bottom: 80px;"></div>`;
     const listContainer = container.querySelector('#dynamic-list');
 
-    // 2. Pulizia UI Filtri
     const oldSheet = document.getElementById('filter-sheet');
     if (oldSheet) oldSheet.remove();
     const oldOverlay = document.getElementById('filter-overlay');
@@ -579,14 +546,10 @@ function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer)
     const oldBtn = document.getElementById('filter-toggle-btn');
     if (oldBtn) oldBtn.remove();
 
-    // 3. ESTRAZIONE DATI DINAMICA
-    // Helper per ottenere valori unici da una colonna
     const getUniqueValues = (key, customOrder = []) => {
         const raw = allData.map(i => window.dbCol(i, key)).filter(x => x).map(x => x.trim());
         let unique = [...new Set(raw)];
-        
         if (customOrder && customOrder.length > 0) {
-            // Ordina secondo la lista custom, mettendo in fondo quelli non presenti
             return unique.sort((a, b) => {
                 const idxA = customOrder.indexOf(a);
                 const idxB = customOrder.indexOf(b);
@@ -600,28 +563,25 @@ function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer)
         }
     };
 
-    // Genera le opzioni per i due livelli
     const values1 = getUniqueValues(filtersConfig.primary.key, filtersConfig.primary.customOrder);
     const values2 = getUniqueValues(filtersConfig.secondary.key, filtersConfig.secondary.customOrder);
 
-    // STATO INTERNO (Generico)
     let activeVal1 = 'Tutti';
     let activeVal2 = 'Tutti';
 
-    // 4. CREAZIONE HTML
     const overlay = document.createElement('div');
     overlay.className = 'sheet-overlay';
     
     const sheet = document.createElement('div');
     sheet.className = 'bottom-sheet';
     
-    // Titoli dinamici presi dalla config (o fallback generici)
-    const title1 = filtersConfig.primary.title || 'Filtro 1';
-    const title2 = filtersConfig.secondary.title || 'Filtro 2';
+    // Titoli tradotti (gestiti nel dizionario)
+    const title1 = filtersConfig.primary.title || window.t('filter_village');
+    const title2 = filtersConfig.secondary.title || window.t('filter_cat');
 
     sheet.innerHTML = `
         <div class="sheet-header">
-            <div class="sheet-title">Filtri</div>
+            <div class="sheet-title">${window.t('filter_title')}</div>
             <div class="material-icons sheet-close" onclick="closeFilterSheet()">close</div>
         </div>
         
@@ -632,31 +592,30 @@ function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer)
         <div class="filter-grid" id="section-2-options"></div>
 
         <button class="btn-apply-filters" onclick="closeFilterSheet()">
-            ${window.t('show_results') || 'Mostra Risultati'}
+            ${window.t('show_results')}
         </button>
     `;
 
     document.body.appendChild(overlay);
     document.body.appendChild(sheet);
 
-    // 5. RENDER CHIPS (Generico)
     function renderChips() {
-        // Render Gruppo 1
         const c1 = sheet.querySelector('#section-1-options');
         c1.innerHTML = '';
-        c1.appendChild(createChip('Tutti', activeVal1 === 'Tutti', () => { activeVal1 = 'Tutti'; applyFilters(); renderChips(); }));
+        // Traduzione "Tutti"
+        c1.appendChild(createChip(window.t('filter_all'), activeVal1 === 'Tutti', () => { activeVal1 = 'Tutti'; applyFilters(); renderChips(); }));
         
         values1.forEach(v => {
             c1.appendChild(createChip(v, activeVal1 === v, () => { activeVal1 = v; applyFilters(); renderChips(); }));
         });
 
-        // Render Gruppo 2
         const c2 = sheet.querySelector('#section-2-options');
         c2.innerHTML = '';
-        c2.appendChild(createChip('Tutti', activeVal2 === 'Tutti', () => { activeVal2 = 'Tutti'; applyFilters(); renderChips(); }));
+        // Traduzione "Tutti"
+        c2.appendChild(createChip(window.t('filter_all'), activeVal2 === 'Tutti', () => { activeVal2 = 'Tutti'; applyFilters(); renderChips(); }));
 
         values2.forEach(v => {
-            const label = v.charAt(0).toUpperCase() + v.slice(1); // Capitalize estetico
+            const label = v.charAt(0).toUpperCase() + v.slice(1); 
             c2.appendChild(createChip(label, activeVal2 === v, () => { activeVal2 = v; applyFilters(); renderChips(); }));
         });
     }
@@ -670,19 +629,14 @@ function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer)
         return btn;
     }
 
-    // 6. LOGICA DI FILTRAGGIO AGNOSTICA
     function applyFilters() {
         const filtered = allData.filter(item => {
             const val1 = window.dbCol(item, filtersConfig.primary.key) || '';
             const val2 = window.dbCol(item, filtersConfig.secondary.key) || '';
-
             const match1 = (activeVal1 === 'Tutti') || val1.includes(activeVal1);
-            // Match parziale (case insensitive) per il secondo filtro (es. Label)
             const match2 = (activeVal2 === 'Tutti') || val2.toLowerCase().includes(activeVal2.toLowerCase());
-
             return match1 && match2;
         });
-
         updateList(filtered);
     }
 
@@ -694,7 +648,6 @@ function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer)
         }
     }
 
-    // 7. GESTIONE EVENTI
     const filterBtn = document.createElement('button');
     filterBtn.id = 'filter-toggle-btn';
     filterBtn.innerHTML = '<span class="material-icons">filter_list</span>';
