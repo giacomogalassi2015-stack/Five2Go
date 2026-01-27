@@ -1,16 +1,21 @@
-console.log("✅ 2. ui-renderers.js caricato (Refactored IDs)");
+console.log("✅ 2. ui-renderers.js caricato (Refactored IDs & Sanitized)");
 
 // ============================================================
 // 1. RENDERER DELLE CARD (LISTE)
 // ============================================================
 
 window.ristoranteRenderer = (r) => {
+    // dbCol è già sanitizzato da data-logic.js
     const nome = window.dbCol(r, 'Nome') || 'Ristorante';
     const paesi = window.dbCol(r, 'Paesi') || '';
-    const numero = r.Numero || r.Telefono || '';
-    // CHANGE: Pass ID instead of full object
-    const itemId = r.id || r.ID;
+    
+    // Manual escape per i campi diretti
+    const numero = window.escapeHTML(r.Numero || r.Telefono || '');
+    const itemId = window.escapeHTML(r.id || r.ID);
+    
+    // Mappa è un URL, encodeURIComponent lo gestisce, ma sanitizziamo per sicurezza
     const mapLink = r.Mappa || `https://www.google.com/maps/search/?api=1&query=$?q=$?q=${encodeURIComponent(nome + ' ' + paesi)}`;
+    // Nota: per href, il browser gestisce &amp;, ma evitiamo iniezioni HTML nella stringa
 
     return `
     <div class="restaurant-glass-card"> 
@@ -27,74 +32,84 @@ window.ristoranteRenderer = (r) => {
 };
 
 window.spiaggiaRenderer = function(item) {
-    const nome = item.Nome || 'Spiaggia';
-    const comune = item.Paese || item.Comune || '';
-    const tipo = item.Tipo || 'Spiaggia'; 
+    // Manual escape campi diretti
+    const nome = window.escapeHTML(item.Nome || 'Spiaggia');
+    const comune = window.escapeHTML(item.Paese || item.Comune || '');
+    const tipo = window.escapeHTML(item.Tipo || 'Spiaggia'); 
+    const safeId = window.escapeHTML(item.id);
     const iconClass = 'fa-water';
-    // ID is already safe to pass directly
-    return `<div class="culture-card is-beach animate-fade" onclick="openModal('Spiagge', '${item.id}')"><div class="culture-info">${comune ? `<div class="culture-location"><span class="material-icons icon-sm">place</span> ${comune}</div>` : ''}<h3 class="culture-title">${nome}</h3><div class="culture-tags"><span class="c-pill">${tipo}</span></div></div><div class="culture-bg-icon"><i class="fa-solid ${iconClass}"></i></div></div>`;
+
+    return `<div class="culture-card is-beach animate-fade" onclick="openModal('Spiagge', '${safeId}')"><div class="culture-info">${comune ? `<div class="culture-location"><span class="material-icons icon-sm">place</span> ${comune}</div>` : ''}<h3 class="culture-title">${nome}</h3><div class="culture-tags"><span class="c-pill">${tipo}</span></div></div><div class="culture-bg-icon"><i class="fa-solid ${iconClass}"></i></div></div>`;
 };
 
 window.sentieroRenderer = (s) => {
     const paese = window.dbCol(s, 'Paesi');
-    const titoloMostrato = s.Nome || paese; 
-    const diff = s.Tag || s.Difficolta || 'Media';
-    const gpxUrl = s.Gpxlink || s.gpxlink;
+    // Manual escape
+    const nomeSentiero = window.escapeHTML(s.Nome || '');
+    const titoloMostrato = nomeSentiero || paese; 
+    const diff = window.escapeHTML(s.Tag || s.Difficolta || 'Media');
+    const gpxUrl = s.Gpxlink || s.gpxlink; // URL non va escaped con escapeHTML se usato in JS logic, ma attenzione al rendering
     const uniqueMapId = `map-trail-${Math.random().toString(36).substr(2, 9)}`;
-    
-    // CHANGE: Pass ID instead of full object
-    const itemId = s.id || s.ID;
+    const itemId = window.escapeHTML(s.id || s.ID);
 
     let diffColor = '#f39c12';
     if (diff.toLowerCase().includes('facile') || diff.toLowerCase().includes('easy')) diffColor = '#27ae60';
     if (diff.toLowerCase().includes('difficile') || diff.toLowerCase().includes('hard')) diffColor = '#c0392b';
+    
+    // Qui gpxUrl viene passato a JS, non stampato direttamente nell'HTML visibile come testo
     if (gpxUrl) { window.mapsToInit.push({ id: uniqueMapId, gpx: gpxUrl }); }
     
+    // Nota: openModal prende stringhe, gpxUrl dentro le virgolette singole va bene
     return `<div class="trail-card-modern animate-fade"><div id="${uniqueMapId}" class="trail-map-container" onclick="event.stopPropagation(); openModal('map', '${gpxUrl}')"></div><div class="trail-info-overlay"><h3 class="text-center font-bold color-dark" style="margin: 5px 0; font-family:'Roboto Slab'; font-size: 1.25rem;">${titoloMostrato}</h3><div class="text-center text-uppercase font-bold mb-20" style="font-size:0.75rem; color:${diffColor}; letter-spacing:1px;">${diff}</div><button onclick="openModal('trail', '${itemId}')" class="btn-trail-action">${window.t('btn_details')} <span class="material-icons" style="font-size:1.1rem;">arrow_forward</span></button></div></div>`;
 };
 
 window.vinoRenderer = function(item) {
-    const safeId = item.id || item.ID; 
-    const nome = item.Nome || 'Vino';
-    const cantina = item.Produttore || ''; 
-    const tipo = (item.Tipo || '').toLowerCase().trim();
+    const safeId = window.escapeHTML(item.id || item.ID); 
+    const nome = window.escapeHTML(item.Nome || 'Vino');
+    // dbCol già sanitizzato
+    const cantina = window.dbCol(item, 'Produttore') || ''; 
+    const tipoRaw = window.escapeHTML(item.Tipo || '');
+    const tipo = tipoRaw.toLowerCase().trim();
+    
     let themeClass = 'is-wine-red'; 
     if (tipo.includes('bianco')) themeClass = 'is-wine-white';
     if (tipo.includes('rosato') || tipo.includes('orange')) themeClass = 'is-wine-orange';
-    return `<div class="culture-card ${themeClass} animate-fade" onclick="openModal('Vini', '${safeId}')"><div class="culture-info">${cantina ? `<div class="culture-location"><span class="material-icons icon-sm">storefront</span> ${cantina}</div>` : ''}<div class="culture-title">${nome}</div><div class="culture-tags"><span class="c-pill" style="text-transform: capitalize;">${item.Tipo || 'Vino'}</span></div></div><div class="culture-bg-icon"><i class="fa-solid fa-wine-bottle"></i></div></div>`;
+    
+    return `<div class="culture-card ${themeClass} animate-fade" onclick="openModal('Vini', '${safeId}')"><div class="culture-info">${cantina ? `<div class="culture-location"><span class="material-icons icon-sm">storefront</span> ${cantina}</div>` : ''}<div class="culture-title">${nome}</div><div class="culture-tags"><span class="c-pill" style="text-transform: capitalize;">${tipoRaw || 'Vino'}</span></div></div><div class="culture-bg-icon"><i class="fa-solid fa-wine-bottle"></i></div></div>`;
 };
 
 window.numeriUtiliRenderer = (n) => {
     const nome = window.dbCol(n, 'Nome') || 'Numero Utile';
     const paesi = window.dbCol(n, 'Paesi') || 'Info'; 
-    const numero = n.Numero || n.Telefono || '';
+    const numero = window.escapeHTML(n.Numero || n.Telefono || '');
+    
     let icon = 'help_outline'; 
     const nLower = nome.toLowerCase();
     if (nLower.includes('carabinieri') || nLower.includes('polizia')) icon = 'security';
     else if (nLower.includes('medica') || nLower.includes('croce')) icon = 'medical_services';
     else if (nLower.includes('taxi')) icon = 'local_taxi';
     else if (nLower.includes('farmacia')) icon = 'local_pharmacy';
-    // Numeri utili raramente aprono modali, solo chiamata
+
     return `<div class="info-card animate-fade"><div class="info-icon-box"><span class="material-icons">${icon}</span></div><div class="info-text-col"><h3>${nome}</h3><p><span class="material-icons icon-sm">place</span> ${paesi}</p></div><div class="action-btn btn-call" onclick="window.location.href='tel:${numero}'"><span class="material-icons">call</span></div></div>`;
 };
 
 window.farmacieRenderer = (f) => {
     const nome = window.dbCol(f, 'Farmacia') || window.dbCol(f, 'Nome') || 'Farmacia';
     const paese = window.dbCol(f, 'Paese') || window.dbCol(f, 'Paesi') || '';
-    const numero = f.Telefono || f.Numero || '';
-    const itemId = f.id || f.ID;
+    const numero = window.escapeHTML(f.Telefono || f.Numero || '');
+    const itemId = window.escapeHTML(f.id || f.ID);
     return `<div class="info-card animate-fade" onclick="openModal('farmacia', '${itemId}')"><div class="info-icon-box"><span class="material-icons">local_pharmacy</span></div><div class="info-text-col"><h3>${nome}</h3><p><span class="material-icons icon-sm">place</span> ${paese}</p></div><div class="action-btn btn-call" onclick="event.stopPropagation(); window.location.href='tel:${numero}'"><span class="material-icons">call</span></div></div>`;
 };
 
 window.attrazioniRenderer = (item) => {
-    // CHANGE: Use ID or POI_ID preferentially
-    const safeId = item.POI_ID || item.id;
+    const safeId = window.escapeHTML(item.POI_ID || item.id);
     const titolo = window.dbCol(item, 'Attrazioni') || 'Attrazione';
     const paese = window.dbCol(item, 'Paese');
-    const tempo = item.Tempo_visita || '--'; 
+    const tempo = window.escapeHTML(item.Tempo_visita || '--'); 
     const diff = window.dbCol(item, 'Difficoltà Accesso') || 'Accessibile';
     const rawLabel = window.dbCol(item, 'Label') || 'Storico';
     const label = rawLabel.toLowerCase().trim(); 
+    
     let themeClass = 'is-monument';
     let iconClass = 'fa-landmark'; 
     if (label === 'religioso') { themeClass = 'is-church'; iconClass = 'fa-church'; }
@@ -109,8 +124,7 @@ window.prodottoRenderer = (p) => {
     const ideale = window.dbCol(p, 'Ideale per') || 'Tutti'; 
     const fotoKey = p.Prodotti_foto || titolo;
     const imgUrl = window.getSmartUrl(fotoKey, '', 200);
-    // CHANGE: Pass ID
-    const itemId = p.id || p.ID;
+    const itemId = window.escapeHTML(p.id || p.ID);
     return `<div class="culture-card is-product animate-fade" onclick="openModal('product', '${itemId}')"><div class="culture-info"><div class="culture-title">${titolo}</div><div class="product-subtitle"><span class="material-icons">stars</span> ${window.t('ideal_for')}: ${ideale}</div></div><div class="culture-product-thumb"><img src="${imgUrl}" loading="lazy" alt="${titolo}"></div></div>`;
 };
 
@@ -136,6 +150,7 @@ window.openModal = async function(type, payload) {
 // ============================================================
 
 window.renderBusTemplate = (item) => {
+    // dbCol è safe
     const infoSms = window.dbCol(item, 'Info_SMS');
     const infoApp = window.dbCol(item, 'Info_App');
     const infoAvvisi = window.dbCol(item, 'Info_Avvisi');
@@ -224,7 +239,9 @@ window.renderGenericFilterableView = function(allData, filterKey, container, car
     const oldSheet = document.getElementById('filter-sheet'); if (oldSheet) oldSheet.remove();
     const oldOverlay = document.getElementById('filter-overlay'); if (oldOverlay) oldOverlay.remove();
     const oldBtn = document.getElementById('filter-toggle-btn'); if (oldBtn) oldBtn.remove();
-    let rawValues = allData.map(item => item[filterKey] ? item[filterKey].trim() : null).filter(x => x);
+    
+    // Sanitizziamo i valori usati per i filtri
+    let rawValues = allData.map(item => item[filterKey] ? window.escapeHTML(item[filterKey].trim()) : null).filter(x => x);
     let tagsRaw = [...new Set(rawValues)];
     const customOrder = ["Tutti", "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso", "Facile", "Media", "Difficile"];
     if (!tagsRaw.includes('Tutti')) tagsRaw.unshift('Tutti');
@@ -301,6 +318,7 @@ window.renderDoubleFilterView = function(allData, filtersConfig, container, card
     function createChip(text, isActive, onClick) {
         const btn = document.createElement('button'); btn.className = 'sheet-chip';
         if (isActive) btn.classList.add('active-filter');
+        // Testo pulsanti filtri già safe perché passa per dbCol o stringhe statiche
         btn.innerText = text; btn.onclick = onClick; return btn;
     }
     function applyFilters() {

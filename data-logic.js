@@ -1,4 +1,4 @@
-console.log("✅ 1. data-logic.js caricato");
+console.log("✅ 1. data-logic.js caricato (Sanitized)");
 
 // 1. CONFIGURAZIONE SUPABASE
 const SUPABASE_URL = 'https://ydrpicezcwtfwdqpihsb.supabase.co';
@@ -18,7 +18,7 @@ window.mapsToInit = [];
 window.tempTransportData = [];
 window.tempAttractionsData = [];
 window.currentLang = localStorage.getItem('app_lang') || 'it';
-window.currentViewName = 'home'; // Tracciamento vista per header
+window.currentViewName = 'home'; 
 
 // 3. CONFIGURAZIONE LINGUE
 window.AVAILABLE_LANGS = [
@@ -34,24 +34,18 @@ window.AVAILABLE_LANGS = [
 const UI_TEXT = {
     it: {
         loading: "Caricamento...", error: "Errore", no_results: "Nessun risultato.",
-        // Menu & Nav
         home_title: "Benvenuto", nav_villages: "Paesi", nav_food: "Cibo", nav_outdoor: "Outdoor", nav_services: "Servizi",
         menu_prod: "Prodotti", menu_rest: "Ristoranti", menu_trail: "Sentieri", menu_beach: "Spiagge", 
         menu_trans: "Trasporti", menu_num: "Numeri Utili", menu_pharm: "Farmacie", menu_map: "Mappe", menu_monu: "Attrazioni",
         menu_wine: "Vini",
-        // Footer
         footer_rights: "Tutti i diritti riservati.",
-        // Filtri
         filter_title: "Filtra per", filter_all: "Tutti", show_results: "Mostra Risultati", 
         filter_cat: "Categoria", filter_village: "Borgo",
-        // Vini & Schede
         wine_type: "Tipologia", wine_grapes: "Uve", wine_pairings: "Abbinamenti", wine_deg: "Gradi",
         label_curiosity: "Curiosità", desc_missing: "Descrizione non disponibile.",
-        // Azioni Generiche
         btn_details: "Vedi Dettagli", btn_download_gpx: "Scarica file GPX", 
         gpx_missing: "Traccia GPS non presente",
         map_route_title: "Mappa Percorso", map_zoom_hint: "Usa due dita per zoomare",
-        // Trasporti (Bus/Treno) Avanzati
         plan_trip: "Pianifica Viaggio", departure: "PARTENZA", arrival: "ARRIVO", 
         date_trip: "DATA VIAGGIO", time_trip: "ORARIO", find_times: "TROVA ORARI",
         next_runs: "CORSE SUCCESSIVE", next_departure: "PROSSIMA PARTENZA",
@@ -239,24 +233,36 @@ const FERRY_STOPS = [
 ];
 
 // 5. HELPER FUNCTIONS GLOBALI
-window.t = function(key) {
-    const langDict = UI_TEXT[window.currentLang] || UI_TEXT['it'];
-    return langDict[key] || key; // Fallback sulla chiave stessa se manca
+
+// --- FUNZIONE DI SANITIZZAZIONE AGGIUNTA ---
+window.escapeHTML = function(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 };
 
+window.t = function(key) {
+    const langDict = UI_TEXT[window.currentLang] || UI_TEXT['it'];
+    // I testi UI statici sono considerati sicuri, non li sanitizziamo qui
+    return langDict[key] || key; 
+};
+
+// --- MODIFICATO: dbCol ora sanitizza automaticamente l'output ---
 window.dbCol = function(item, field) {
     if (!item || !item[field]) return '';
 
     let value = item[field];
 
-    // Se Supabase restituisce il JSONB già come oggetto
     if (typeof value === 'object' && value !== null) {
-        // Cerca la lingua corrente, altrimenti fallback su italiano, altrimenti stringa vuota
-        return value[window.currentLang] || value['it'] || '';
+        value = value[window.currentLang] || value['it'] || '';
     }
 
-    // Se è ancora una stringa (es. vecchi dati o errore di parsing), la restituisce così com'è
-    return value;
+    // Sanitizza SEMPRE il valore proveniente dal DB
+    return window.escapeHTML(value);
 };
 
 window.getSmartUrl = function(name, folder = '', width = 600) {
@@ -268,43 +274,23 @@ window.getSmartUrl = function(name, folder = '', width = 600) {
 
 window.changeLanguage = function(langCode) {
     console.log("Cambio lingua a:", langCode);
-    
-    // 1. Aggiorna la variabile globale
     window.currentLang = langCode;
-    
-    // (Opzionale) Salva la scelta nel browser per la prossima volta
     localStorage.setItem('user_lang', langCode);
-
-    // 2. Aggiorna i testi statici dell'interfaccia (Titoli, Bottoni)
     updateStaticInterface();
-
-    // 3. Ricarica la vista corrente (Forza il re-render delle card)
-    // Assumo che tu abbia una funzione che renderizza la pagina, es: renderApp() o loadData()
-    // Se usi una logica basata su router, ricarica la pagina corrente:
     if (typeof renderCategory === 'function') {
-        // Esempio: se sei nella vista attrazioni, ricaricala
-        const currentCategory = window.currentCategory || 'attrazioni'; // O la tua variabile di stato
+        const currentCategory = window.currentCategory || 'attrazioni'; 
         renderCategory(currentCategory); 
     } else {
-        // Fallback brutale se non hai una funzione di render centralizzata
         location.reload(); 
     }
 };
 
-// Funzione helper per aggiornare i testi fissi (Menu, Home Title, ecc.)
 function updateStaticInterface() {
-    // Esempio: Aggiorna il titolo della Home
     const homeTitleEl = document.getElementById('home-title'); 
     if(homeTitleEl) homeTitleEl.textContent = window.t('home_title');
-
-    // Esempio: Aggiorna i bottoni della navbar
-    // Suggerimento: Aggiungi id="nav-food" ai tuoi elementi HTML per trovarli facilmente
     const navFood = document.getElementById('nav-food');
     if(navFood) navFood.textContent = window.t('nav_food');
-    
-    // Aggiorna tutti gli elementi che usano window.t() al volo se necessario
 }
-
 
 // Algoritmo di Gauss per calcolare la Pasqua
 function getEasterDate(year) {
@@ -321,45 +307,22 @@ function getEasterDate(year) {
     const l = (32 + 2 * e + 2 * i - h - k) % 7;
     const m = Math.floor((a + 11 * h + 22 * l) / 451);
     
-    const month = Math.floor((h + l - 7 * m + 114) / 31) - 1; // 0-indexed per JS Date
+    const month = Math.floor((h + l - 7 * m + 114) / 31) - 1; 
     const day = ((h + l - 7 * m + 114) % 31) + 1;
     
     return new Date(year, month, day);
 }
 
-// Verifica se è un giorno festivo in Italia
 function isItalianHoliday(dateObj) {
     const d = dateObj.getDate();
-    const m = dateObj.getMonth() + 1; // 1-12
+    const m = dateObj.getMonth() + 1; 
     const y = dateObj.getFullYear();
-
-    // 1. Domenica
     if (dateObj.getDay() === 0) return true;
-
-    // 2. Festività Fisse
-    const fixedHolidays = [
-        "1-1",   // Capodanno
-        "6-1",   // Epifania
-        "25-4",  // Liberazione
-        "1-5",   // Festa del Lavoro
-        "2-6",   // Festa della Repubblica
-        "15-8",  // Ferragosto
-        "1-11",  // Ognissanti
-        "8-12",  // Immacolata
-        "25-12", // Natale
-        "26-12"  // Santo Stefano
-    ];
+    const fixedHolidays = ["1-1", "6-1", "25-4", "1-5", "2-6", "15-8", "1-11", "8-12", "25-12", "26-12"];
     if (fixedHolidays.includes(`${d}-${m}`)) return true;
-
-    // 3. Pasquetta (Lunedì dell'Angelo) = Pasqua + 1 giorno
     const easter = getEasterDate(y);
     const pasquetta = new Date(easter);
     pasquetta.setDate(easter.getDate() + 1);
-
     if (d === pasquetta.getDate() && (m - 1) === pasquetta.getMonth()) return true;
-    
-    // (Opzionale) Patrono della Spezia 19 Marzo? 
-    // Per ora teniamo le nazionali standard.
-    
     return false;
 }
