@@ -1,4 +1,4 @@
-console.log("✅ strategies.js caricato (Refactor ID Pattern)");
+console.log("✅ strategies.js caricato (DOM Safe Mode - Fixed Bus & Ferry)");
 
 /* ============================================================
    PATTERN 1: STRATEGY (Gestione Caricamento Viste/Tabelle)
@@ -8,13 +8,8 @@ class BaseViewStrategy {
     async load(container) {
         throw new Error("Method 'load' must be implemented.");
     }
-
     async fetchData(tableName) {
-        if (window.appCache[tableName]) {
-            console.log(`⚡ Cache hit: ${tableName}`);
-            return window.appCache[tableName];
-        }
-        console.log(`🌐 Cache miss: ${tableName}`);
+        if (window.appCache[tableName]) return window.appCache[tableName];
         const { data, error } = await window.supabaseClient.from(tableName).select('*');
         if (error) throw error;
         window.appCache[tableName] = data;
@@ -25,7 +20,7 @@ class BaseViewStrategy {
 class WineStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Vini');
-        window.currentTableData = data; // Fondamentale per il lookup ID
+        window.currentTableData = data;
         window.renderGenericFilterableView(data, 'Tipo', container, window.vinoRenderer);
     }
 }
@@ -41,25 +36,34 @@ class BeachStrategy extends BaseViewStrategy {
 class ProductStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Prodotti');
-        window.currentTableData = data; // AGGIUNTO: Salva i dati per la modale
-        let html = '<div class="list-container animate-fade" style="padding-bottom:20px;">';
-        data.forEach(p => { html += window.prodottoRenderer(p); });
-        container.innerHTML = html + '</div>';
+        window.currentTableData = data;
+        container.innerHTML = '';
+        const listDiv = window.mk('div', { class: 'list-container animate-fade', style: { paddingBottom:'20px' } });
+        // Passiamo 'data' completo, il renderer gestirà l'id
+        data.forEach(p => listDiv.appendChild(window.prodottoRenderer(p)));
+        container.appendChild(listDiv);
     }
 }
 
 class TransportStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Trasporti');
-        window.tempTransportData = data; // I trasporti usano un array separato
-        let html = '<div class="list-container animate-fade">';
+        window.tempTransportData = data; // Cruciale per la modale trasporti
+        container.innerHTML = '';
+        const listDiv = window.mk('div', { class: 'list-container animate-fade' });
+        
         data.forEach((t, index) => {
-            // Qui passiamo l'indice o l'ID se presente, manteniamo index per compatibilità Trasporti
             const nomeDisplay = window.dbCol(t, 'Località') || window.dbCol(t, 'Mezzo');
             const imgUrl = window.getSmartUrl(t.Mezzo, '', 400);
-            html += `<div class="card-product" onclick="openModal('transport', '${index}')"><div class="prod-info"><div class="prod-title">${nomeDisplay}</div></div><img src="${imgUrl}" class="prod-thumb" loading="lazy"></div>`;
+            
+            // Usiamo l'indice per i trasporti perché la modale trasporti lavora su tempTransportData[index]
+            const card = window.mk('div', { class: 'card-product', onclick: () => window.openModal('transport', index) }, [
+                window.mk('div', { class: 'prod-info' }, window.mk('div', { class: 'prod-title' }, nomeDisplay)),
+                window.mk('img', { src: imgUrl, class: 'prod-thumb', loading: 'lazy' })
+            ]);
+            listDiv.appendChild(card);
         });
-        container.innerHTML = html + '</div>';
+        container.appendChild(listDiv);
     }
 }
 
@@ -67,7 +71,6 @@ class AttractionStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Attrazioni');
         window.currentTableData = data;
-        
         const culturaConfig = {
             primary: { key: 'Paese', title: '📍 ' + (window.t('nav_villages') || 'Borgo'), customOrder: ["Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso"] },
             secondary: { key: 'Label', title: '🏷️ Categoria' }
@@ -95,7 +98,7 @@ class TrailStrategy extends BaseViewStrategy {
 class PharmacyStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Farmacie');
-        window.currentTableData = data; // AGGIUNTO
+        window.currentTableData = data;
         window.renderGenericFilterableView(data, 'Paesi', container, window.farmacieRenderer);
     }
 }
@@ -103,7 +106,6 @@ class PharmacyStrategy extends BaseViewStrategy {
 class UsefulNumbersStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Numeri_utili');
-        // I numeri utili raramente hanno modali complesse, ma se servisse:
         window.currentTableData = data; 
         window.renderGenericFilterableView(data, 'Comune', container, window.numeriUtiliRenderer);
     }
@@ -111,7 +113,15 @@ class UsefulNumbersStrategy extends BaseViewStrategy {
 
 class MapStrategy extends BaseViewStrategy {
     async load(container) {
-        container.innerHTML = `<div class="map-container animate-fade"><iframe src="https://www.google.com/maps/d/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F&noprof=1" width="640" height="480"></iframe></div>`;
+        container.innerHTML = '';
+        container.appendChild(
+            window.mk('div', { class: 'map-container animate-fade' }, 
+                window.mk('iframe', { 
+                    src: 'https://www.google.com/maps/d/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F&noprof=1', 
+                    width: '640', height: '480', style: { border: 'none' } 
+                })
+            )
+        );
     }
 }
 
@@ -135,136 +145,277 @@ class ViewContext {
 
 window.viewStrategyContext = new ViewContext();
 
-
 /* ============================================================
-   PATTERN 2: FACTORY (Generazione Contenuto Modali)
+   PATTERN 2: FACTORY (MODALI DOM BASED)
    ============================================================ */
 
 class ModalContentFactory {
     static create(type, payload) {
         let item = null;
 
-        // 1. GESTIONE SPECIALE: MAPPE (URL diretto)
-        if (type === 'map') {
-            return new MapModalGenerator(payload);
-        }
+        // 1. Mappe e Trasporti (logica speciale)
+        if (type === 'map') return new MapModalGenerator(payload);
+        if (type === 'transport') return new TransportModalGenerator(payload);
 
-        // 2. GESTIONE SPECIALE: TRASPORTI (Usa tempTransportData e Indice)
-        if (type === 'transport') {
-            // Payload qui è l'indice dell'array
-            return new TransportModalGenerator(payload);
-        }
-
-        // 3. LOOKUP GENERICO PER ID
-        // Cerca l'oggetto corrispondente all'ID passato nel payload
+        // 2. Lookup Item Generico per ID
+        // FIX: Usiamo String() per assicurarci che confronti stringa con stringa (es. "1" === "1")
         if (window.currentTableData) {
-            // Normalizziamo a stringa per evitare problemi '1' vs 1
             const searchId = String(payload);
-            item = window.currentTableData.find(i => 
-                String(i.id) === searchId || 
-                String(i.ID) === searchId || 
-                String(i.POI_ID) === searchId
-            );
+            item = window.currentTableData.find(i => {
+                // Controlla tutte le possibili varianti di ID
+                const itemId = String(i.id || i.ID || i.POI_ID);
+                return itemId === searchId;
+            });
         }
 
-        // Se non troviamo l'oggetto, mostriamo errore (eccetto mappe che passano URL)
         if (!item) {
-            console.warn(`Oggetto non trovato per ID: ${payload} in contesto ${type}`);
-            return { generate: () => `<div class="modal-body-pad"><p>Dati non disponibili o ID non trovato (${payload}).</p></div>`, getClass: () => 'modal-content' };
+            console.warn(`Oggetto non trovato per ID: ${payload}. Controllare window.currentTableData.`);
+            return { 
+                generate: () => window.mk('div', { class: 'modal-body-pad' }, window.mk('p', {}, `Dati non disponibili o ID non trovato (${payload}).`)), 
+                getClass: () => 'modal-content' 
+            };
         }
 
-        // 4. ROUTING GENERATORI
+        // 3. Routing
         switch (type) {
-            case 'product': 
-            case 'Prodotti':
-                return new ProductModalGenerator(item);
-            
-            case 'trail': 
-            case 'Sentieri':
-                return new TrailModalGenerator(item);
-            
-            case 'ristorante':
-            case 'restaurant': 
-            case 'Ristoranti':
-                return new RestaurantModalGenerator(item);
-            
-            case 'farmacia': 
-            case 'Farmacie':
-                return new PharmacyModalGenerator(item);
-            
-            case 'Vini':
-            case 'wine': 
-                return new WineModalGenerator(item);
-            
-            case 'Attrazioni':
-            case 'attrazione': 
-                return new AttractionModalGenerator(item);
-            
-            case 'Spiagge': 
-                return new BeachModalGenerator(item);
-            
-            default: 
-                return { generate: () => `<p>Content not found for type: ${type}</p>`, getClass: () => 'modal-content' };
+            case 'product': case 'Prodotti': return new ProductModalGenerator(item);
+            case 'trail': case 'Sentieri': return new TrailModalGenerator(item);
+            case 'ristorante': case 'restaurant': case 'Ristoranti': return new RestaurantModalGenerator(item);
+            case 'farmacia': case 'Farmacie': return new PharmacyModalGenerator(item);
+            case 'Vini': case 'wine': return new WineModalGenerator(item);
+            case 'Attrazioni': case 'attrazione': return new AttractionModalGenerator(item);
+            case 'Spiagge': return new BeachModalGenerator(item);
+            default: return { generate: () => window.mk('p', {}, 'Content not found'), getClass: () => 'modal-content' };
         }
     }
 }
 
-// --- GENERATORI CONCRETI ---
-// NOTA: Ora ricevono l'Oggetto Item reale, non una stringa JSON da parsare.
+// GENERATORI DOM
 
 class ProductModalGenerator {
     constructor(item) { this.p = item; }
     getClass() { return 'modal-content glass-modal'; }
     generate() {
-        const nome = window.dbCol(this.p, 'Prodotti') || window.dbCol(this.p, 'Nome') || 'Prodotto';
+        const nome = window.dbCol(this.p, 'Prodotti') || window.dbCol(this.p, 'Nome');
         const desc = window.dbCol(this.p, 'Descrizione');   
         const ideale = window.dbCol(this.p, 'Ideale per'); 
-        const fotoKey = this.p.Prodotti_foto || nome;
-        const bigImg = window.getSmartUrl(fotoKey, '', 800);
+        const bigImg = window.getSmartUrl(this.p.Prodotti_foto || nome, '', 800);
 
-        return `
-            <div class="modal-hero-wrapper">
-                <img src="${bigImg}" class="modal-hero-img" onerror="this.style.display='none'">
-            </div>
-            <div class="modal-body-pad">
-                <h2 class="modal-title-lg">${nome}</h2>
-                ${ideale ? `<div class="mb-20"><span class="glass-tag">✨ ${window.t('ideal_for')}: ${ideale}</span></div>` : ''}
-                <p class="modal-desc-text">${desc || ''}</p>
-            </div>`;
+        return window.mk('div', {}, [
+            window.mk('div', { class: 'modal-hero-wrapper' }, 
+                window.mk('img', { src: bigImg, class: 'modal-hero-img', onerror: function() { this.style.display='none'; } })
+            ),
+            window.mk('div', { class: 'modal-body-pad' }, [
+                window.mk('h2', { class: 'modal-title-lg' }, nome),
+                ideale ? window.mk('div', { class: 'mb-20' }, window.mk('span', { class: 'glass-tag' }, `✨ ${window.t('ideal_for')}: ${ideale}`)) : null,
+                window.mk('p', { class: 'modal-desc-text' }, desc)
+            ])
+        ]);
     }
 }
 
 class TransportModalGenerator {
-    constructor(index) { this.item = window.tempTransportData[index]; }
+    constructor(index) { 
+        // Recupera dai dati temporanei salvati dalla strategy
+        this.item = window.tempTransportData ? window.tempTransportData[index] : null; 
+    }
     getClass() { return 'modal-content'; }
+    
     generate() {
-        if (!this.item) return '<p>Errore dati trasporto</p>';
-        const nome = window.dbCol(this.item, 'Nome') || window.dbCol(this.item, 'Località') || window.dbCol(this.item, 'Mezzo') || 'Trasporto';
-        const desc = window.dbCol(this.item, 'Descrizione') || '';
+        if (!this.item) return window.mk('div', { class: 'modal-body-pad' }, window.mk('p', {}, 'Errore caricamento dati trasporto.'));
         
         const searchStr = ((window.dbCol(this.item, 'Nome') || '') + ' ' + (window.dbCol(this.item, 'Località') || '') + ' ' + (window.dbCol(this.item, 'Mezzo') || '')).toLowerCase();
 
-        if (searchStr.includes('bus') || searchStr.includes('autobus') || searchStr.includes('atc')) return this._generateBusHtml();
-        if (searchStr.includes('battello') || searchStr.includes('traghetto')) return this._generateFerryHtml();
-        if (searchStr.includes('tren') || searchStr.includes('ferrovi')) return this._generateTrainHtml();
+        if (searchStr.includes('bus') || searchStr.includes('autobus') || searchStr.includes('atc')) {
+            setTimeout(() => { if(window.loadAllStops) window.loadAllStops(); }, 100);
+            return this._createBusDOM(this.item);
+        }
+        if (searchStr.includes('battello') || searchStr.includes('traghetto')) {
+            setTimeout(() => window.initFerrySearch(), 100);
+            return this._createFerryDOM();
+        }
         
-        return `<div class="modal-body-pad mt-10"><h2>${nome}</h2><p class="color-gray">${desc}</p></div>`;
+        // Default (Treno, Taxi, ecc.)
+        const nome = window.dbCol(this.item, 'Nome') || 'Trasporto';
+        return window.mk('div', { class: 'modal-body-pad mt-10' }, [
+            window.mk('h2', {}, nome),
+            window.mk('p', { class: 'color-gray' }, window.dbCol(this.item, 'Descrizione'))
+        ]);
     }
 
-    _generateBusHtml() {
-        setTimeout(() => { if(window.loadAllStops) window.loadAllStops(); }, 100);
-        return window.renderBusTemplate(this.item);
+    // FIX 1: Ricreato UI Bus con Ticket Info e Mappa
+    _createBusDOM(item) {
+        const container = window.mk('div', { class: 'bus-search-box animate-fade' });
+        
+        // Titolo
+        container.appendChild(window.mk('div', { class: 'bus-title', style: { paddingBottom:'15px' } }, [
+            window.mk('span', { class: 'material-icons' }, 'directions_bus'), 
+            ` ${window.t('plan_trip')}`
+        ]));
+
+        // Sezione Ticket Info (nascosta di default)
+        const infoSms = window.dbCol(item, 'Info_SMS');
+        const infoApp = window.dbCol(item, 'Info_App');
+        const infoAvvisi = window.dbCol(item, 'Info_Avvisi');
+
+        if (infoSms || infoApp || infoAvvisi) {
+            const ticketBox = window.mk('div', { id: 'ticket-info-box', class: 'ticket-info-content', style: { display: 'none' } });
+            if(infoSms) ticketBox.appendChild(window.mk('p', { class: 'mb-10' }, [window.mk('strong', {}, '📱 SMS'), window.mk('br'), infoSms]));
+            if(infoApp) ticketBox.appendChild(window.mk('p', { class: 'mb-10' }, [window.mk('strong', {}, '📲 APP'), window.mk('br'), infoApp]));
+            if(infoAvvisi) ticketBox.appendChild(window.mk('div', { class: 'warning-box' }, [window.mk('strong', {}, `⚠️ ${window.t('label_warning')}: `), infoAvvisi]));
+
+            const toggleBtn = window.mk('button', { 
+                class: 'ticket-toggle-btn', 
+                onclick: () => { 
+                    const t = document.getElementById('ticket-info-box'); 
+                    if(t) t.style.display = (t.style.display === 'none') ? 'block' : 'none'; 
+                } 
+            }, `🎟️ ${window.t('how_to_ticket')} ▾`);
+
+            container.append(toggleBtn, ticketBox);
+        }
+
+        // Sezione Mappa (nascosta di default)
+        const mapBox = window.mk('div', { id: 'bus-map-wrapper', class: 'map-hidden-container', style: { display: 'none' } }, [
+            window.mk('div', { id: 'bus-map', class: 'bus-map-frame' }),
+            window.mk('p', { class: 'map-modal-hint' }, window.t('map_hint'))
+        ]);
+        
+        const mapBtn = window.mk('button', { 
+            class: 'map-toggle-btn',
+            onclick: () => {
+                const m = document.getElementById('bus-map-wrapper');
+                if(m) m.style.display = (m.style.display === 'none') ? 'block' : 'none';
+            }
+        }, `🗺️ ${window.t('show_map')} ▾`);
+
+        container.append(mapBtn, mapBox);
+
+        // Inputs Ricerca
+        const inputs = window.mk('div', {}, [
+            window.mk('div', { class: 'bus-inputs' }, [
+                window.mk('div', { style: { flex:1 } }, [
+                    window.mk('label', { class: 'input-label-sm' }, window.t('departure')),
+                    window.mk('select', { id: 'selPartenza', class: 'bus-select', onchange: function(){ window.filterDestinations(this.value) } }, 
+                        window.mk('option', { disabled: true, selected: true }, window.t('loading'))
+                    )
+                ]),
+                window.mk('div', { style: { flex:1 } }, [
+                    window.mk('label', { class: 'input-label-sm' }, window.t('arrival')),
+                    window.mk('select', { id: 'selArrivo', class: 'bus-select', disabled: true }, 
+                        window.mk('option', { disabled: true, selected: true }, window.t('select_start'))
+                    )
+                ])
+            ]),
+            window.mk('div', { class: 'bus-inputs' }, [
+                window.mk('div', { style: { flex:1 } }, [
+                    window.mk('label', { class: 'input-label-sm' }, window.t('date_trip')),
+                    window.mk('input', { type: 'date', id: 'selData', class: 'bus-select', value: new Date().toISOString().split('T')[0] })
+                ]),
+                window.mk('div', { style: { flex:1 } }, [
+                    window.mk('label', { class: 'input-label-sm' }, window.t('time_trip')),
+                    window.mk('input', { type: 'time', id: 'selOra', class: 'bus-select', value: new Date().toTimeString().substring(0,5) })
+                ])
+            ])
+        ]);
+
+        const btnSearch = window.mk('button', { 
+            id: 'btnSearchBus', 
+            class: 'btn-yellow', 
+            style: { width: '100%', marginTop: '5px', opacity: '0.5', pointerEvents: 'none' },
+            onclick: () => window.eseguiRicercaBus()
+        }, window.t('find_times'));
+
+        const results = window.mk('div', { id: 'busResultsContainer', class: 'd-none mt-20' }, [
+            window.mk('div', { id: 'nextBusCard', class: 'bus-result-main' }),
+            window.mk('div', { style: { fontSize:'0.8rem', fontWeight:'bold', color:'#666', marginTop:'15px' } }, `${window.t('next_runs')}:`),
+            window.mk('div', { id: 'otherBusList', class: 'bus-list-container' })
+        ]);
+
+        container.append(inputs, btnSearch, results);
+        return container;
     }
 
-    _generateFerryHtml() {
-        setTimeout(() => window.initFerrySearch(), 50);
-        return window.renderFerryTemplate();
-    }
+    // FIX 2: Ricreato UI Battelli completa
+    _createFerryDOM() {
+        const container = window.mk('div', { class: 'bus-search-box animate-fade' });
+        
+        // Header Battello
+        const headerIcon = window.mk('span', { 
+            class: 'material-icons', 
+            style: { background: 'linear-gradient(135deg, #0288D1, #0277BD)', boxShadow: '0 4px 6px rgba(2, 119, 189, 0.3)' } 
+        }, 'directions_boat');
+        
+        container.appendChild(window.mk('div', { class: 'bus-title', style: { paddingBottom:'15px' } }, [headerIcon, ` ${window.t('plan_trip')} (Battello)`]));
 
-    _generateTrainHtml() {
-        const now = new Date();
-        const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-        return window.trainSearchRenderer ? window.trainSearchRenderer(null, nowTime) : "<p>Errore UI Treni</p>";
+        // Info Biglietti & Meteo
+        const ticketBox = window.mk('div', { id: 'ticket-info-box-ferry', class: 'ticket-info-content', style: { display: 'none' } }, [
+            window.mk('p', {}, 'I biglietti sono acquistabili presso le biglietterie al molo.'),
+            window.mk('div', { class: 'warning-box' }, [window.mk('strong', {}, '⚠️ INFO METEO:'), ' In caso di mare mosso il servizio è sospeso.'])
+        ]);
+
+        const toggleBtn = window.mk('button', { 
+            class: 'ticket-toggle-btn', 
+            style: { background:'#e1f5fe', color:'#01579b', borderColor:'#b3e5fc' },
+            onclick: () => { 
+                const t = document.getElementById('ticket-info-box-ferry'); 
+                if(t) t.style.display = (t.style.display === 'none') ? 'block' : 'none'; 
+            } 
+        }, `🎟️ ${window.t('how_to_ticket')} ▾`);
+
+        container.append(toggleBtn, ticketBox);
+
+        // Inputs Battelli
+        const inputs = window.mk('div', {}, [
+            window.mk('div', { class: 'bus-inputs' }, [
+                window.mk('div', { style: { flex:1 } }, [
+                    window.mk('label', { class: 'input-label-sm' }, window.t('departure')),
+                    window.mk('select', { id: 'selPartenzaFerry', class: 'bus-select' }, 
+                        window.mk('option', { disabled: true, selected: true }, window.t('loading'))
+                    )
+                ]),
+                window.mk('div', { style: { flex:1 } }, [
+                    window.mk('label', { class: 'input-label-sm' }, window.t('arrival')),
+                    window.mk('select', { id: 'selArrivoFerry', class: 'bus-select' }, 
+                        window.mk('option', { disabled: true, selected: true }, window.t('select_start'))
+                    )
+                ])
+            ]),
+            window.mk('div', { class: 'bus-inputs' }, [
+                window.mk('div', { style: { flex:1 } }, [
+                    window.mk('label', { class: 'input-label-sm' }, window.t('date_trip')),
+                    window.mk('input', { type: 'date', id: 'selDataFerry', class: 'bus-select', value: new Date().toISOString().split('T')[0] })
+                ]),
+                window.mk('div', { style: { flex:1 } }, [
+                    window.mk('label', { class: 'input-label-sm' }, window.t('time_trip')),
+                    window.mk('input', { type: 'time', id: 'selOraFerry', class: 'bus-select', value: new Date().toTimeString().substring(0,5) })
+                ])
+            ])
+        ]);
+
+        const btnSearch = window.mk('button', { 
+            class: 'btn-yellow', 
+            style: { 
+                background: 'linear-gradient(135deg, #0288D1 0%, #01579b 100%)', 
+                color: 'white', width: '100%', fontWeight: 'bold', marginTop: '5px', 
+                boxShadow: '0 10px 25px -5px rgba(2, 136, 209, 0.4)'
+            },
+            onclick: () => window.eseguiRicercaTraghetto()
+        }, window.t('find_times'));
+
+        // Contenitore Risultati
+        const results = window.mk('div', { id: 'ferryResultsContainer', class: 'd-none mt-20' }, [
+            window.mk('div', { 
+                id: 'nextFerryCard', 
+                class: 'bus-result-main', 
+                style: { background: 'linear-gradient(135deg, #0277BD 0%, #01579b 100%)', boxShadow: '0 15px 30px -5px rgba(1, 87, 155, 0.3)' } 
+            }),
+            window.mk('div', { style: { fontSize:'0.8rem', fontWeight:'bold', color:'#666', marginTop:'15px' } }, `${window.t('next_runs')}:`),
+            window.mk('div', { id: 'otherFerryList', class: 'bus-list-container' })
+        ]);
+
+        container.append(inputs, btnSearch, results);
+        return container;
     }
 }
 
@@ -274,40 +425,22 @@ class TrailModalGenerator {
     generate() {
         const p = this.p;
         const titolo = window.dbCol(p, 'Paesi') || p.Nome;
-        const nomeSentiero = p.Nome || '';
-        const dist = p.Distanza || '--';
-        const dura = p.Durata || '--';
-        const diff = p.Tag || p.Difficolta || 'Media'; 
-        const desc = window.dbCol(p, 'Descrizione') || '';
-        
-        let linkGpx = p.Link_Gpx || p.Link_gpx || p.gpxlink || p.Mappa || p.Gpx;
-        if (!linkGpx) {
-            const key = Object.keys(p).find(k => k.toLowerCase().includes('gpx') || k.toLowerCase().includes('mappa'));
-            if (key) linkGpx = p[key];
-        }
+        const linkGpx = p.Link_Gpx || p.gpxlink || p.Mappa;
 
-        return `
-        <div class="trail-modal-pad">
-            <h2 class="trail-modal-title">${titolo}</h2>
-            ${nomeSentiero ? `<p class="trail-modal-subtitle">${nomeSentiero}</p>` : ''}
-            
-            <div class="trail-stats-grid">
-                <div class="trail-stat-box"><span class="material-icons">straighten</span><span class="stat-value">${dist}</span><span class="stat-label">${window.t('distance')}</span></div>
-                <div class="trail-stat-box"><span class="material-icons">schedule</span><span class="stat-value">${dura}</span><span class="stat-label">${window.t('duration')}</span></div>
-                <div class="trail-stat-box"><span class="material-icons">terrain</span><span class="stat-value">${diff}</span><span class="stat-label">${window.t('level')}</span></div>
-            </div>
-
-            <div class="trail-actions-group">
-                ${linkGpx ? `
-                <a href="${linkGpx}" download="${nomeSentiero || 'percorso'}.gpx" class="btn-download-gpx" target="_blank">
-                    <span class="material-icons">file_download</span> ${window.t('btn_download_gpx')}
-                </a>` : `
-                <div class="gpx-error-box">
-                    <span class="material-icons icon-sm">error_outline</span> ${window.t('gpx_missing')}
-                </div>`}
-            </div>
-            <div class="text-justify mt-10 line-height-relaxed color-dark">${desc}</div>
-        </div>`;
+        return window.mk('div', { class: 'trail-modal-pad' }, [
+            window.mk('h2', { class: 'trail-modal-title' }, titolo),
+            window.mk('div', { class: 'trail-stats-grid' }, [
+                window.mk('div', { class: 'trail-stat-box' }, [window.mk('span', { class: 'material-icons' }, 'straighten'), window.mk('span', { class: 'stat-value' }, p.Distanza||'--')]),
+                window.mk('div', { class: 'trail-stat-box' }, [window.mk('span', { class: 'material-icons' }, 'schedule'), window.mk('span', { class: 'stat-value' }, p.Durata||'--')]),
+                window.mk('div', { class: 'trail-stat-box' }, [window.mk('span', { class: 'material-icons' }, 'terrain'), window.mk('span', { class: 'stat-value' }, p.Tag||'Media')])
+            ]),
+            window.mk('div', { class: 'trail-actions-group' }, 
+                linkGpx ? window.mk('a', { href: linkGpx, download: '', class: 'btn-download-gpx', target: '_blank' }, [
+                    window.mk('span', { class: 'material-icons' }, 'file_download'), ` ${window.t('btn_download_gpx')}`
+                ]) : window.mk('div', { class: 'gpx-error-box' }, window.t('gpx_missing'))
+            ),
+            window.mk('div', { class: 'text-justify mt-10 line-height-relaxed color-dark' }, window.dbCol(p, 'Descrizione'))
+        ]);
     }
 }
 
@@ -317,10 +450,11 @@ class MapModalGenerator {
     generate() {
         const uniqueMapId = 'modal-map-' + Math.random().toString(36).substr(2, 9);
         setTimeout(() => window.initGpxMap(uniqueMapId, this.url), 100);
-        return `
-            <h3 class="text-center mb-10">${window.t('map_route_title')}</h3>
-            <div id="${uniqueMapId}" class="map-modal-frame"></div>
-            <p class="map-modal-hint">${window.t('map_zoom_hint')}</p>`;
+        return window.mk('div', {}, [
+            window.mk('h3', { class: 'text-center mb-10' }, window.t('map_route_title')),
+            window.mk('div', { id: uniqueMapId, class: 'map-modal-frame' }),
+            window.mk('p', { class: 'map-modal-hint' }, window.t('map_zoom_hint'))
+        ]);
     }
 }
 
@@ -328,19 +462,14 @@ class RestaurantModalGenerator {
     constructor(item) { this.item = item; }
     getClass() { return 'modal-content'; }
     generate() {
-        const nome = window.dbCol(this.item, 'Nome');
-        const indirizzo = window.dbCol(this.item, 'Paesi') || ''; 
-        const desc = window.dbCol(this.item, 'Descrizioni') || window.t('desc_missing'); 
-
-        return `
-            <div class="rest-modal-wrapper">
-                <div class="rest-header">
-                    <h2>${nome}</h2>
-                    <div class="rest-location"><span class="material-icons">place</span> ${indirizzo}</div>
-                    <div class="rest-divider"></div>
-                </div>
-                <div class="rest-body">${desc}</div>
-            </div>`;
+        return window.mk('div', { class: 'rest-modal-wrapper' }, [
+            window.mk('div', { class: 'rest-header' }, [
+                window.mk('h2', {}, window.dbCol(this.item, 'Nome')),
+                window.mk('div', { class: 'rest-location' }, [window.mk('span', { class: 'material-icons' }, 'place'), ` ${window.dbCol(this.item, 'Paesi')}`]),
+                window.mk('div', { class: 'rest-divider' })
+            ]),
+            window.mk('div', { class: 'rest-body' }, window.dbCol(this.item, 'Descrizioni') || window.t('desc_missing'))
+        ]);
     }
 }
 
@@ -348,9 +477,11 @@ class PharmacyModalGenerator {
     constructor(item) { this.item = item; }
     getClass() { return 'modal-content'; }
     generate() {
-        const nome = window.dbCol(this.item, 'Nome');
-        const paesi = window.dbCol(this.item, 'Paesi');
-        return `<h2>${nome}</h2><p>📍 ${this.item.Indirizzo}, ${paesi}</p><p>📞 <a href="tel:${this.item.Numero}">${this.item.Numero}</a></p>`;
+        return window.mk('div', { class: 'modal-body-pad' }, [
+            window.mk('h2', {}, window.dbCol(this.item, 'Nome')),
+            window.mk('p', {}, `📍 ${this.item.Indirizzo}, ${window.dbCol(this.item, 'Paesi')}`),
+            window.mk('p', {}, window.mk('a', { href: `tel:${this.item.Numero}` }, `📞 ${this.item.Numero}`))
+        ]);
     }
 }
 
@@ -358,57 +489,37 @@ class WineModalGenerator {
     constructor(item) { this.item = item; }
     getClass() { return 'modal-content'; }
     generate() {
-        if (!this.item) return '';
-        const item = this.item;
-        const nome = window.dbCol(item, 'Nome');
-        const tipo = window.dbCol(item, 'Tipo');
-        const produttore = window.dbCol(item, 'Produttore');
-        const uve = window.dbCol(item, 'Uve');
-        const gradi = window.dbCol(item, 'Gradi');
-        const abbinamenti = window.dbCol(item, 'Abbinamenti');
-        const desc = window.dbCol(item, 'Descrizione');
-        const foto = window.dbCol(item, 'Foto');
-
-        const t = String(tipo).toLowerCase();
+        if (!this.item) return window.mk('div', {});
+        const t = String(this.item.Tipo).toLowerCase();
         let color = '#9B2335'; 
         if (t.includes('bianco')) color = '#F4D03F'; 
-        if (t.includes('rosato') || t.includes('orange')) color = '#E67E22'; 
+        if (t.includes('rosato')) color = '#E67E22'; 
+        const foto = window.dbCol(this.item, 'Foto');
 
-        return `
-            <div class="mb-20">
-                ${foto ? `<img src="${foto}" class="wine-hero-img">` : 
-                `<div class="wine-placeholder-box">
-                    <i class="fa-solid fa-wine-bottle wine-placeholder-icon" style="color: ${color};"></i>
-                </div>`}
-
-                <div class="${foto ? 'wine-header-pad-img' : 'wine-header-pad'}">
-                    <h2 class="wine-title">${nome}</h2>
-                    <div class="wine-producer">
-                        <span class="material-icons icon-sm">storefront</span> ${produttore}
-                    </div>
-                </div>
-
-                <div class="wine-stats-grid">
-                    <div class="wine-stat-card">
-                        <div class="wine-stat-label">${window.t('wine_type')}</div>
-                        <div class="wine-stat-value" style="color:${color}">${tipo || '--'}</div>
-                    </div>
-                    <div class="wine-stat-card">
-                        <div class="wine-stat-label">${window.t('wine_deg')}</div>
-                        <div class="wine-stat-value">${gradi || '--'}</div>
-                    </div>
-                    ${uve ? `<div class="wine-grapes-box"><strong>🍇 ${window.t('wine_grapes')}:</strong> ${uve}</div>` : ''}
-                </div>
-
-                <div class="modal-body-pad">
-                    <p class="modal-desc-text mt-10">${desc}</p>
-                    ${abbinamenti ? `
-                    <div class="wine-pairing-box">
-                        <div class="font-bold mb-10 icon-xs text-uppercase">🍽️ ${window.t('wine_pairings')}</div>
-                        ${abbinamenti}
-                    </div>` : ''}
-                </div>
-            </div>`;
+        return window.mk('div', { class: 'mb-20' }, [
+            foto ? window.mk('img', { src: foto, class: 'wine-hero-img' }) : 
+            window.mk('div', { class: 'wine-placeholder-box' }, window.mk('i', { class: 'fa-solid fa-wine-bottle wine-placeholder-icon', style: { color } })),
+            
+            window.mk('div', { class: foto ? 'wine-header-pad-img' : 'wine-header-pad' }, [
+                window.mk('h2', { class: 'wine-title' }, window.dbCol(this.item, 'Nome')),
+                window.mk('div', { class: 'wine-producer' }, [window.mk('span', { class: 'material-icons icon-sm' }, 'storefront'), ` ${window.dbCol(this.item, 'Produttore')}`])
+            ]),
+            
+            window.mk('div', { class: 'wine-stats-grid' }, [
+                window.mk('div', { class: 'wine-stat-card' }, [
+                    window.mk('div', { class: 'wine-stat-label' }, window.t('wine_type')),
+                    window.mk('div', { class: 'wine-stat-value', style: { color } }, this.item.Tipo)
+                ]),
+                window.mk('div', { class: 'wine-stat-card' }, [
+                    window.mk('div', { class: 'wine-stat-label' }, window.t('wine_deg')),
+                    window.mk('div', { class: 'wine-stat-value' }, this.item.Gradi)
+                ])
+            ]),
+            
+            window.mk('div', { class: 'modal-body-pad' }, [
+                window.mk('p', { class: 'modal-desc-text mt-10' }, window.dbCol(this.item, 'Descrizione'))
+            ])
+        ]);
     }
 }
 
@@ -416,29 +527,17 @@ class AttractionModalGenerator {
     constructor(item) { this.item = item; }
     getClass() { return 'modal-content'; }
     generate() {
-        if (!this.item) return '';
-        const item = this.item;
-        const titolo = window.dbCol(item, 'Attrazioni') || window.dbCol(item, 'Titolo');
-        const curiosita = window.dbCol(item, 'Curiosita');
-        const desc = window.dbCol(item, 'Descrizione');
-        const img = window.dbCol(item, 'Immagine') || window.dbCol(item, 'Foto'); 
-
-        return `
-            ${img ? `<img src="${img}" class="monument-header-img">` : 
-            `<div class="monument-header-icon"><i class="fa-solid fa-landmark" style="font-size:4rem; color:#546e7a;"></i></div>`}
-
-            <div class="monument-body-pad">
-                <h2 class="monument-title" style="margin-top: ${img ? '0' : '20px'}">${titolo}</h2>
-                <div class="monument-divider"></div>
-
-                ${curiosita ? `
-                <div class="curiosity-box animate-fade">
-                    <div class="curiosity-title"><span class="material-icons icon-sm">lightbulb</span> ${window.t('label_curiosity')}</div>
-                    <div style="font-style:italic; line-height:1.5;">${curiosita}</div>
-                </div>` : ''}
-                
-                <p class="modal-desc-text text-justify">${desc || window.t('desc_missing')}</p>
-            </div>`;
+        const img = window.dbCol(this.item, 'Immagine');
+        return window.mk('div', {}, [
+            img ? window.mk('img', { src: img, class: 'monument-header-img' }) : 
+            window.mk('div', { class: 'monument-header-icon' }, window.mk('i', { class: 'fa-solid fa-landmark', style: { fontSize:'4rem', color:'#546e7a' } })),
+            
+            window.mk('div', { class: 'monument-body-pad' }, [
+                window.mk('h2', { class: 'monument-title', style: { marginTop: img ? '0' : '20px' } }, window.dbCol(this.item, 'Attrazioni')),
+                window.mk('div', { class: 'monument-divider' }),
+                window.mk('p', { class: 'modal-desc-text text-justify' }, window.dbCol(this.item, 'Descrizione'))
+            ])
+        ]);
     }
 }
 
@@ -446,18 +545,11 @@ class BeachModalGenerator {
     constructor(item) { this.item = item; }
     getClass() { return 'modal-content'; }
     generate() {
-        if (!this.item) return '';
-        const nome = this.item.Nome || 'Spiaggia';
-        const desc = window.dbCol(this.item, 'Descrizione') || '';
-        const tipo = this.item.Tipo || '';
-        
-        return `
-             <div class="modal-body-pad">
-                <h2 style="font-family:'Roboto Slab'; color:#00695C;">${nome}</h2>
-                <span class="c-pill mb-15" style="display:inline-block;">${tipo}</span>
-                <p class="line-height-relaxed color-444">${desc}</p>
-             </div>
-        `;
+        return window.mk('div', { class: 'modal-body-pad' }, [
+            window.mk('h2', { style: { fontFamily:'Roboto Slab', color:'#00695C' } }, this.item.Nome),
+            window.mk('span', { class: 'c-pill mb-15', style: { display:'inline-block' } }, this.item.Tipo),
+            window.mk('p', { class: 'line-height-relaxed color-444' }, window.dbCol(this.item, 'Descrizione'))
+        ]);
     }
 }
 

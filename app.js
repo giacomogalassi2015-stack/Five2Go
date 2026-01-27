@@ -1,45 +1,53 @@
-console.log("✅ 3. app.js caricato (Controller - Refactored Clean)");
+console.log("✅ 3. app.js caricato (Controller - DOM Safe Mode)");
 
 const content = document.getElementById('app-content');
 
-// --- SETUP LINGUA & HEADER ---
-const getGlobalFooter = () => `<footer class="app-footer"><p>© 2026 Five2Go. ${window.t('footer_rights')}</p></footer>`;
+// --- SETUP HEADER (DOM) ---
+const createGlobalFooter = () => window.mk('footer', { class: 'app-footer' }, 
+    window.mk('p', {}, `© 2026 Five2Go. ${window.t('footer_rights')}`)
+);
 
 function setupHeaderElements() {
     const header = document.querySelector('header');
     
-    // 1. PULIZIA
-    const oldActions = header.querySelector('.header-actions');
+    const oldActions = header.querySelector('.header-actions-container');
     if (oldActions) oldActions.remove();
     header.querySelectorAll('.material-icons').forEach(i => i.remove());
 
-    // 2. LOGICA: Se NON siamo in home, ci fermiamo qui
     if (window.currentViewName !== 'home') return; 
 
-    // 3. COSTRUZIONE (Solo per Home)
-    const actionsContainer = document.createElement('div');
-    actionsContainer.className = 'header-actions animate-fade header-actions-container'; // USA LA NUOVA CLASSE
-    actionsContainer.id = 'header-btn-lang'; 
-    // NOTA: Ho rimosso Object.assign con stili inline, ora è tutto in .header-actions-container
-
+    // Costruzione Container Lingue
     const currFlag = window.AVAILABLE_LANGS.find(l => l.code === window.currentLang).flag;
     const currCode = window.currentLang.toUpperCase();
+    
+    // Dropdown (nascosto di base)
+    const dropdown = window.mk('div', { class: 'lang-dropdown lang-dropdown-wrapper', id: 'lang-dropdown' });
+    window.AVAILABLE_LANGS.forEach(l => {
+        const btn = window.mk('button', { 
+            class: `lang-opt ${l.code === window.currentLang ? 'active' : ''}`,
+            onclick: () => window.changeLanguage(l.code)
+        }, [
+            window.mk('span', { class: 'lang-flag' }, l.flag),
+            ` ${l.label}`
+        ]);
+        dropdown.appendChild(btn);
+    });
 
-    const langSelector = document.createElement('div');
-    langSelector.className = 'lang-selector';
-    // Ho aggiunto la classe lang-dropdown-wrapper al dropdown
-    langSelector.innerHTML = `
-        <button class="current-lang-btn" onclick="toggleLangDropdown(event)">
-            <span class="lang-flag">${currFlag}</span> ${currCode} ▾
-        </button>
-        <div class="lang-dropdown lang-dropdown-wrapper" id="lang-dropdown">
-            ${window.AVAILABLE_LANGS.map(l => `
-                <button class="lang-opt ${l.code === window.currentLang ? 'active' : ''}" onclick="changeLanguage('${l.code}')">
-                    <span class="lang-flag">${l.flag}</span> ${l.label}
-                </button>
-            `).join('')}
-        </div>`;
-    actionsContainer.appendChild(langSelector);
+    // Selettore principale
+    const langSelector = window.mk('div', { class: 'lang-selector' }, [
+        window.mk('button', { class: 'current-lang-btn', onclick: window.toggleLangDropdown }, [
+            window.mk('span', { class: 'lang-flag' }, currFlag), 
+            ` ${currCode} ▾`
+        ]),
+        dropdown
+    ]);
+
+    const actionsContainer = window.mk('div', { 
+        id: 'header-btn-lang',
+        class: 'header-actions animate-fade header-actions-container' 
+    }, langSelector);
+
+    header.appendChild(actionsContainer);
 }
 
 function updateNavBar() {
@@ -59,7 +67,6 @@ window.changeLanguage = function(langCode) {
     setupHeaderElements(); 
     updateNavBar(); 
     
-    // Ricarica la vista corrente
     const activeNav = document.querySelector('.nav-item.active');
     if(activeNav) {
         const onclickAttr = activeNav.getAttribute('onclick');
@@ -117,109 +124,111 @@ window.switchView = async function(view, el) {
         else if (view === 'mappe_monumenti') renderSubMenu([{ label: window.t('menu_map'), table: "Mappe" }], 'Mappe');
     } catch (err) {
         console.error(err);
-        content.innerHTML = `<div class="error-msg">${window.t('error')}: ${err.message}</div>`;
+        content.innerHTML = '';
+        content.appendChild(window.mk('div', { class: 'error-msg' }, `${window.t('error')}: ${err.message}`));
     }
 };
 
 function renderHome() {
     const bgImage = "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+    
+    content.innerHTML = '';
+    
+    // Griglia Lingue per Home
+    const langGrid = window.mk('div', { class: 'lang-grid' });
+    window.AVAILABLE_LANGS.forEach(l => {
+        langGrid.appendChild(window.mk('button', { 
+            class: `lang-tile ${l.code === window.currentLang ? 'active' : ''}`,
+            onclick: () => window.changeLanguage(l.code)
+        }, [
+            window.mk('span', { class: 'lang-flag-large' }, l.flag),
+            window.mk('span', { class: 'lang-label' }, l.label)
+        ]));
+    });
 
-    content.innerHTML = `
-    <div class="welcome-card animate-fade" style="background-image: url('${bgImage}');">
-        <div class="welcome-overlay">
-            <div class="welcome-content">
-                <h1 class="welcome-title">${window.t('welcome_app_name')}</h1>
-                <div class="welcome-divider"></div>
-                <div class="lang-grid">
-                    ${window.AVAILABLE_LANGS.map(l => `
-                        <button class="lang-tile ${l.code === window.currentLang ? 'active' : ''}" onclick="changeLanguage('${l.code}')">
-                            <span class="lang-flag-large">${l.flag}</span>
-                            <span class="lang-label">${l.label}</span>
-                        </button>
-                    `).join('')}
-                </div>
-            </div>
-        </div>
-    </div>`;
+    const welcomeCard = window.mk('div', { class: 'welcome-card animate-fade', style: { backgroundImage: `url('${bgImage}')` } }, 
+        window.mk('div', { class: 'welcome-overlay' }, 
+            window.mk('div', { class: 'welcome-content' }, [
+                window.mk('h1', { class: 'welcome-title' }, window.t('welcome_app_name')),
+                window.mk('div', { class: 'welcome-divider' }),
+                langGrid
+            ])
+        )
+    );
+    
+    content.appendChild(welcomeCard);
 }
 
 function renderSubMenu(options, defaultTable) {
-    let menuHtml = `
-    <div class="nav-sticky-header animate-fade">
-        <div class="nav-scroll-container">
-            ${options.map(opt => `
-                <button class="btn-3d" onclick="loadTableData('${opt.table}', this)">
-                    ${opt.label}
-                </button>
-            `).join('')}
-        </div>
-    </div>
-    <div id="sub-content"></div>`;
+    content.innerHTML = '';
+
+    const scrollContainer = window.mk('div', { class: 'nav-scroll-container' });
+    options.forEach(opt => {
+        const btn = window.mk('button', { 
+            class: 'btn-3d', 
+            onclick: function() { loadTableData(opt.table, this); } 
+        }, opt.label);
+        scrollContainer.appendChild(btn);
+    });
+
+    const stickyHeader = window.mk('div', { class: 'nav-sticky-header animate-fade' }, scrollContainer);
+    const subContent = window.mk('div', { id: 'sub-content' });
+
+    content.append(stickyHeader, subContent);
     
-    content.innerHTML = menuHtml;
-    
-    const firstBtn = content.querySelector('.btn-3d');
+    // Click automatico sul primo
+    const firstBtn = scrollContainer.firstChild;
     if (firstBtn) {
         loadTableData(defaultTable, firstBtn);
     }
 }
 
-// --- FUNZIONE CENTRALE REFACTORIZZATA (USA STRATEGY) ---
+// --- FUNZIONE CENTRALE (USA STRATEGY) ---
 window.loadTableData = async function(tableName, btnEl) {
     const subContent = document.getElementById('sub-content');
     if (!subContent) return;
 
-    // 1. Gestione UI Bottoni
+    // UI Buttons
     document.querySelectorAll('.nav-chip, .btn-3d').forEach(btn => btn.classList.remove('active-chip', 'active-3d'));
     if (btnEl) {
         if(btnEl.classList.contains('nav-chip')) btnEl.classList.add('active-chip');
         if(btnEl.classList.contains('btn-3d')) btnEl.classList.add('active-3d');
     }
 
-    // 2. Reset Filtri
+    // Reset Filtri
     const existingFilters = document.getElementById('dynamic-filters');
     if(existingFilters) existingFilters.remove();
     const filterBtn = document.getElementById('filter-toggle-btn');
     if(filterBtn) filterBtn.style.display = 'none';
 
-    // 3. Loading UI
+    // Loading
     if (!window.appCache[tableName] && tableName !== 'Mappe') {
-        subContent.innerHTML = `<div class="loader" style="margin-top:20px;">${window.t('loading')}...</div>`;
+        subContent.innerHTML = '';
+        subContent.appendChild(window.mk('div', { class: 'loader', style: { marginTop:'20px' } }, `${window.t('loading')}...`));
     }
     
-    // 4. ESECUZIONE STRATEGIA
     try {
         const strategy = window.viewStrategyContext.getStrategy(tableName);
         if (strategy) {
             await strategy.load(subContent);
         } else {
-            console.error(`Nessuna strategia trovata per: ${tableName}`);
-            subContent.innerHTML = `<p class="error-msg">Nessuna vista disponibile per ${tableName}</p>`;
+            console.error(`Nessuna strategia per: ${tableName}`);
+            subContent.innerText = `Nessuna vista per ${tableName}`;
         }
     } catch (err) {
         console.error(err);
-        subContent.innerHTML = `<p class="error-msg">${window.t('error')}: ${err.message}</p>`;
+        subContent.innerHTML = '';
+        subContent.appendChild(window.mk('p', { class: 'error-msg' }, `${window.t('error')}: ${err.message}`));
     }
 };
 
-// --- SWIPE GESTURE ---
+// --- SWIPE GESTURE (Invariata) ---
 const minSwipeDistance = 50; 
 const maxVerticalDistance = 100;
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
+let touchStartX = 0; let touchStartY = 0; let touchEndX = 0; let touchEndY = 0;
 
 document.addEventListener('touchstart', e => {
-    if (e.target.closest('.leaflet-container') || 
-        e.target.closest('.map-container') || 
-        e.target.closest('.swiper-container') ||      
-        e.target.closest('.nav-scroll-container') ||  
-        e.target.closest('.nav-sticky-header') ||     
-        e.target.closest('.modal-content')) {         
-        touchStartX = null; 
-        return;
-    }
+    if (e.target.closest('.leaflet-container') || e.target.closest('.map-container') || e.target.closest('.nav-scroll-container')) { touchStartX = null; return; }
     touchStartX = e.changedTouches[0].clientX;
     touchStartY = e.changedTouches[0].clientY;
 }, {passive: true});
@@ -234,7 +243,6 @@ document.addEventListener('touchend', e => {
 function handlePageSwipe() {
     const xDiff = touchEndX - touchStartX;
     const yDiff = touchEndY - touchStartY;
-    
     if (Math.abs(xDiff) < minSwipeDistance) return;
     if (Math.abs(yDiff) > maxVerticalDistance) return;
     if (Math.abs(yDiff) > Math.abs(xDiff)) return;
@@ -243,100 +251,88 @@ function handlePageSwipe() {
     if (tabs.length === 0) return;
 
     let activeIndex = -1;
-    tabs.forEach((tab, index) => {
-        if (tab.classList.contains('active-chip') || tab.classList.contains('active-3d')) {
-            activeIndex = index;
-        }
-    });
-
+    tabs.forEach((tab, index) => { if (tab.classList.contains('active-chip') || tab.classList.contains('active-3d')) activeIndex = index; });
     if (activeIndex === -1) return; 
 
-    if (xDiff < 0) {
-        if (activeIndex < tabs.length - 1) tabs[activeIndex + 1].click();
-    } else {
-        if (activeIndex > 0) tabs[activeIndex - 1].click();
-    }
+    if (xDiff < 0) { if (activeIndex < tabs.length - 1) tabs[activeIndex + 1].click(); } 
+    else { if (activeIndex > 0) tabs[activeIndex - 1].click(); }
     touchStartX = null;
-    touchStartY = null;
 }
 
-// --- RENDER SERVIZI ---
+// --- RENDER SERVIZI (DOM) ---
 window.renderServicesGrid = async function() {
     const content = document.getElementById('app-content');
     
-    // Per i trasporti usiamo ancora tempTransportData perché serve alla modale
     const { data, error } = await window.supabaseClient.from('Trasporti').select('*');
     if (error) { 
-        console.error(error);
-        content.innerHTML = `<p class="error-msg">${window.t('error')}</p>`; 
+        content.innerHTML = ''; content.appendChild(window.mk('p', { class: 'error-msg' }, window.t('error'))); 
         return;
     }
     window.tempTransportData = data;
 
     function getServiceIcon(name, type) {
         const n = name.toLowerCase();
-        if (n.includes('treno') || n.includes('stazione')) return 'train';
-        if (n.includes('battello') || n.includes('traghetto')) return 'directions_boat';
-        if (n.includes('bus') || n.includes('autobus')) return 'directions_bus';
+        if (n.includes('treno')) return 'train';
+        if (n.includes('battello')) return 'directions_boat';
+        if (n.includes('bus')) return 'directions_bus';
         if (n.includes('taxi')) return 'local_taxi';
-        if (type === 'farmacia') return 'local_pharmacy';
-        if (type === 'info') return 'phonelink_ring';
         return 'confirmation_number';
     }
 
-    let html = '<div class="services-grid-modern animate-fade">';
+    const grid = window.mk('div', { class: 'services-grid-modern animate-fade' });
+
     data.forEach((t, index) => {
         const nome = t.Mezzo || t.Località || 'Trasporto';
         const icon = getServiceIcon(nome, 'trasporto');
-        html += `
-        <div class="service-widget" onclick="openModal('transport', ${index})">
-            <span class="material-icons widget-icon">${icon}</span>
-            <span class="widget-label">${nome}</span>
-        </div>`;
+        const widget = window.mk('div', { class: 'service-widget', onclick: () => window.openModal('transport', index) }, [
+            window.mk('span', { class: 'material-icons widget-icon' }, icon),
+            window.mk('span', { class: 'widget-label' }, nome)
+        ]);
+        grid.appendChild(widget);
     });
 
-    html += `
-    <div class="service-widget" onclick="renderSimpleList('Numeri_utili')">
-        <span class="material-icons widget-icon">phonelink_ring</span>
-        <span class="widget-label">${window.t('menu_num')}</span>
-    </div>`;
+    // Widget Extra
+    grid.appendChild(window.mk('div', { class: 'service-widget', onclick: () => renderSimpleList('Numeri_utili') }, [
+        window.mk('span', { class: 'material-icons widget-icon' }, 'phonelink_ring'),
+        window.mk('span', { class: 'widget-label' }, window.t('menu_num'))
+    ]));
     
-    html += `
-    <div class="service-widget" onclick="renderSimpleList('Farmacie')">
-        <span class="material-icons widget-icon">medical_services</span>
-        <span class="widget-label">${window.t('menu_pharm')}</span>
-    </div>`;
+    grid.appendChild(window.mk('div', { class: 'service-widget', onclick: () => renderSimpleList('Farmacie') }, [
+        window.mk('span', { class: 'material-icons widget-icon' }, 'medical_services'),
+        window.mk('span', { class: 'widget-label' }, window.t('menu_pharm'))
+    ]));
 
-    html += '</div>';
-    html += getGlobalFooter();
-    content.innerHTML = html;
+    content.innerHTML = '';
+    content.append(grid, createGlobalFooter());
 };
 
 function renderSimpleList(tableName) {
     const cleanTitle = tableName.replace('_', ' '); 
-    const layout = `
-    <div class="header-simple-list animate-fade">
-        <button onclick="renderServicesGrid()" class="btn-back-custom">
-            <span class="material-icons">arrow_back</span>
-        </button>
-        <h2>${cleanTitle}</h2>
-    </div>
-    <div id="sub-content">
-        <div class="loader">${window.t('loading')}...</div>
-    </div>`;
+    content.innerHTML = '';
 
-    content.innerHTML = layout;
+    const header = window.mk('div', { class: 'header-simple-list animate-fade' }, [
+        window.mk('button', { class: 'btn-back-custom', onclick: window.renderServicesGrid }, 
+            window.mk('span', { class: 'material-icons' }, 'arrow_back')
+        ),
+        window.mk('h2', {}, cleanTitle)
+    ]);
+
+    const subContent = window.mk('div', { id: 'sub-content' }, 
+        window.mk('div', { class: 'loader' }, `${window.t('loading')}...`)
+    );
+
+    content.append(header, subContent);
     window.loadTableData(tableName, null);
 }
 
 window.toggleTicketInfo = function() {
     const box = document.getElementById('ticket-info-box');
-    if (box) { box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none'; }
+    if (box) box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
 };
 
 window.toggleBusMap = function() {
     const wrapper = document.getElementById('bus-map-wrapper');
-    if (wrapper) { wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none'; }
+    if (wrapper) wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none';
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -345,7 +341,3 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNavBar(); 
     switchView('home');
 });
-
-window.apriTrenitalia = function() {
-    window.open('https://www.trenitalia.com', '_blank');
-};

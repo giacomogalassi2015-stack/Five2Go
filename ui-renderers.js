@@ -1,87 +1,136 @@
-console.log("✅ 2. ui-renderers.js caricato (Refactored IDs & Sanitized)");
+console.log("✅ 2. ui-renderers.js caricato (DOM Safe Mode - Fixed IDs)");
 
 // ============================================================
-// 1. RENDERER DELLE CARD (LISTE)
+// 1. RENDERER DELLE CARD (Restituiscono ELEMENTI DOM, non stringhe)
 // ============================================================
 
 window.ristoranteRenderer = (r) => {
-    // dbCol è già sanitizzato da data-logic.js
     const nome = window.dbCol(r, 'Nome') || 'Ristorante';
     const paesi = window.dbCol(r, 'Paesi') || '';
+    const numero = r.Numero || r.Telefono || '';
     
-    // Manual escape per i campi diretti
-    const numero = window.escapeHTML(r.Numero || r.Telefono || '');
-    const itemId = window.escapeHTML(r.id || r.ID);
+    // FIX 3: Estrazione sicura dell'ID per evitare conflitti o undefined
+    const itemId = String(r.id || r.ID || r.POI_ID);
     
-    // Mappa è un URL, encodeURIComponent lo gestisce, ma sanitizziamo per sicurezza
-    const mapLink = r.Mappa || `https://www.google.com/maps/search/?api=1&query=$?q=$?q=${encodeURIComponent(nome + ' ' + paesi)}`;
-    // Nota: per href, il browser gestisce &amp;, ma evitiamo iniezioni HTML nella stringa
+    const mapLink = r.Mappa || `http://googleusercontent.com/maps.google.com/?q=${encodeURIComponent(nome + ' ' + paesi)}`;
 
-    return `
-    <div class="restaurant-glass-card"> 
-        <h3 class="rest-card-title">${nome}</h3>
-        <p class="rest-card-subtitle"><span class="material-icons">restaurant</span> ${paesi}</p>
-        <div class="rest-card-actions">
-            <div class="action-btn btn-info rest-btn-size" onclick="openModal('ristorante', '${itemId}')">
-                <span class="material-icons">info_outline</span>
-            </div>
-            ${numero ? `<div class="action-btn btn-call rest-btn-size" onclick="window.location.href='tel:${numero}'"><span class="material-icons">call</span></div>` : ''}
-            <div class="action-btn btn-map rest-btn-size" onclick="window.open('${mapLink}', '_blank')"><span class="material-icons">map</span></div>
-        </div>
-    </div>`;
+    // Costruzione sicura
+    return window.mk('div', { class: 'restaurant-glass-card' }, [
+        window.mk('h3', { class: 'rest-card-title' }, nome),
+        window.mk('p', { class: 'rest-card-subtitle' }, [
+            window.mk('span', { class: 'material-icons' }, 'restaurant'),
+            ` ${paesi}`
+        ]),
+        window.mk('div', { class: 'rest-card-actions' }, [
+            // Qui passiamo itemId, che è univoco per questa istanza grazie a 'const' e scope
+            window.mk('div', { class: 'action-btn btn-info rest-btn-size', onclick: () => window.openModal('ristorante', itemId) }, 
+                window.mk('span', { class: 'material-icons' }, 'info_outline')
+            ),
+            numero ? window.mk('div', { class: 'action-btn btn-call rest-btn-size', onclick: () => window.location.href=`tel:${numero}` },
+                window.mk('span', { class: 'material-icons' }, 'call')
+            ) : null,
+            window.mk('div', { class: 'action-btn btn-map rest-btn-size', onclick: () => window.open(mapLink, '_blank') },
+                window.mk('span', { class: 'material-icons' }, 'map')
+            )
+        ])
+    ]);
 };
 
-window.spiaggiaRenderer = function(item) {
-    // Manual escape campi diretti
-    const nome = window.escapeHTML(item.Nome || 'Spiaggia');
-    const comune = window.escapeHTML(item.Paese || item.Comune || '');
-    const tipo = window.escapeHTML(item.Tipo || 'Spiaggia'); 
-    const safeId = window.escapeHTML(item.id);
-    const iconClass = 'fa-water';
+window.spiaggiaRenderer = (item) => {
+    const nome = item.Nome || 'Spiaggia';
+    const comune = item.Paese || item.Comune || '';
+    const tipo = item.Tipo || 'Spiaggia';
+    
+    // FIX 3: ID Univoco Sicuro
+    const safeId = String(item.id || item.ID || item.POI_ID);
 
-    return `<div class="culture-card is-beach animate-fade" onclick="openModal('Spiagge', '${safeId}')"><div class="culture-info">${comune ? `<div class="culture-location"><span class="material-icons icon-sm">place</span> ${comune}</div>` : ''}<h3 class="culture-title">${nome}</h3><div class="culture-tags"><span class="c-pill">${tipo}</span></div></div><div class="culture-bg-icon"><i class="fa-solid ${iconClass}"></i></div></div>`;
+    return window.mk('div', { class: 'culture-card is-beach animate-fade', onclick: () => window.openModal('Spiagge', safeId) }, [
+        window.mk('div', { class: 'culture-info' }, [
+            comune ? window.mk('div', { class: 'culture-location' }, [
+                window.mk('span', { class: 'material-icons icon-sm' }, 'place'),
+                ` ${comune}`
+            ]) : null,
+            window.mk('h3', { class: 'culture-title' }, nome),
+            window.mk('div', { class: 'culture-tags' }, 
+                window.mk('span', { class: 'c-pill' }, tipo)
+            )
+        ]),
+        window.mk('div', { class: 'culture-bg-icon' }, 
+            window.mk('i', { class: 'fa-solid fa-water' })
+        )
+    ]);
 };
 
 window.sentieroRenderer = (s) => {
     const paese = window.dbCol(s, 'Paesi');
-    // Manual escape
-    const nomeSentiero = window.escapeHTML(s.Nome || '');
+    const nomeSentiero = s.Nome || '';
     const titoloMostrato = nomeSentiero || paese; 
-    const diff = window.escapeHTML(s.Tag || s.Difficolta || 'Media');
-    const gpxUrl = s.Gpxlink || s.gpxlink; // URL non va escaped con escapeHTML se usato in JS logic, ma attenzione al rendering
+    const diff = s.Tag || s.Difficolta || 'Media';
+    const gpxUrl = s.Gpxlink || s.gpxlink;
+    const itemId = String(s.id || s.ID || s.POI_ID);
     const uniqueMapId = `map-trail-${Math.random().toString(36).substr(2, 9)}`;
-    const itemId = window.escapeHTML(s.id || s.ID);
 
     let diffColor = '#f39c12';
     if (diff.toLowerCase().includes('facile') || diff.toLowerCase().includes('easy')) diffColor = '#27ae60';
     if (diff.toLowerCase().includes('difficile') || diff.toLowerCase().includes('hard')) diffColor = '#c0392b';
-    
-    // Qui gpxUrl viene passato a JS, non stampato direttamente nell'HTML visibile come testo
+
+    // Registra la mappa per l'inizializzazione successiva
     if (gpxUrl) { window.mapsToInit.push({ id: uniqueMapId, gpx: gpxUrl }); }
-    
-    // Nota: openModal prende stringhe, gpxUrl dentro le virgolette singole va bene
-    return `<div class="trail-card-modern animate-fade"><div id="${uniqueMapId}" class="trail-map-container" onclick="event.stopPropagation(); openModal('map', '${gpxUrl}')"></div><div class="trail-info-overlay"><h3 class="text-center font-bold color-dark" style="margin: 5px 0; font-family:'Roboto Slab'; font-size: 1.25rem;">${titoloMostrato}</h3><div class="text-center text-uppercase font-bold mb-20" style="font-size:0.75rem; color:${diffColor}; letter-spacing:1px;">${diff}</div><button onclick="openModal('trail', '${itemId}')" class="btn-trail-action">${window.t('btn_details')} <span class="material-icons" style="font-size:1.1rem;">arrow_forward</span></button></div></div>`;
+
+    return window.mk('div', { class: 'trail-card-modern animate-fade' }, [
+        window.mk('div', { 
+            id: uniqueMapId, 
+            class: 'trail-map-container',
+            onclick: (e) => { e.stopPropagation(); window.openModal('map', gpxUrl); }
+        }),
+        window.mk('div', { class: 'trail-info-overlay' }, [
+            window.mk('h3', { 
+                class: 'text-center font-bold color-dark', 
+                style: { margin: '5px 0', fontFamily: 'Roboto Slab', fontSize: '1.25rem' } 
+            }, titoloMostrato),
+            window.mk('div', { 
+                class: 'text-center text-uppercase font-bold mb-20',
+                style: { fontSize: '0.75rem', color: diffColor, letterSpacing: '1px' }
+            }, diff),
+            window.mk('button', { 
+                class: 'btn-trail-action',
+                onclick: () => window.openModal('trail', itemId)
+            }, [
+                window.t('btn_details'),
+                window.mk('span', { class: 'material-icons', style: { fontSize: '1.1rem' } }, 'arrow_forward')
+            ])
+        ])
+    ]);
 };
 
-window.vinoRenderer = function(item) {
-    const safeId = window.escapeHTML(item.id || item.ID); 
-    const nome = window.escapeHTML(item.Nome || 'Vino');
-    // dbCol già sanitizzato
+window.vinoRenderer = (item) => {
+    const safeId = String(item.id || item.ID || item.POI_ID);
+    const nome = item.Nome || 'Vino';
     const cantina = window.dbCol(item, 'Produttore') || ''; 
-    const tipoRaw = window.escapeHTML(item.Tipo || '');
-    const tipo = tipoRaw.toLowerCase().trim();
+    const tipo = (item.Tipo || '').toLowerCase().trim();
     
     let themeClass = 'is-wine-red'; 
     if (tipo.includes('bianco')) themeClass = 'is-wine-white';
     if (tipo.includes('rosato') || tipo.includes('orange')) themeClass = 'is-wine-orange';
-    
-    return `<div class="culture-card ${themeClass} animate-fade" onclick="openModal('Vini', '${safeId}')"><div class="culture-info">${cantina ? `<div class="culture-location"><span class="material-icons icon-sm">storefront</span> ${cantina}</div>` : ''}<div class="culture-title">${nome}</div><div class="culture-tags"><span class="c-pill" style="text-transform: capitalize;">${tipoRaw || 'Vino'}</span></div></div><div class="culture-bg-icon"><i class="fa-solid fa-wine-bottle"></i></div></div>`;
+
+    return window.mk('div', { class: `culture-card ${themeClass} animate-fade`, onclick: () => window.openModal('Vini', safeId) }, [
+        window.mk('div', { class: 'culture-info' }, [
+            cantina ? window.mk('div', { class: 'culture-location' }, [
+                window.mk('span', { class: 'material-icons icon-sm' }, 'storefront'), ` ${cantina}`
+            ]) : null,
+            window.mk('div', { class: 'culture-title' }, nome),
+            window.mk('div', { class: 'culture-tags' }, 
+                window.mk('span', { class: 'c-pill', style: { textTransform: 'capitalize' } }, item.Tipo || 'Vino')
+            )
+        ]),
+        window.mk('div', { class: 'culture-bg-icon' }, window.mk('i', { class: 'fa-solid fa-wine-bottle' }))
+    ]);
 };
 
 window.numeriUtiliRenderer = (n) => {
     const nome = window.dbCol(n, 'Nome') || 'Numero Utile';
     const paesi = window.dbCol(n, 'Paesi') || 'Info'; 
-    const numero = window.escapeHTML(n.Numero || n.Telefono || '');
+    const numero = n.Numero || n.Telefono || '';
     
     let icon = 'help_outline'; 
     const nLower = nome.toLowerCase();
@@ -90,22 +139,41 @@ window.numeriUtiliRenderer = (n) => {
     else if (nLower.includes('taxi')) icon = 'local_taxi';
     else if (nLower.includes('farmacia')) icon = 'local_pharmacy';
 
-    return `<div class="info-card animate-fade"><div class="info-icon-box"><span class="material-icons">${icon}</span></div><div class="info-text-col"><h3>${nome}</h3><p><span class="material-icons icon-sm">place</span> ${paesi}</p></div><div class="action-btn btn-call" onclick="window.location.href='tel:${numero}'"><span class="material-icons">call</span></div></div>`;
+    return window.mk('div', { class: 'info-card animate-fade' }, [
+        window.mk('div', { class: 'info-icon-box' }, window.mk('span', { class: 'material-icons' }, icon)),
+        window.mk('div', { class: 'info-text-col' }, [
+            window.mk('h3', {}, nome),
+            window.mk('p', {}, [window.mk('span', { class: 'material-icons icon-sm' }, 'place'), ` ${paesi}`])
+        ]),
+        window.mk('div', { class: 'action-btn btn-call', onclick: () => window.location.href=`tel:${numero}` },
+            window.mk('span', { class: 'material-icons' }, 'call')
+        )
+    ]);
 };
 
 window.farmacieRenderer = (f) => {
     const nome = window.dbCol(f, 'Farmacia') || window.dbCol(f, 'Nome') || 'Farmacia';
     const paese = window.dbCol(f, 'Paese') || window.dbCol(f, 'Paesi') || '';
-    const numero = window.escapeHTML(f.Telefono || f.Numero || '');
-    const itemId = window.escapeHTML(f.id || f.ID);
-    return `<div class="info-card animate-fade" onclick="openModal('farmacia', '${itemId}')"><div class="info-icon-box"><span class="material-icons">local_pharmacy</span></div><div class="info-text-col"><h3>${nome}</h3><p><span class="material-icons icon-sm">place</span> ${paese}</p></div><div class="action-btn btn-call" onclick="event.stopPropagation(); window.location.href='tel:${numero}'"><span class="material-icons">call</span></div></div>`;
+    const numero = f.Telefono || f.Numero || '';
+    const itemId = String(f.id || f.ID || f.POI_ID);
+
+    return window.mk('div', { class: 'info-card animate-fade', onclick: () => window.openModal('farmacia', itemId) }, [
+        window.mk('div', { class: 'info-icon-box' }, window.mk('span', { class: 'material-icons' }, 'local_pharmacy')),
+        window.mk('div', { class: 'info-text-col' }, [
+            window.mk('h3', {}, nome),
+            window.mk('p', {}, [window.mk('span', { class: 'material-icons icon-sm' }, 'place'), ` ${paese}`])
+        ]),
+        window.mk('div', { class: 'action-btn btn-call', onclick: (e) => { e.stopPropagation(); window.location.href=`tel:${numero}`; } },
+            window.mk('span', { class: 'material-icons' }, 'call')
+        )
+    ]);
 };
 
 window.attrazioniRenderer = (item) => {
-    const safeId = window.escapeHTML(item.POI_ID || item.id);
+    const safeId = String(item.POI_ID || item.id || item.ID);
     const titolo = window.dbCol(item, 'Attrazioni') || 'Attrazione';
     const paese = window.dbCol(item, 'Paese');
-    const tempo = window.escapeHTML(item.Tempo_visita || '--'); 
+    const tempo = item.Tempo_visita || '--'; 
     const diff = window.dbCol(item, 'Difficoltà Accesso') || 'Accessibile';
     const rawLabel = window.dbCol(item, 'Label') || 'Storico';
     const label = rawLabel.toLowerCase().trim(); 
@@ -115,8 +183,18 @@ window.attrazioniRenderer = (item) => {
     if (label === 'religioso') { themeClass = 'is-church'; iconClass = 'fa-church'; }
     else if (label === 'panorama') { themeClass = 'is-view'; iconClass = 'fa-mountain-sun'; }
     else if (label === 'storico') { themeClass = 'is-monument'; iconClass = 'fa-chess-rook'; }
-    
-    return `<div class="culture-card ${themeClass} animate-fade" onclick="openModal('attrazione', '${safeId}')"><div class="culture-info"><div class="culture-location"><span class="material-icons icon-sm">place</span> ${paese}</div><div class="culture-title">${titolo}</div><div class="culture-tags"><span class="c-pill"><span class="material-icons icon-xs">schedule</span> ${tempo}</span><span class="c-pill">${diff}</span></div></div><div class="culture-bg-icon"><i class="fa-solid ${iconClass}"></i></div></div>`;
+
+    return window.mk('div', { class: `culture-card ${themeClass} animate-fade`, onclick: () => window.openModal('attrazione', safeId) }, [
+        window.mk('div', { class: 'culture-info' }, [
+            window.mk('div', { class: 'culture-location' }, [window.mk('span', { class: 'material-icons icon-sm' }, 'place'), ` ${paese}`]),
+            window.mk('div', { class: 'culture-title' }, titolo),
+            window.mk('div', { class: 'culture-tags' }, [
+                window.mk('span', { class: 'c-pill' }, [window.mk('span', { class: 'material-icons icon-xs' }, 'schedule'), ` ${tempo}`]),
+                window.mk('span', { class: 'c-pill' }, diff)
+            ])
+        ]),
+        window.mk('div', { class: 'culture-bg-icon' }, window.mk('i', { class: `fa-solid ${iconClass}` }))
+    ]);
 };
 
 window.prodottoRenderer = (p) => {
@@ -124,99 +202,44 @@ window.prodottoRenderer = (p) => {
     const ideale = window.dbCol(p, 'Ideale per') || 'Tutti'; 
     const fotoKey = p.Prodotti_foto || titolo;
     const imgUrl = window.getSmartUrl(fotoKey, '', 200);
-    const itemId = window.escapeHTML(p.id || p.ID);
-    return `<div class="culture-card is-product animate-fade" onclick="openModal('product', '${itemId}')"><div class="culture-info"><div class="culture-title">${titolo}</div><div class="product-subtitle"><span class="material-icons">stars</span> ${window.t('ideal_for')}: ${ideale}</div></div><div class="culture-product-thumb"><img src="${imgUrl}" loading="lazy" alt="${titolo}"></div></div>`;
+    
+    // FIX 3: ID Sicuro
+    const itemId = String(p.id || p.ID || p.POI_ID);
+
+    return window.mk('div', { class: 'culture-card is-product animate-fade', onclick: () => window.openModal('product', itemId) }, [
+        window.mk('div', { class: 'culture-info' }, [
+            window.mk('div', { class: 'culture-title' }, titolo),
+            window.mk('div', { class: 'product-subtitle' }, [window.mk('span', { class: 'material-icons' }, 'stars'), ` ${window.t('ideal_for')}: ${ideale}`])
+        ]),
+        window.mk('div', { class: 'culture-product-thumb' }, 
+            window.mk('img', { src: imgUrl, loading: 'lazy', alt: titolo })
+        )
+    ]);
 };
 
 // ============================================================
-// 2. LOGICA MODALE (Factory Pattern - vedi strategies.js)
+// 2. LOGICA MODALE (DOM Only)
 // ============================================================
 
 window.openModal = async function(type, payload) {
-    console.log("Opening Modal (ID Pattern):", type, payload);
+    // Factory crea contenuto DOM
     const generator = window.ModalFactory.create(type, payload);
-    const contentHtml = generator.generate();
+    const contentEl = generator.generate(); 
     const modalClass = generator.getClass();
 
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay animate-fade';
-    document.body.appendChild(modal);
-    modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
-    modal.innerHTML = `<div class="${modalClass}"><span class="close-modal" onclick="this.parentElement.parentElement.remove()">×</span>${contentHtml}</div>`;
+    const overlay = window.mk('div', { class: 'modal-overlay animate-fade', onclick: (e) => { if(e.target === overlay) overlay.remove(); } });
+    
+    const contentWrapper = window.mk('div', { class: modalClass }, [
+        window.mk('span', { class: 'close-modal', onclick: () => overlay.remove() }, '×'),
+        contentEl
+    ]);
+
+    overlay.appendChild(contentWrapper);
+    document.body.appendChild(overlay);
 };
 
 // ============================================================
-// 3. TEMPLATE HELPERS (Per i Trasporti - Invariato)
-// ============================================================
-
-window.renderBusTemplate = (item) => {
-    // dbCol è safe
-    const infoSms = window.dbCol(item, 'Info_SMS');
-    const infoApp = window.dbCol(item, 'Info_App');
-    const infoAvvisi = window.dbCol(item, 'Info_Avvisi');
-    const hasTicketInfo = infoSms || infoApp || infoAvvisi;
-
-    let ticketSection = '';
-    if (hasTicketInfo) {
-        ticketSection = `
-        <button onclick="toggleTicketInfo()" class="ticket-toggle-btn">🎟️ ${window.t('how_to_ticket')} ▾</button>
-        <div id="ticket-info-box" class="ticket-info-content">
-            ${infoSms ? `<p class="mb-10"><strong>📱 SMS</strong><br>${infoSms}</p>` : ''}
-            ${infoApp ? `<p class="mb-10"><strong>📲 APP</strong><br>${infoApp}</p>` : ''}
-            ${infoAvvisi ? `<div class="warning-box"><strong>⚠️ ${window.t('label_warning')}:</strong> ${infoAvvisi}</div>` : ''}
-        </div>`;
-    }
-
-    const mapToggleSection = `
-        <button id="btn-bus-map-toggle" onclick="toggleBusMap()" class="map-toggle-btn">🗺️ ${window.t('show_map')} ▾</button>
-        <div id="bus-map-wrapper" class="map-hidden-container"><div id="bus-map" class="bus-map-frame"></div><p class="map-modal-hint">${window.t('map_hint')}</p></div>`;
-
-    const now = new Date();
-    const todayISO = now.toISOString().split('T')[0];
-    const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-
-    return `
-    <div class="bus-search-box animate-fade">
-        <div class="bus-title" style="margin-bottom: 0px; padding-bottom: 15px;"><span class="material-icons">directions_bus</span> ${window.t('plan_trip')}</div>
-        ${ticketSection} ${mapToggleSection}
-        <div class="bus-inputs">
-            <div style="flex:1;"><label class="input-label-sm">${window.t('departure')}</label><select id="selPartenza" class="bus-select" onchange="filterDestinations(this.value)"><option value="" disabled selected>${window.t('loading')}...</option></select></div>
-            <div style="flex:1;"><label class="input-label-sm">${window.t('arrival')}</label><select id="selArrivo" class="bus-select" disabled><option value="" disabled selected>${window.t('select_start')}</option></select></div>
-        </div>
-        <div class="bus-inputs">
-            <div style="flex:1;"><label class="input-label-sm">${window.t('date_trip')}</label><input type="date" id="selData" class="bus-select" value="${todayISO}"></div>
-            <div style="flex:1;"><label class="input-label-sm">${window.t('time_trip')}</label><input type="time" id="selOra" class="bus-select" value="${nowTime}"></div>
-        </div>
-        <button id="btnSearchBus" onclick="eseguiRicercaBus()" class="btn-yellow" style="width:100%; font-weight:bold; margin-top:5px; opacity: 0.5; pointer-events: none;">${window.t('find_times')}</button>
-        <div id="busResultsContainer" class="d-none mt-20"><div id="nextBusCard" class="bus-result-main"></div><div style="font-size:0.8rem; font-weight:bold; color:#666; margin-top:15px;">${window.t('next_runs')}:</div><div id="otherBusList" class="bus-list-container"></div></div>
-    </div>`;
-};
-
-window.renderFerryTemplate = () => {
-    const now = new Date();
-    const todayISO = now.toISOString().split('T')[0];
-    const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-
-    return `
-    <div class="bus-search-box animate-fade">
-        <div class="bus-title" style="margin-bottom: 0px; padding-bottom: 15px;"><span class="material-icons" style="background: linear-gradient(135deg, #0288D1, #0277BD); box-shadow: 0 4px 6px rgba(2, 119, 189, 0.3);">directions_boat</span> ${window.t('plan_trip')} (Battello)</div>
-        <button onclick="toggleTicketInfo()" class="ticket-toggle-btn" style="background:#e1f5fe; color:#01579b; border-color:#b3e5fc;">🎟️ ${window.t('how_to_ticket')} ▾</button>
-        <div id="ticket-info-box" class="ticket-info-content"><p>I biglietti sono acquistabili presso le biglietterie al molo.</p><div class="warning-box"><strong>⚠️ INFO METEO:</strong> In caso di mare mosso il servizio è sospeso.</div></div>
-        <div class="bus-inputs">
-            <div style="flex:1;"><label class="input-label-sm">${window.t('departure')}</label><select id="selPartenzaFerry" class="bus-select"><option value="" disabled selected>${window.t('loading')}...</option></select></div>
-            <div style="flex:1;"><label class="input-label-sm">${window.t('arrival')}</label><select id="selArrivoFerry" class="bus-select"><option value="" disabled selected>${window.t('select_start')}</option></select></div>
-        </div>
-        <div class="bus-inputs">
-            <div style="flex:1;"><label class="input-label-sm">${window.t('date_trip')}</label><input type="date" id="selDataFerry" class="bus-select" value="${todayISO}"></div>
-            <div style="flex:1;"><label class="input-label-sm">${window.t('time_trip')}</label><input type="time" id="selOraFerry" class="bus-select" value="${nowTime}"></div>
-        </div>
-        <button onclick="eseguiRicercaTraghetto()" class="btn-yellow" style="background: linear-gradient(135deg, #0288D1 0%, #01579b 100%); color:white; width:100%; font-weight:bold; margin-top:5px; box-shadow: 0 10px 25px -5px rgba(2, 136, 209, 0.4);">${window.t('find_times')}</button>
-        <div id="ferryResultsContainer" class="d-none mt-20"><div id="nextFerryCard" class="bus-result-main" style="background: linear-gradient(135deg, #0277BD 0%, #01579b 100%); box-shadow: 0 15px 30px -5px rgba(1, 87, 155, 0.3);"></div><div style="font-size:0.8rem; font-weight:bold; color:#666; margin-top:15px;">${window.t('next_runs')}:</div><div id="otherFerryList" class="bus-list-container"></div></div>
-    </div>`;
-};
-
-// ============================================================
-// 4. MAP & UTILS (GPX Init, Bottom Sheet Filters)
+// 3. MAP & UTILS
 // ============================================================
 
 window.initGpxMap = function(divId, gpxUrl) {
@@ -234,14 +257,16 @@ window.initGpxMap = function(divId, gpxUrl) {
 };
 
 window.renderGenericFilterableView = function(allData, filterKey, container, cardRenderer) {
-    container.innerHTML = `<div class="list-container animate-fade" id="dynamic-list" style="padding-bottom: 80px;"></div>`;
-    const listContainer = container.querySelector('#dynamic-list');
-    const oldSheet = document.getElementById('filter-sheet'); if (oldSheet) oldSheet.remove();
-    const oldOverlay = document.getElementById('filter-overlay'); if (oldOverlay) oldOverlay.remove();
-    const oldBtn = document.getElementById('filter-toggle-btn'); if (oldBtn) oldBtn.remove();
-    
-    // Sanitizziamo i valori usati per i filtri
-    let rawValues = allData.map(item => item[filterKey] ? window.escapeHTML(item[filterKey].trim()) : null).filter(x => x);
+    container.innerHTML = ''; 
+    const listContainer = window.mk('div', { class: 'list-container animate-fade', id: 'dynamic-list', style: { paddingBottom: '80px' } });
+    container.appendChild(listContainer);
+
+    ['filter-sheet', 'filter-overlay', 'filter-toggle-btn'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.remove();
+    });
+
+    let rawValues = allData.map(item => item[filterKey] ? item[filterKey].trim() : null).filter(x => x);
     let tagsRaw = [...new Set(rawValues)];
     const customOrder = ["Tutti", "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso", "Facile", "Media", "Difficile"];
     if (!tagsRaw.includes('Tutti')) tagsRaw.unshift('Tutti');
@@ -252,75 +277,124 @@ window.renderGenericFilterableView = function(allData, filterKey, container, car
         if (indexB !== -1) return 1;
         return a.localeCompare(b);
     });
-    const overlay = document.createElement('div'); overlay.id = 'filter-overlay'; overlay.className = 'sheet-overlay';
-    const sheet = document.createElement('div'); sheet.id = 'filter-sheet'; sheet.className = 'bottom-sheet';
-    sheet.innerHTML = `<div class="sheet-header"><div class="sheet-title">${window.t('filter_title')}</div><div class="material-icons sheet-close" onclick="closeFilterSheet()">close</div></div><div class="filter-grid" id="sheet-options"></div>`;
-    document.body.appendChild(overlay); document.body.appendChild(sheet);
-    const optionsContainer = sheet.querySelector('#sheet-options');
+
+    const overlay = window.mk('div', { id: 'filter-overlay', class: 'sheet-overlay' });
+    const optionsContainer = window.mk('div', { class: 'filter-grid', id: 'sheet-options' });
+    
+    const sheet = window.mk('div', { id: 'filter-sheet', class: 'bottom-sheet' }, [
+        window.mk('div', { class: 'sheet-header' }, [
+            window.mk('div', { class: 'sheet-title' }, window.t('filter_title')),
+            window.mk('div', { class: 'material-icons sheet-close', onclick: window.closeFilterSheet }, 'close')
+        ]),
+        optionsContainer
+    ]);
+
     let activeTag = 'Tutti'; 
+
     uniqueTags.forEach(tag => {
-        const chip = document.createElement('button'); chip.className = 'sheet-chip';
-        if (tag === 'Tutti') chip.classList.add('active-filter');
-        chip.innerText = (tag === 'Tutti') ? window.t('filter_all') : tag; 
-        chip.onclick = () => {
-            document.querySelectorAll('.sheet-chip').forEach(c => c.classList.remove('active-filter'));
-            chip.classList.add('active-filter');
-            activeTag = tag;
-            const filtered = tag === 'Tutti' ? allData : allData.filter(item => { const valDB = item[filterKey] ? item[filterKey].trim() : ''; return valDB.includes(tag) || (item.Nome && item.Nome.toLowerCase().includes('emergenza')); });
-            updateList(filtered); closeFilterSheet();
-        };
+        const isAll = tag === 'Tutti';
+        const chip = window.mk('button', { 
+            class: `sheet-chip ${isAll ? 'active-filter' : ''}`, 
+            onclick: () => {
+                document.querySelectorAll('.sheet-chip').forEach(c => c.classList.remove('active-filter'));
+                chip.classList.add('active-filter');
+                activeTag = tag;
+                const filtered = isAll ? allData : allData.filter(item => { 
+                    const valDB = item[filterKey] ? item[filterKey].trim() : ''; 
+                    return valDB.includes(tag) || (item.Nome && item.Nome.toLowerCase().includes('emergenza')); 
+                });
+                updateList(filtered); 
+                window.closeFilterSheet();
+            }
+        }, isAll ? window.t('filter_all') : tag);
         optionsContainer.appendChild(chip);
     });
-    const filterBtn = document.createElement('button'); filterBtn.id = 'filter-toggle-btn'; filterBtn.innerHTML = '<span class="material-icons">filter_list</span>'; filterBtn.style.display = 'block'; document.body.appendChild(filterBtn);
+
+    const filterBtn = window.mk('button', { 
+        id: 'filter-toggle-btn', 
+        style: { display: 'block' },
+        onclick: window.openFilterSheet
+    }, window.mk('span', { class: 'material-icons' }, 'filter_list'));
+
+    document.body.append(overlay, sheet, filterBtn);
+
     window.openFilterSheet = () => { overlay.classList.add('active'); sheet.classList.add('active'); };
     window.closeFilterSheet = () => { overlay.classList.remove('active'); sheet.classList.remove('active'); };
-    filterBtn.onclick = window.openFilterSheet; overlay.onclick = window.closeFilterSheet;
+    overlay.onclick = window.closeFilterSheet;
+
     function updateList(items) {
-        if (!items || items.length === 0) { listContainer.innerHTML = `<p style="text-align:center; padding:40px; color:#999;">${window.t('no_results')}</p>`; return; }
-        listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
+        listContainer.innerHTML = '';
+        if (!items || items.length === 0) { 
+            listContainer.appendChild(window.mk('p', { style: { textAlign:'center', padding:'40px', color:'#999' } }, window.t('no_results')));
+            return; 
+        }
+        
+        const frag = document.createDocumentFragment();
+        items.forEach(item => frag.appendChild(cardRenderer(item)));
+        listContainer.appendChild(frag);
+
         if (typeof window.initPendingMaps === 'function') setTimeout(() => window.initPendingMaps(), 100);
     }
     updateList(allData);
 };
 
 window.renderDoubleFilterView = function(allData, filtersConfig, container, cardRenderer) {
-    container.innerHTML = `<div class="list-container animate-fade" id="dynamic-list" style="padding-bottom: 80px;"></div>`;
-    const listContainer = container.querySelector('#dynamic-list');
-    const oldSheet = document.getElementById('filter-sheet'); if (oldSheet) oldSheet.remove();
-    const oldOverlay = document.getElementById('filter-overlay'); if (oldOverlay) oldOverlay.remove();
-    const oldBtn = document.getElementById('filter-toggle-btn'); if (oldBtn) oldBtn.remove();
+    container.innerHTML = '';
+    const listContainer = window.mk('div', { class: 'list-container animate-fade', id: 'dynamic-list', style: { paddingBottom: '80px' } });
+    container.appendChild(listContainer);
+
+    ['filter-sheet', 'filter-overlay', 'filter-toggle-btn'].forEach(id => { const el = document.getElementById(id); if(el) el.remove(); });
 
     const getUniqueValues = (key, customOrder = []) => {
         const raw = allData.map(i => window.dbCol(i, key)).filter(x => x).map(x => x.trim());
         let unique = [...new Set(raw)];
         if (customOrder && customOrder.length > 0) { return unique.sort((a, b) => { const idxA = customOrder.indexOf(a); const idxB = customOrder.indexOf(b); if (idxA !== -1 && idxB !== -1) return idxA - idxB; if (idxA !== -1) return -1; if (idxB !== -1) return 1; return a.localeCompare(b); }); } else { return unique.sort(); }
     };
+
     const values1 = getUniqueValues(filtersConfig.primary.key, filtersConfig.primary.customOrder);
     const values2 = getUniqueValues(filtersConfig.secondary.key, filtersConfig.secondary.customOrder);
     let activeVal1 = 'Tutti'; let activeVal2 = 'Tutti';
 
-    const overlay = document.createElement('div'); overlay.className = 'sheet-overlay';
-    const sheet = document.createElement('div'); sheet.className = 'bottom-sheet';
-    const title1 = filtersConfig.primary.title || window.t('filter_village');
-    const title2 = filtersConfig.secondary.title || window.t('filter_cat');
+    const overlay = window.mk('div', { class: 'sheet-overlay' });
+    const sheet = window.mk('div', { class: 'bottom-sheet' });
+    
+    const opts1 = window.mk('div', { class: 'filter-grid', id: 'section-1-options' });
+    const opts2 = window.mk('div', { class: 'filter-grid', id: 'section-2-options' });
 
-    sheet.innerHTML = `<div class="sheet-header"><div class="sheet-title">${window.t('filter_title')}</div><div class="material-icons sheet-close" onclick="closeFilterSheet()">close</div></div><div class="filter-section-title">${title1}</div><div class="filter-grid" id="section-1-options"></div><div class="filter-section-title" style="margin-top: 25px;">${title2}</div><div class="filter-grid" id="section-2-options"></div><button class="btn-apply-filters" onclick="closeFilterSheet()">${window.t('show_results')}</button>`;
-    document.body.appendChild(overlay); document.body.appendChild(sheet);
+    sheet.append(
+        window.mk('div', { class: 'sheet-header' }, [
+            window.mk('div', { class: 'sheet-title' }, window.t('filter_title')),
+            window.mk('div', { class: 'material-icons sheet-close', onclick: window.closeFilterSheet }, 'close')
+        ]),
+        window.mk('div', { class: 'filter-section-title' }, filtersConfig.primary.title || window.t('filter_village')),
+        opts1,
+        window.mk('div', { class: 'filter-section-title', style: { marginTop: '25px' } }, filtersConfig.secondary.title || window.t('filter_cat')),
+        opts2,
+        window.mk('button', { class: 'btn-apply-filters', onclick: window.closeFilterSheet }, window.t('show_results'))
+    );
+
+    document.body.append(overlay, sheet);
+
+    function createChip(text, isActive, onClick) {
+        return window.mk('button', { 
+            class: `sheet-chip ${isActive ? 'active-filter' : ''}`, 
+            onclick: onClick 
+        }, text);
+    }
 
     function renderChips() {
-        const c1 = sheet.querySelector('#section-1-options'); c1.innerHTML = '';
-        c1.appendChild(createChip(window.t('filter_all'), activeVal1 === 'Tutti', () => { activeVal1 = 'Tutti'; applyFilters(); renderChips(); }));
-        values1.forEach(v => { c1.appendChild(createChip(v, activeVal1 === v, () => { activeVal1 = v; applyFilters(); renderChips(); })); });
-        const c2 = sheet.querySelector('#section-2-options'); c2.innerHTML = '';
-        c2.appendChild(createChip(window.t('filter_all'), activeVal2 === 'Tutti', () => { activeVal2 = 'Tutti'; applyFilters(); renderChips(); }));
-        values2.forEach(v => { const label = v.charAt(0).toUpperCase() + v.slice(1); c2.appendChild(createChip(label, activeVal2 === v, () => { activeVal2 = v; applyFilters(); renderChips(); })); });
+        opts1.innerHTML = ''; opts2.innerHTML = '';
+        
+        opts1.appendChild(createChip(window.t('filter_all'), activeVal1 === 'Tutti', () => { activeVal1 = 'Tutti'; applyFilters(); renderChips(); }));
+        values1.forEach(v => opts1.appendChild(createChip(v, activeVal1 === v, () => { activeVal1 = v; applyFilters(); renderChips(); })));
+        
+        opts2.appendChild(createChip(window.t('filter_all'), activeVal2 === 'Tutti', () => { activeVal2 = 'Tutti'; applyFilters(); renderChips(); }));
+        values2.forEach(v => {
+            const label = v.charAt(0).toUpperCase() + v.slice(1);
+            opts2.appendChild(createChip(label, activeVal2 === v, () => { activeVal2 = v; applyFilters(); renderChips(); }));
+        });
     }
-    function createChip(text, isActive, onClick) {
-        const btn = document.createElement('button'); btn.className = 'sheet-chip';
-        if (isActive) btn.classList.add('active-filter');
-        // Testo pulsanti filtri già safe perché passa per dbCol o stringhe statiche
-        btn.innerText = text; btn.onclick = onClick; return btn;
-    }
+
     function applyFilters() {
         const filtered = allData.filter(item => {
             const val1 = window.dbCol(item, filtersConfig.primary.key) || '';
@@ -331,13 +405,26 @@ window.renderDoubleFilterView = function(allData, filtersConfig, container, card
         });
         updateList(filtered);
     }
+
     function updateList(items) {
-        if (!items || items.length === 0) { listContainer.innerHTML = `<p style="text-align:center; padding:40px; color:#999;">${window.t('no_results')}</p>`; } 
-        else { listContainer.innerHTML = items.map(item => cardRenderer(item)).join(''); }
+        listContainer.innerHTML = '';
+        if (!items || items.length === 0) { 
+            listContainer.appendChild(window.mk('p', { style: { textAlign:'center', padding:'40px', color:'#999' } }, window.t('no_results'))); 
+        } else { 
+            const frag = document.createDocumentFragment();
+            items.forEach(item => frag.appendChild(cardRenderer(item))); 
+            listContainer.appendChild(frag);
+        }
     }
-    const filterBtn = document.createElement('button'); filterBtn.id = 'filter-toggle-btn'; filterBtn.innerHTML = '<span class="material-icons">filter_list</span>'; filterBtn.style.display = 'block'; document.body.appendChild(filterBtn);
+
+    const filterBtn = window.mk('button', { id: 'filter-toggle-btn', style: { display:'block' }, onclick: window.openFilterSheet }, 
+        window.mk('span', { class: 'material-icons' }, 'filter_list')
+    );
+    document.body.appendChild(filterBtn);
+
     window.openFilterSheet = () => { overlay.classList.add('active'); sheet.classList.add('active'); };
     window.closeFilterSheet = () => { overlay.classList.remove('active'); sheet.classList.remove('active'); };
-    filterBtn.onclick = window.openFilterSheet; overlay.onclick = window.closeFilterSheet;
+    overlay.onclick = window.closeFilterSheet;
+
     renderChips(); updateList(allData);
 };
