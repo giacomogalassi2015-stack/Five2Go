@@ -1,13 +1,17 @@
-/* modals.js - Factory e Generatori Modali (Template Strings) */
+/* modals.js - Factory e Generatori Modali */
 
 import { t, dbCol, getSmartUrl, escapeHTML } from './utils.js';
-import { loadAllStops, filterDestinations, eseguiRicercaBus, initFerrySearch, eseguiRicercaTraghetto } from './api.js';
+import { loadAllStops, initFerrySearch } from './api.js';
 
-// Funzione globale di apertura Modale
+// Global Data Store accessibile solo tramite il namespace app (che ora è solo datastore)
+// Nota: Per mantenere il dataStore, lo useremo tramite una variabile interna al modulo se possibile, 
+// ma main.js espone app.dataStore. Lo useremo in lettura.
+
 export const openModal = async (type, payload) => {
     // Recupera i dati dal global store (definito in main.js/app.dataStore)
-    const currentTableData = window.app.dataStore.currentList || [];
-    const tempTransportData = window.app.dataStore.transportList || [];
+    // Usiamo window.app.dataStore perché main.js lo inizializza ancora per contenere i dati
+    const currentTableData = window.app && window.app.dataStore ? window.app.dataStore.currentList : [];
+    const tempTransportData = window.app && window.app.dataStore ? window.app.dataStore.transportList : [];
 
     const generator = ModalContentFactory.create(type, payload, currentTableData, tempTransportData);
     const contentHtml = generator.generateHtml(); 
@@ -38,7 +42,6 @@ export const openModal = async (type, payload) => {
     }
 };
 
-// Funzione inizializzazione mappa modale (GPX)
 const initGpxMap = (divId, gpxUrl) => {
     const element = document.getElementById(divId);
     if (element && window.L && window.L.GPX) {
@@ -66,7 +69,6 @@ class ModalContentFactory {
         }
 
         if (!item) {
-            console.warn(`Oggetto non trovato per ID: ${payload}.`);
             return { 
                 generateHtml: () => `<div class="modal-body-pad"><p>Dati non disponibili o ID non trovato (${payload}).</p></div>`, 
                 getClass: () => 'modal-content' 
@@ -142,24 +144,11 @@ class TransportModalGenerator {
         
         if (searchStr.includes('bus') || searchStr.includes('autobus') || searchStr.includes('atc')) {
             loadAllStops(document.getElementById('selPartenza'));
-            
-            // Re-bind click handlers for toggle buttons
-            const tBtn = document.getElementById('btn-ticket-toggle');
-            if(tBtn) tBtn.onclick = () => { const e = document.getElementById('ticket-info-box'); if(e) e.style.display = (e.style.display === 'none') ? 'block' : 'none'; };
-            
-            const mBtn = document.getElementById('btn-map-toggle');
-            if(mBtn) mBtn.onclick = () => { const m = document.getElementById('bus-map-wrapper'); if(m) m.style.display = (m.style.display === 'none') ? 'block' : 'none'; };
-            
-            const sBtn = document.getElementById('btnSearchBus');
-            if(sBtn) sBtn.onclick = () => eseguiRicercaBus();
+            // Il resto (toggle e search) è gestito dal delegator globale tramite data-action
         } 
         else if (searchStr.includes('battello') || searchStr.includes('traghetto')) {
             initFerrySearch();
-            const tBtn = document.getElementById('btn-ticket-toggle-ferry');
-            if(tBtn) tBtn.onclick = () => { const e = document.getElementById('ticket-info-box-ferry'); if(e) e.style.display = (e.style.display === 'none') ? 'block' : 'none'; };
-            
-            const sBtn = document.getElementById('btnSearchFerry');
-            if(sBtn) sBtn.onclick = () => eseguiRicercaTraghetto();
+            // Il resto è gestito dal delegator
         }
     }
 
@@ -171,7 +160,7 @@ class TransportModalGenerator {
         let ticketInfo = '';
         if (infoSms || infoApp || infoAvvisi) {
             ticketInfo = `
-            <button id="btn-ticket-toggle" class="ticket-toggle-btn">🎟️ ${t('how_to_ticket')} ▾</button>
+            <button class="ticket-toggle-btn" data-action="toggle-element" data-target="ticket-info-box">🎟️ ${t('how_to_ticket')} ▾</button>
             <div id="ticket-info-box" class="ticket-info-content" style="display: none;">
                 ${infoSms ? `<p class="mb-10"><strong>📱 SMS</strong><br>${infoSms}</p>` : ''}
                 ${infoApp ? `<p class="mb-10"><strong>📲 APP</strong><br>${infoApp}</p>` : ''}
@@ -187,7 +176,7 @@ class TransportModalGenerator {
             
             ${ticketInfo}
 
-            <button id="btn-map-toggle" class="map-toggle-btn">🗺️ ${t('show_map')} ▾</button>
+            <button class="map-toggle-btn" data-action="toggle-element" data-target="bus-map-wrapper">🗺️ ${t('show_map')} ▾</button>
             <div id="bus-map-wrapper" class="map-hidden-container" style="display: none;">
                 <div id="bus-map" class="bus-map-frame"></div>
                 <p class="map-modal-hint">${t('map_hint')}</p>
@@ -197,7 +186,7 @@ class TransportModalGenerator {
                 <div class="bus-inputs">
                     <div style="flex:1">
                         <label class="input-label-sm">${t('departure')}</label>
-                        <select id="selPartenza" class="bus-select" onchange="window.app.actions.filterDestinations(this.value)">
+                        <select id="selPartenza" class="bus-select" data-action="bus-filter-destinations">
                             <option disabled selected>${t('loading')}</option>
                         </select>
                     </div>
@@ -220,7 +209,7 @@ class TransportModalGenerator {
                 </div>
             </div>
 
-            <button id="btnSearchBus" class="btn-yellow" style="width: 100%; margin-top: 5px; opacity: 0.5; pointer-events: none;">
+            <button id="btnSearchBus" class="btn-yellow" style="width: 100%; margin-top: 5px; opacity: 0.5; pointer-events: none;" data-action="bus-search">
                 ${t('find_times')}
             </button>
 
@@ -240,7 +229,7 @@ class TransportModalGenerator {
                 ${t('plan_trip')} (Battello)
             </div>
 
-            <button id="btn-ticket-toggle-ferry" class="ticket-toggle-btn" style="background:#e1f5fe; color:#01579b; border-color:#b3e5fc;">
+            <button class="ticket-toggle-btn" style="background:#e1f5fe; color:#01579b; border-color:#b3e5fc;" data-action="toggle-element" data-target="ticket-info-box-ferry">
                 🎟️ ${t('how_to_ticket')} ▾
             </button>
             <div id="ticket-info-box-ferry" class="ticket-info-content" style="display: none;">
@@ -252,7 +241,7 @@ class TransportModalGenerator {
                 <div class="bus-inputs">
                     <div style="flex:1">
                         <label class="input-label-sm">${t('departure')}</label>
-                        <select id="selPartenzaFerry" class="bus-select">
+                        <select id="selPartenzaFerry" class="bus-select" data-action="ferry-filter-destinations">
                             <option disabled selected>${t('loading')}</option>
                         </select>
                     </div>
@@ -275,7 +264,7 @@ class TransportModalGenerator {
                 </div>
             </div>
 
-            <button id="btnSearchFerry" class="btn-yellow" style="background: linear-gradient(135deg, #0288D1 0%, #01579b 100%); color: white; width: 100%; font-weight: bold; margin-top: 5px; box-shadow: 0 10px 25px -5px rgba(2, 136, 209, 0.4);">
+            <button id="btnSearchFerry" class="btn-yellow" style="background: linear-gradient(135deg, #0288D1 0%, #01579b 100%); color: white; width: 100%; font-weight: bold; margin-top: 5px; box-shadow: 0 10px 25px -5px rgba(2, 136, 209, 0.4);" data-action="ferry-search">
                 ${t('find_times')}
             </button>
 
@@ -329,7 +318,6 @@ class MapModalGenerator {
         </div>`;
     }
     postRender() {
-        // Cerca l'ID della mappa nell'HTML generato
         const frame = document.querySelector('.map-modal-frame');
         if(frame) initGpxMap(frame.id, this.url);
     }

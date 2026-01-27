@@ -1,8 +1,8 @@
-/* components.js - UI Renderers (Template Strings) */
+/* components.js - UI Renderers (Template Strings + Event Delegation Tags) */
 
 import { t, dbCol, getSmartUrl, escapeHTML } from './utils.js';
 
-// --- RENDERERS (Return HTML Strings) ---
+// --- RENDERERS (Return HTML Strings with Data Attributes) ---
 
 export const ristoranteRenderer = (r) => {
     const nome = escapeHTML(dbCol(r, 'Nome') || 'Ristorante');
@@ -11,10 +11,11 @@ export const ristoranteRenderer = (r) => {
     const itemId = String(r.id || r.ID || r.POI_ID);
     const mapLink = r.Mappa || `http://googleusercontent.com/maps.google.com/?q=${encodeURIComponent(nome + ' ' + paesi)}`;
 
+    // Uso tag <a> per il telefono e la mappa
     const callBtn = numero 
-        ? `<div class="action-btn btn-call rest-btn-size" onclick="window.location.href='tel:${numero}'">
+        ? `<a href="tel:${numero}" class="action-btn btn-call rest-btn-size" style="text-decoration:none">
              <span class="material-icons">call</span>
-           </div>` 
+           </a>` 
         : '';
 
     return `
@@ -24,13 +25,13 @@ export const ristoranteRenderer = (r) => {
             <span class="material-icons">restaurant</span> ${paesi}
         </p>
         <div class="rest-card-actions">
-            <div class="action-btn btn-info rest-btn-size" onclick="app.actions.openModal('ristorante', '${itemId}')">
+            <div class="action-btn btn-info rest-btn-size" data-action="open-modal" data-modal-type="ristorante" data-id="${itemId}">
                 <span class="material-icons">info_outline</span>
             </div>
             ${callBtn}
-            <div class="action-btn btn-map rest-btn-size" onclick="window.open('${mapLink}', '_blank')">
+            <a href="${mapLink}" target="_blank" class="action-btn btn-map rest-btn-size" style="text-decoration:none">
                 <span class="material-icons">map</span>
-            </div>
+            </a>
         </div>
     </div>`;
 };
@@ -46,7 +47,7 @@ export const spiaggiaRenderer = (item) => {
         : '';
 
     return `
-    <div class="culture-card is-beach animate-fade" onclick="app.actions.openModal('Spiagge', '${safeId}')">
+    <div class="culture-card is-beach animate-fade" data-action="open-modal" data-modal-type="Spiagge" data-id="${safeId}">
         <div class="culture-info">
             ${locationHtml}
             <h3 class="culture-title">${nome}</h3>
@@ -73,14 +74,14 @@ export const sentieroRenderer = (s) => {
     if (diff.toLowerCase().includes('facile') || diff.toLowerCase().includes('easy')) diffColor = '#27ae60';
     if (diff.toLowerCase().includes('difficile') || diff.toLowerCase().includes('hard')) diffColor = '#c0392b';
     
-    // Script di inizializzazione mappa iniettato come stringa (o gestito via evento post-render)
+    // Script iniettato: Dispatch evento custom per mappa (gestito in main.js)
     const scriptInit = gpxUrl 
         ? `<script>setTimeout(()=>window.dispatchEvent(new CustomEvent('init-map', {detail:{id:'${uniqueMapId}', url:'${gpxUrl}'}})), 500)</script>`
         : '';
 
     return `
     <div class="trail-card-modern animate-fade">
-        <div id="${uniqueMapId}" class="trail-map-container" onclick="event.stopPropagation(); app.actions.openModal('map', '${gpxUrl}')"></div>
+        <div id="${uniqueMapId}" class="trail-map-container" data-action="open-modal" data-modal-type="map" data-payload="${gpxUrl}"></div>
         <div class="trail-info-overlay">
             <h3 class="text-center font-bold color-dark" style="margin: 5px 0; fontFamily: 'Roboto Slab'; fontSize: 1.25rem;">
                 ${titoloMostrato}
@@ -88,7 +89,7 @@ export const sentieroRenderer = (s) => {
             <div class="text-center text-uppercase font-bold mb-20" style="fontSize: 0.75rem; color: ${diffColor}; letterSpacing: 1px;">
                 ${diff}
             </div>
-            <button class="btn-trail-action" onclick="app.actions.openModal('trail', '${itemId}')">
+            <button class="btn-trail-action" data-action="open-modal" data-modal-type="trail" data-id="${itemId}">
                 ${t('btn_details')}
                 <span class="material-icons" style="fontSize: 1.1rem;">arrow_forward</span>
             </button>
@@ -112,7 +113,7 @@ export const vinoRenderer = (item) => {
         : '';
 
     return `
-    <div class="culture-card ${themeClass} animate-fade" onclick="app.actions.openModal('Vini', '${safeId}')">
+    <div class="culture-card ${themeClass} animate-fade" data-action="open-modal" data-modal-type="Vini" data-id="${safeId}">
         <div class="culture-info">
             ${cantinaHtml}
             <div class="culture-title">${nome}</div>
@@ -143,9 +144,9 @@ export const numeriUtiliRenderer = (n) => {
             <h3>${nome}</h3>
             <p><span class="material-icons icon-sm">place</span> ${paesi}</p>
         </div>
-        <div class="action-btn btn-call" onclick="window.location.href='tel:${numero}'">
+        <a href="tel:${numero}" class="action-btn btn-call" style="text-decoration:none">
             <span class="material-icons">call</span>
-        </div>
+        </a>
     </div>`;
 };
 
@@ -156,15 +157,15 @@ export const farmacieRenderer = (f) => {
     const itemId = String(f.id || f.ID || f.POI_ID);
 
     return `
-    <div class="info-card animate-fade" onclick="app.actions.openModal('farmacia', '${itemId}')">
+    <div class="info-card animate-fade" data-action="open-modal" data-modal-type="farmacia" data-id="${itemId}">
         <div class="info-icon-box"><span class="material-icons">local_pharmacy</span></div>
         <div class="info-text-col">
             <h3>${nome}</h3>
             <p><span class="material-icons icon-sm">place</span> ${paese}</p>
         </div>
-        <div class="action-btn btn-call" onclick="event.stopPropagation(); window.location.href='tel:${numero}'">
+        <a href="tel:${numero}" class="action-btn btn-call" style="text-decoration:none" data-action="stop-prop-call">
             <span class="material-icons">call</span>
-        </div>
+        </a>
     </div>`;
 };
 
@@ -184,7 +185,7 @@ export const attrazioniRenderer = (item) => {
     else if (label === 'storico') { themeClass = 'is-monument'; iconClass = 'fa-chess-rook'; }
 
     return `
-    <div class="culture-card ${themeClass} animate-fade" onclick="app.actions.openModal('attrazione', '${safeId}')">
+    <div class="culture-card ${themeClass} animate-fade" data-action="open-modal" data-modal-type="attrazione" data-id="${safeId}">
         <div class="culture-info">
             <div class="culture-location"><span class="material-icons icon-sm">place</span> ${paese}</div>
             <div class="culture-title">${titolo}</div>
@@ -205,7 +206,7 @@ export const prodottoRenderer = (p) => {
     const itemId = String(p.id || p.ID || p.POI_ID);
 
     return `
-    <div class="culture-card is-product animate-fade" onclick="app.actions.openModal('product', '${itemId}')">
+    <div class="culture-card is-product animate-fade" data-action="open-modal" data-modal-type="product" data-id="${itemId}">
         <div class="culture-info">
             <div class="culture-title">${titolo}</div>
             <div class="product-subtitle">
@@ -218,7 +219,7 @@ export const prodottoRenderer = (p) => {
     </div>`;
 };
 
-// --- LOGICA FILTRI (Generazione HTML + Binding Eventi) ---
+// --- LOGICA FILTRI (Generazione HTML + Binding Eventi LOCALI JS) ---
 
 export const renderGenericFilterableView = (allData, filterKey, container, cardRenderer) => {
     // 1. Pulizia e Setup
@@ -248,6 +249,7 @@ export const renderGenericFilterableView = (allData, filterKey, container, cardR
     // 3. Generazione HTML Filtri
     let chipsHtml = uniqueTags.map(tag => {
         const isAll = tag === 'Tutti';
+        // Nota: Qui non usiamo data-action perché leghiamo l'evento JS direttamente sotto
         return `<button class="sheet-chip ${isAll ? 'active-filter' : ''}" data-tag="${tag}">
                     ${isAll ? t('filter_all') : tag}
                 </button>`;
@@ -271,7 +273,7 @@ export const renderGenericFilterableView = (allData, filterKey, container, cardR
     // 4. Iniezione nel DOM
     document.body.insertAdjacentHTML('beforeend', filterHtml);
 
-    // 5. Binding Logica (JavaScript)
+    // 5. Binding Logica (JavaScript locale, no globali)
     const overlay = document.getElementById('filter-overlay');
     const sheet = document.getElementById('filter-sheet');
     const closeBtn = sheet.querySelector('.sheet-close');
@@ -285,7 +287,7 @@ export const renderGenericFilterableView = (allData, filterKey, container, cardR
     overlay.onclick = closeFilterSheet;
     closeBtn.onclick = closeFilterSheet;
 
-    // Gestione click sui chip
+    // Gestione click sui chip (Local JS Binding)
     chips.forEach(chip => {
         chip.onclick = () => {
             chips.forEach(c => c.classList.remove('active-filter'));
@@ -308,7 +310,6 @@ export const renderGenericFilterableView = (allData, filterKey, container, cardR
             listContainer.innerHTML = `<p style="text-align:center; padding:40px; color:#999;">${t('no_results')}</p>`;
             return; 
         }
-        // Qui usiamo il renderer passato come argomento che ritorna stringhe
         listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
     }
 
@@ -349,7 +350,6 @@ export const renderDoubleFilterView = (allData, filtersConfig, container, cardRe
                 </button>`;
     };
 
-    // Render iniziale dei chip
     const renderChipsHtml = (vals, type) => {
         let html = createChip(t('filter_all'), type, 'Tutti');
         vals.forEach(v => {
@@ -397,10 +397,8 @@ export const renderDoubleFilterView = (allData, filtersConfig, container, cardRe
     closeBtn.onclick = closeFilterSheet;
     applyBtn.onclick = closeFilterSheet;
 
-    // Logica selezione chip (Event delegation sui container)
     const handleChipClick = (e, container, type) => {
         if(e.target.classList.contains('sheet-chip')) {
-            // Reset active visuale
             container.querySelectorAll('.sheet-chip').forEach(c => c.classList.remove('active-filter'));
             e.target.classList.add('active-filter');
             

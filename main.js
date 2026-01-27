@@ -2,30 +2,84 @@
 
 import { AVAILABLE_LANGS } from './config.js';
 import { t, getLang, setLang } from './utils.js';
-import { supabaseClient } from './api.js';
+import { supabaseClient, filterDestinations, eseguiRicercaBus, updateFerryDestinations, eseguiRicercaTraghetto } from './api.js';
 import { viewStrategyContext } from './views.js';
 import { openModal } from './modals.js';
 import { renderGenericFilterableView, numeriUtiliRenderer, farmacieRenderer } from './components.js';
-import { filterDestinations } from './api.js'; // Import per esporlo globalmente
 
-console.log("✅ main.js caricato (Template Strings Mode)");
+console.log("✅ main.js caricato (Delegation Mode)");
 
-// --- SETUP GLOBAL APP NAMESPACE ---
-// Questo oggetto serve a esporre le funzioni ai gestori onclick nell'HTML (stringhe)
+// --- SETUP GLOBAL APP STATE (Solo Dati, niente funzioni esposte) ---
 window.app = {
     dataStore: {
         currentList: [],
         transportList: []
-    },
-    actions: {
-        openModal: (type, payload) => openModal(type, payload),
-        filterDestinations: (val) => filterDestinations(val)
     }
 };
 
 // --- STATE GLOBALE APP ---
 let currentViewName = 'home';
 const content = document.getElementById('app-content');
+
+// --- EVENT DELEGATOR (Gestore Unico degli Eventi Click) ---
+document.body.addEventListener('click', (e) => {
+    // 1. Gestione click diretti sugli elementi con data-action
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+
+    const action = target.dataset.action;
+
+    // Gestione Azioni
+    switch (action) {
+        case 'open-modal': {
+            e.preventDefault(); // Previene il default se è un link o form
+            const type = target.dataset.modalType || target.dataset.type; // Fallback
+            // Supporta sia 'id' che 'payload' (per gpx)
+            const payload = target.dataset.id || target.dataset.payload;
+            if (type && payload) {
+                openModal(type, payload);
+            }
+            break;
+        }
+        case 'change-language': {
+            const code = target.dataset.lang;
+            if (code) changeLanguage(code);
+            break;
+        }
+        case 'toggle-ticket':
+        case 'toggle-element': {
+            const targetId = target.dataset.target;
+            const el = document.getElementById(targetId);
+            if(el) el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+            break;
+        }
+        case 'bus-search': {
+            eseguiRicercaBus();
+            break;
+        }
+        case 'ferry-search': {
+            eseguiRicercaTraghetto();
+            break;
+        }
+        case 'stop-prop-call': {
+            // Non fare nulla, ma evita che l'evento risalga al padre (la card)
+            e.stopPropagation(); 
+            break;
+        }
+        // Aggiungere qui altri case se necessario
+    }
+});
+
+// --- EVENT DELEGATOR (Gestore Unico degli Eventi Change) ---
+document.body.addEventListener('change', (e) => {
+    // Intercetta i change delle select (perché create dinamicamente)
+    if (e.target.dataset.action === 'bus-filter-destinations') {
+        filterDestinations(e.target.value);
+    }
+    if (e.target.dataset.action === 'ferry-filter-destinations') {
+        updateFerryDestinations(e.target.value);
+    }
+});
 
 // --- SETUP HEADER ---
 const createGlobalFooter = () => `<footer class="app-footer"><p>© 2026 Five2Go. ${t('footer_rights')}</p></footer>`;
@@ -46,7 +100,6 @@ function setupHeaderElements() {
     // Pulizia Header
     const oldActions = header.querySelector('.header-actions-container');
     if (oldActions) oldActions.remove();
-    // Nota: usando innerHTML, rimuoviamo tutto facilmente se necessario, ma qui preserviamo struttura base
     
     if (currentViewName !== 'home') return; 
 
@@ -55,9 +108,9 @@ function setupHeaderElements() {
     const currFlag = langObj ? langObj.flag : '🇮🇹';
     const currCode = currLang.toUpperCase();
     
-    // Generazione HTML Dropdown
+    // Generazione HTML Dropdown con data-action
     const dropdownOpts = AVAILABLE_LANGS.map(l => `
-        <button class="lang-opt ${l.code === currLang ? 'active' : ''}" onclick="window.appCalls.changeLanguage('${l.code}')">
+        <button class="lang-opt ${l.code === currLang ? 'active' : ''}" data-action="change-language" data-lang="${l.code}">
             <span class="lang-flag">${l.flag}</span> ${l.label}
         </button>
     `).join('');
@@ -76,7 +129,7 @@ function setupHeaderElements() {
 
     header.insertAdjacentHTML('beforeend', actionsHtml);
 
-    // Binding Eventi Header
+    // Binding Eventi Header (Qui usiamo ID perché è statico dopo render)
     const toggleBtn = document.getElementById('lang-btn-toggle');
     if(toggleBtn) {
         toggleBtn.onclick = (e) => {
@@ -86,11 +139,6 @@ function setupHeaderElements() {
         };
     }
 }
-
-// Espongo changeLanguage per l'HTML string generato sopra
-window.appCalls = {
-    changeLanguage: (code) => changeLanguage(code)
-};
 
 function updateNavBar() {
     const labels = document.querySelectorAll('.nav-label');
@@ -106,7 +154,6 @@ function updateNavBar() {
 function changeLanguage(langCode) {
     setLang(langCode);
     
-    // Rimuovi vecchio header actions per ricrearlo
     const old = document.querySelector('.header-actions-container');
     if(old) old.remove();
     
@@ -128,19 +175,16 @@ window.addEventListener('click', () => {
     if(dd) dd.classList.remove('show');
 });
 
-
 // --- NAVIGAZIONE PRINCIPALE ---
 async function switchView(view, el) {
     if (!content) return;
     currentViewName = view; 
 
-    // Reset UI
     const globalFilterBtn = document.querySelector('body > #filter-toggle-btn');
     if (globalFilterBtn) { globalFilterBtn.remove(); }
 
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     
-    // Gestione stato attivo nav items
     if (el) {
         el.classList.add('active');
     } else {
@@ -175,7 +219,7 @@ function renderHome() {
     const bgImage = "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
     
     const langTiles = AVAILABLE_LANGS.map(l => `
-        <button class="lang-tile ${l.code === getLang() ? 'active' : ''}" onclick="window.appCalls.changeLanguage('${l.code}')">
+        <button class="lang-tile ${l.code === getLang() ? 'active' : ''}" data-action="change-language" data-lang="${l.code}">
             <span class="lang-flag-large">${l.flag}</span>
             <span class="lang-label">${l.label}</span>
         </button>
@@ -205,14 +249,12 @@ function renderSubMenu(options, defaultTable) {
     <div id="sub-content"></div>`;
     
     const scrollContainer = content.querySelector('.nav-scroll-container');
-    const subContent = content.querySelector('#sub-content');
-
-    // Binding click handlers sui bottoni appena creati
+    
+    // Binding manuale per la navigazione interna delle tab (non è un'azione globale, è logica di UI locale)
     scrollContainer.querySelectorAll('.btn-3d').forEach(btn => {
         btn.onclick = function() { loadTableData(this.getAttribute('data-table'), this); };
     });
 
-    // Load default
     if (scrollContainer.firstElementChild) {
         loadTableData(defaultTable, scrollContainer.firstElementChild);
     }
@@ -258,7 +300,6 @@ async function renderServicesGrid() {
         return;
     }
     
-    // Salviamo i dati per la modale trasporti
     window.app.dataStore.transportList = data;
 
     function getServiceIcon(name) {
@@ -273,15 +314,13 @@ async function renderServicesGrid() {
     const gridItems = data.map((tVal, index) => {
         const nome = tVal.Mezzo || tVal.Località || 'Trasporto';
         const icon = getServiceIcon(nome);
-        // onclick usa l'indice per recuperare il dato da app.dataStore.transportList
         return `
-        <div class="service-widget" onclick="app.actions.openModal('transport', '${index}')">
+        <div class="service-widget" data-action="open-modal" data-modal-type="transport" data-id="${index}">
             <span class="material-icons widget-icon">${icon}</span>
             <span class="widget-label">${nome}</span>
         </div>`;
     }).join('');
 
-    // Aggiunta bottoni extra manualmente
     const extraItems = `
         <div class="service-widget" id="btn-serv-numeri">
             <span class="material-icons widget-icon">phonelink_ring</span>
@@ -301,7 +340,7 @@ async function renderServicesGrid() {
         ${createGlobalFooter()}
     `;
 
-    // Binding manuale per gli elementi extra
+    // Binding per gli elementi extra
     document.getElementById('btn-serv-numeri').onclick = () => renderSimpleList('Numeri_utili');
     document.getElementById('btn-serv-farmacie').onclick = () => renderSimpleList('Farmacie');
 }
@@ -329,7 +368,6 @@ async function renderSimpleList(tableName) {
         const { data, error } = await supabaseClient.from(tableName).select('*');
         if(error) throw error;
         
-        // Salviamo comunque nello store anche se per questi non usiamo modale dettagli complessa
         window.app.dataStore.currentList = data;
 
         if(tableName === 'Numeri_utili') renderGenericFilterableView(data, 'Comune', subContent, numeriUtiliRenderer);

@@ -1,4 +1,4 @@
-/* api.js - Logica Backend e Bus/Traghetti (HTML Strings) */
+/* api.js - Logica Backend e Bus/Traghetti */
 
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { t, isItalianHoliday, escapeHTML } from './utils.js';
@@ -71,13 +71,8 @@ export const filterDestinations = (startId) => {
         if (validDestinations.length > 0) {
             selArrivo.disabled = false;
         }
-
-        selArrivo.onchange = function() {
-            if (btnSearch && this.value) {
-                btnSearch.style.opacity = '1';
-                btnSearch.style.pointerEvents = 'auto';
-            }
-        };
+        
+        // La logica di enable search on change è gestita globalmente nel delegator in main.js
 
     } catch (err) {
         console.error(err);
@@ -188,15 +183,30 @@ export const initFerrySearch = async () => {
     ];
 
     populateStartSelect(ferryPorts, selPartenza);
+    // Onchange gestito via delegator
+};
 
-    selPartenza.onchange = function() {
-        const selArrivo = document.getElementById('selArrivoFerry');
-        const valid = ferryPorts.filter(p => String(p.id) !== selPartenza.value);
-        
-        const options = valid.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
-        selArrivo.innerHTML = `<option value="" disabled selected>${t('select_placeholder')}</option>` + options;
-        selArrivo.disabled = false;
-    };
+export const updateFerryDestinations = (startId) => {
+    const selArrivo = document.getElementById('selArrivoFerry');
+    const selPartenza = document.getElementById('selPartenzaFerry');
+    
+    // Logica duplicata ma adattata per i traghetti
+    const ferryPorts = [
+        { id: 101, nome: 'La Spezia' },
+        { id: 102, nome: 'Portovenere' },
+        { id: 103, nome: 'Riomaggiore' },
+        { id: 104, nome: 'Manarola' },
+        { id: 105, nome: 'Corniglia' }, 
+        { id: 106, nome: 'Vernazza' },
+        { id: 107, nome: 'Monterosso' },
+        { id: 108, nome: 'Levanto' }
+    ];
+
+    const valid = ferryPorts.filter(p => String(p.id) !== startId);
+    const options = valid.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+    
+    selArrivo.innerHTML = `<option value="" disabled selected>${t('select_placeholder')}</option>` + options;
+    selArrivo.disabled = false;
 };
 
 export const eseguiRicercaTraghetto = async () => {

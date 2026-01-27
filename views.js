@@ -1,8 +1,7 @@
-/* views.js - Strategy Pattern per le Viste (Template Strings) */
+/* views.js - Strategy Pattern per le Viste */
 
 import { supabaseClient } from './api.js';
 import { t, dbCol, getSmartUrl, escapeHTML } from './utils.js';
-import { openModal } from './modals.js';
 import * as Renderers from './components.js';
 
 // Cache interna dei dati
@@ -24,7 +23,7 @@ class BaseViewStrategy {
 class WineStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Vini');
-        window.app.dataStore.currentList = data; // Aggiorna store globale
+        if(window.app && window.app.dataStore) window.app.dataStore.currentList = data; 
         Renderers.renderGenericFilterableView(data, 'Tipo', container, Renderers.vinoRenderer);
     }
 }
@@ -32,7 +31,7 @@ class WineStrategy extends BaseViewStrategy {
 class BeachStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Spiagge');
-        window.app.dataStore.currentList = data;
+        if(window.app && window.app.dataStore) window.app.dataStore.currentList = data;
         Renderers.renderGenericFilterableView(data, 'Paesi', container, Renderers.spiaggiaRenderer);
     }
 }
@@ -40,7 +39,7 @@ class BeachStrategy extends BaseViewStrategy {
 class ProductStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Prodotti');
-        window.app.dataStore.currentList = data;
+        if(window.app && window.app.dataStore) window.app.dataStore.currentList = data;
         
         const cardsHtml = data.map(p => Renderers.prodottoRenderer(p)).join('');
         container.innerHTML = `<div class="list-container animate-fade" style="padding-bottom:20px;">${cardsHtml}</div>`;
@@ -50,15 +49,15 @@ class ProductStrategy extends BaseViewStrategy {
 class TransportStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Trasporti');
-        window.app.dataStore.transportList = data; // Salva in store dedicato per i trasporti
+        if(window.app && window.app.dataStore) window.app.dataStore.transportList = data; // Salva in store dedicato per i trasporti
         
         const cardsHtml = data.map((tVal, index) => {
             const nomeDisplay = escapeHTML(dbCol(tVal, 'Località') || dbCol(tVal, 'Mezzo'));
             const imgUrl = getSmartUrl(tVal.Mezzo, '', 400);
             
-            // Nota: qui passiamo l'index perché la modale trasporti lavora su indice
+            // Refactored to data-action
             return `
-            <div class="card-product" onclick="app.actions.openModal('transport', '${index}')">
+            <div class="card-product" data-action="open-modal" data-modal-type="transport" data-id="${index}">
                 <div class="prod-info"><div class="prod-title">${nomeDisplay}</div></div>
                 <img src="${imgUrl}" class="prod-thumb" loading="lazy">
             </div>`;
@@ -71,7 +70,7 @@ class TransportStrategy extends BaseViewStrategy {
 class AttractionStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Attrazioni');
-        window.app.dataStore.currentList = data;
+        if(window.app && window.app.dataStore) window.app.dataStore.currentList = data;
         const culturaConfig = {
             primary: { key: 'Paese', title: '📍 ' + (t('nav_villages') || 'Borgo'), customOrder: ["Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso"] },
             secondary: { key: 'Label', title: '🏷️ Categoria' }
@@ -83,7 +82,7 @@ class AttractionStrategy extends BaseViewStrategy {
 class RestaurantStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Ristoranti');
-        window.app.dataStore.currentList = data;
+        if(window.app && window.app.dataStore) window.app.dataStore.currentList = data;
         Renderers.renderGenericFilterableView(data, 'Paesi', container, Renderers.ristoranteRenderer);
     }
 }
@@ -91,7 +90,7 @@ class RestaurantStrategy extends BaseViewStrategy {
 class TrailStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Sentieri');
-        window.app.dataStore.currentList = data;
+        if(window.app && window.app.dataStore) window.app.dataStore.currentList = data;
         Renderers.renderGenericFilterableView(data, 'Difficolta', container, Renderers.sentieroRenderer);
     }
 }
@@ -99,7 +98,7 @@ class TrailStrategy extends BaseViewStrategy {
 class PharmacyStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Farmacie');
-        window.app.dataStore.currentList = data;
+        if(window.app && window.app.dataStore) window.app.dataStore.currentList = data;
         Renderers.renderGenericFilterableView(data, 'Paesi', container, Renderers.farmacieRenderer);
     }
 }
@@ -107,7 +106,6 @@ class PharmacyStrategy extends BaseViewStrategy {
 class UsefulNumbersStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Numeri_utili');
-        // Non serve salvare in store qui perché i numeri non hanno modale dettagli complessa che richiede lookup per ID
         Renderers.renderGenericFilterableView(data, 'Comune', container, Renderers.numeriUtiliRenderer);
     }
 }
