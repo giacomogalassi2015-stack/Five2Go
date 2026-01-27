@@ -1,4 +1,4 @@
-console.log("✅ 2. ui-renderers.js caricato (Refactored Clean)");
+console.log("✅ 2. ui-renderers.js caricato (Refactored IDs)");
 
 // ============================================================
 // 1. RENDERER DELLE CARD (LISTE)
@@ -8,7 +8,8 @@ window.ristoranteRenderer = (r) => {
     const nome = window.dbCol(r, 'Nome') || 'Ristorante';
     const paesi = window.dbCol(r, 'Paesi') || '';
     const numero = r.Numero || r.Telefono || '';
-    const safeObj = encodeURIComponent(JSON.stringify(r)).replace(/'/g, "%27");
+    // CHANGE: Pass ID instead of full object
+    const itemId = r.id || r.ID;
     const mapLink = r.Mappa || `https://www.google.com/maps/search/?api=1&query=$?q=$?q=${encodeURIComponent(nome + ' ' + paesi)}`;
 
     return `
@@ -16,7 +17,7 @@ window.ristoranteRenderer = (r) => {
         <h3 class="rest-card-title">${nome}</h3>
         <p class="rest-card-subtitle"><span class="material-icons">restaurant</span> ${paesi}</p>
         <div class="rest-card-actions">
-            <div class="action-btn btn-info rest-btn-size" onclick="openModal('ristorante', '${safeObj}')">
+            <div class="action-btn btn-info rest-btn-size" onclick="openModal('ristorante', '${itemId}')">
                 <span class="material-icons">info_outline</span>
             </div>
             ${numero ? `<div class="action-btn btn-call rest-btn-size" onclick="window.location.href='tel:${numero}'"><span class="material-icons">call</span></div>` : ''}
@@ -30,6 +31,7 @@ window.spiaggiaRenderer = function(item) {
     const comune = item.Paese || item.Comune || '';
     const tipo = item.Tipo || 'Spiaggia'; 
     const iconClass = 'fa-water';
+    // ID is already safe to pass directly
     return `<div class="culture-card is-beach animate-fade" onclick="openModal('Spiagge', '${item.id}')"><div class="culture-info">${comune ? `<div class="culture-location"><span class="material-icons icon-sm">place</span> ${comune}</div>` : ''}<h3 class="culture-title">${nome}</h3><div class="culture-tags"><span class="c-pill">${tipo}</span></div></div><div class="culture-bg-icon"><i class="fa-solid ${iconClass}"></i></div></div>`;
 };
 
@@ -39,12 +41,16 @@ window.sentieroRenderer = (s) => {
     const diff = s.Tag || s.Difficolta || 'Media';
     const gpxUrl = s.Gpxlink || s.gpxlink;
     const uniqueMapId = `map-trail-${Math.random().toString(36).substr(2, 9)}`;
-    const safeObj = encodeURIComponent(JSON.stringify(s)).replace(/'/g, "%27");
+    
+    // CHANGE: Pass ID instead of full object
+    const itemId = s.id || s.ID;
+
     let diffColor = '#f39c12';
     if (diff.toLowerCase().includes('facile') || diff.toLowerCase().includes('easy')) diffColor = '#27ae60';
     if (diff.toLowerCase().includes('difficile') || diff.toLowerCase().includes('hard')) diffColor = '#c0392b';
     if (gpxUrl) { window.mapsToInit.push({ id: uniqueMapId, gpx: gpxUrl }); }
-    return `<div class="trail-card-modern animate-fade"><div id="${uniqueMapId}" class="trail-map-container" onclick="event.stopPropagation(); openModal('map', '${gpxUrl}')"></div><div class="trail-info-overlay"><h3 class="text-center font-bold color-dark" style="margin: 5px 0; font-family:'Roboto Slab'; font-size: 1.25rem;">${titoloMostrato}</h3><div class="text-center text-uppercase font-bold mb-20" style="font-size:0.75rem; color:${diffColor}; letter-spacing:1px;">${diff}</div><button onclick="openModal('trail', '${safeObj}')" class="btn-trail-action">${window.t('btn_details')} <span class="material-icons" style="font-size:1.1rem;">arrow_forward</span></button></div></div>`;
+    
+    return `<div class="trail-card-modern animate-fade"><div id="${uniqueMapId}" class="trail-map-container" onclick="event.stopPropagation(); openModal('map', '${gpxUrl}')"></div><div class="trail-info-overlay"><h3 class="text-center font-bold color-dark" style="margin: 5px 0; font-family:'Roboto Slab'; font-size: 1.25rem;">${titoloMostrato}</h3><div class="text-center text-uppercase font-bold mb-20" style="font-size:0.75rem; color:${diffColor}; letter-spacing:1px;">${diff}</div><button onclick="openModal('trail', '${itemId}')" class="btn-trail-action">${window.t('btn_details')} <span class="material-icons" style="font-size:1.1rem;">arrow_forward</span></button></div></div>`;
 };
 
 window.vinoRenderer = function(item) {
@@ -68,6 +74,7 @@ window.numeriUtiliRenderer = (n) => {
     else if (nLower.includes('medica') || nLower.includes('croce')) icon = 'medical_services';
     else if (nLower.includes('taxi')) icon = 'local_taxi';
     else if (nLower.includes('farmacia')) icon = 'local_pharmacy';
+    // Numeri utili raramente aprono modali, solo chiamata
     return `<div class="info-card animate-fade"><div class="info-icon-box"><span class="material-icons">${icon}</span></div><div class="info-text-col"><h3>${nome}</h3><p><span class="material-icons icon-sm">place</span> ${paesi}</p></div><div class="action-btn btn-call" onclick="window.location.href='tel:${numero}'"><span class="material-icons">call</span></div></div>`;
 };
 
@@ -75,14 +82,15 @@ window.farmacieRenderer = (f) => {
     const nome = window.dbCol(f, 'Farmacia') || window.dbCol(f, 'Nome') || 'Farmacia';
     const paese = window.dbCol(f, 'Paese') || window.dbCol(f, 'Paesi') || '';
     const numero = f.Telefono || f.Numero || '';
-    return `<div class="info-card animate-fade"><div class="info-icon-box"><span class="material-icons">local_pharmacy</span></div><div class="info-text-col"><h3>${nome}</h3><p><span class="material-icons icon-sm">place</span> ${paese}</p></div><div class="action-btn btn-call" onclick="window.location.href='tel:${numero}'"><span class="material-icons">call</span></div></div>`;
+    const itemId = f.id || f.ID;
+    return `<div class="info-card animate-fade" onclick="openModal('farmacia', '${itemId}')"><div class="info-icon-box"><span class="material-icons">local_pharmacy</span></div><div class="info-text-col"><h3>${nome}</h3><p><span class="material-icons icon-sm">place</span> ${paese}</p></div><div class="action-btn btn-call" onclick="event.stopPropagation(); window.location.href='tel:${numero}'"><span class="material-icons">call</span></div></div>`;
 };
 
 window.attrazioniRenderer = (item) => {
+    // CHANGE: Use ID or POI_ID preferentially
     const safeId = item.POI_ID || item.id;
     const titolo = window.dbCol(item, 'Attrazioni') || 'Attrazione';
     const paese = window.dbCol(item, 'Paese');
-    const myId = (item._tempIndex !== undefined) ? item._tempIndex : 0;
     const tempo = item.Tempo_visita || '--'; 
     const diff = window.dbCol(item, 'Difficoltà Accesso') || 'Accessibile';
     const rawLabel = window.dbCol(item, 'Label') || 'Storico';
@@ -92,7 +100,8 @@ window.attrazioniRenderer = (item) => {
     if (label === 'religioso') { themeClass = 'is-church'; iconClass = 'fa-church'; }
     else if (label === 'panorama') { themeClass = 'is-view'; iconClass = 'fa-mountain-sun'; }
     else if (label === 'storico') { themeClass = 'is-monument'; iconClass = 'fa-chess-rook'; }
-    return `<div class="culture-card ${themeClass} animate-fade" onclick="openModal('attrazione', ${myId})"><div class="culture-info"><div class="culture-location"><span class="material-icons icon-sm">place</span> ${paese}</div><div class="culture-title">${titolo}</div><div class="culture-tags"><span class="c-pill"><span class="material-icons icon-xs">schedule</span> ${tempo}</span><span class="c-pill">${diff}</span></div></div><div class="culture-bg-icon"><i class="fa-solid ${iconClass}"></i></div></div>`;
+    
+    return `<div class="culture-card ${themeClass} animate-fade" onclick="openModal('attrazione', '${safeId}')"><div class="culture-info"><div class="culture-location"><span class="material-icons icon-sm">place</span> ${paese}</div><div class="culture-title">${titolo}</div><div class="culture-tags"><span class="c-pill"><span class="material-icons icon-xs">schedule</span> ${tempo}</span><span class="c-pill">${diff}</span></div></div><div class="culture-bg-icon"><i class="fa-solid ${iconClass}"></i></div></div>`;
 };
 
 window.prodottoRenderer = (p) => {
@@ -100,16 +109,17 @@ window.prodottoRenderer = (p) => {
     const ideale = window.dbCol(p, 'Ideale per') || 'Tutti'; 
     const fotoKey = p.Prodotti_foto || titolo;
     const imgUrl = window.getSmartUrl(fotoKey, '', 200);
-    const safeObj = encodeURIComponent(JSON.stringify(p)).replace(/'/g, "%27");
-    return `<div class="culture-card is-product animate-fade" onclick="openModal('product', '${safeObj}')"><div class="culture-info"><div class="culture-title">${titolo}</div><div class="product-subtitle"><span class="material-icons">stars</span> ${window.t('ideal_for')}: ${ideale}</div></div><div class="culture-product-thumb"><img src="${imgUrl}" loading="lazy" alt="${titolo}"></div></div>`;
+    // CHANGE: Pass ID
+    const itemId = p.id || p.ID;
+    return `<div class="culture-card is-product animate-fade" onclick="openModal('product', '${itemId}')"><div class="culture-info"><div class="culture-title">${titolo}</div><div class="product-subtitle"><span class="material-icons">stars</span> ${window.t('ideal_for')}: ${ideale}</div></div><div class="culture-product-thumb"><img src="${imgUrl}" loading="lazy" alt="${titolo}"></div></div>`;
 };
 
 // ============================================================
-// 2. LOGICA MODALE (Refactored con Factory)
+// 2. LOGICA MODALE (Factory Pattern - vedi strategies.js)
 // ============================================================
 
 window.openModal = async function(type, payload) {
-    console.log("Opening Modal (Pattern):", type, payload);
+    console.log("Opening Modal (ID Pattern):", type, payload);
     const generator = window.ModalFactory.create(type, payload);
     const contentHtml = generator.generate();
     const modalClass = generator.getClass();
@@ -122,7 +132,7 @@ window.openModal = async function(type, payload) {
 };
 
 // ============================================================
-// 3. TEMPLATE HELPERS (Per i Trasporti)
+// 3. TEMPLATE HELPERS (Per i Trasporti - Invariato)
 // ============================================================
 
 window.renderBusTemplate = (item) => {

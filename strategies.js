@@ -1,4 +1,4 @@
-console.log("✅ strategies.js caricato (Refactored Clean)");
+console.log("✅ strategies.js caricato (Refactor ID Pattern)");
 
 /* ============================================================
    PATTERN 1: STRATEGY (Gestione Caricamento Viste/Tabelle)
@@ -25,7 +25,7 @@ class BaseViewStrategy {
 class WineStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Vini');
-        window.currentTableData = data;
+        window.currentTableData = data; // Fondamentale per il lookup ID
         window.renderGenericFilterableView(data, 'Tipo', container, window.vinoRenderer);
     }
 }
@@ -41,7 +41,7 @@ class BeachStrategy extends BaseViewStrategy {
 class ProductStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Prodotti');
-        window.currentTableData = data;
+        window.currentTableData = data; // AGGIUNTO: Salva i dati per la modale
         let html = '<div class="list-container animate-fade" style="padding-bottom:20px;">';
         data.forEach(p => { html += window.prodottoRenderer(p); });
         container.innerHTML = html + '</div>';
@@ -51,9 +51,10 @@ class ProductStrategy extends BaseViewStrategy {
 class TransportStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Trasporti');
-        window.tempTransportData = data;
+        window.tempTransportData = data; // I trasporti usano un array separato
         let html = '<div class="list-container animate-fade">';
         data.forEach((t, index) => {
+            // Qui passiamo l'indice o l'ID se presente, manteniamo index per compatibilità Trasporti
             const nomeDisplay = window.dbCol(t, 'Località') || window.dbCol(t, 'Mezzo');
             const imgUrl = window.getSmartUrl(t.Mezzo, '', 400);
             html += `<div class="card-product" onclick="openModal('transport', '${index}')"><div class="prod-info"><div class="prod-title">${nomeDisplay}</div></div><img src="${imgUrl}" class="prod-thumb" loading="lazy"></div>`;
@@ -66,7 +67,6 @@ class AttractionStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Attrazioni');
         window.currentTableData = data;
-        data.forEach((item, index) => item._tempIndex = index);
         
         const culturaConfig = {
             primary: { key: 'Paese', title: '📍 ' + (window.t('nav_villages') || 'Borgo'), customOrder: ["Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso"] },
@@ -95,6 +95,7 @@ class TrailStrategy extends BaseViewStrategy {
 class PharmacyStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Farmacie');
+        window.currentTableData = data; // AGGIUNTO
         window.renderGenericFilterableView(data, 'Paesi', container, window.farmacieRenderer);
     }
 }
@@ -102,6 +103,8 @@ class PharmacyStrategy extends BaseViewStrategy {
 class UsefulNumbersStrategy extends BaseViewStrategy {
     async load(container) {
         const data = await this.fetchData('Numeri_utili');
+        // I numeri utili raramente hanno modali complesse, ma se servisse:
+        window.currentTableData = data; 
         window.renderGenericFilterableView(data, 'Comune', container, window.numeriUtiliRenderer);
     }
 }
@@ -140,33 +143,77 @@ window.viewStrategyContext = new ViewContext();
 class ModalContentFactory {
     static create(type, payload) {
         let item = null;
-        if (['Vini', 'Attrazioni', 'Spiagge', 'attrazione', 'wine'].includes(type) && window.currentTableData) {
-            item = window.currentTableData.find(i => i.id == payload || i.ID == payload || i.POI_ID == payload);
-            if (!item && typeof payload === 'number') item = window.currentTableData[payload];
+
+        // 1. GESTIONE SPECIALE: MAPPE (URL diretto)
+        if (type === 'map') {
+            return new MapModalGenerator(payload);
         }
 
+        // 2. GESTIONE SPECIALE: TRASPORTI (Usa tempTransportData e Indice)
+        if (type === 'transport') {
+            // Payload qui è l'indice dell'array
+            return new TransportModalGenerator(payload);
+        }
+
+        // 3. LOOKUP GENERICO PER ID
+        // Cerca l'oggetto corrispondente all'ID passato nel payload
+        if (window.currentTableData) {
+            // Normalizziamo a stringa per evitare problemi '1' vs 1
+            const searchId = String(payload);
+            item = window.currentTableData.find(i => 
+                String(i.id) === searchId || 
+                String(i.ID) === searchId || 
+                String(i.POI_ID) === searchId
+            );
+        }
+
+        // Se non troviamo l'oggetto, mostriamo errore (eccetto mappe che passano URL)
+        if (!item) {
+            console.warn(`Oggetto non trovato per ID: ${payload} in contesto ${type}`);
+            return { generate: () => `<div class="modal-body-pad"><p>Dati non disponibili o ID non trovato (${payload}).</p></div>`, getClass: () => 'modal-content' };
+        }
+
+        // 4. ROUTING GENERATORI
         switch (type) {
-            case 'product': return new ProductModalGenerator(payload);
-            case 'transport': return new TransportModalGenerator(payload);
-            case 'trail': return new TrailModalGenerator(payload);
-            case 'map': return new MapModalGenerator(payload);
+            case 'product': 
+            case 'Prodotti':
+                return new ProductModalGenerator(item);
+            
+            case 'trail': 
+            case 'Sentieri':
+                return new TrailModalGenerator(item);
+            
             case 'ristorante':
-            case 'restaurant': return new RestaurantModalGenerator(payload);
-            case 'farmacia': return new PharmacyModalGenerator(payload);
+            case 'restaurant': 
+            case 'Ristoranti':
+                return new RestaurantModalGenerator(item);
+            
+            case 'farmacia': 
+            case 'Farmacie':
+                return new PharmacyModalGenerator(item);
+            
             case 'Vini':
-            case 'wine': return new WineModalGenerator(item);
+            case 'wine': 
+                return new WineModalGenerator(item);
+            
             case 'Attrazioni':
-            case 'attrazione': return new AttractionModalGenerator(item);
-            case 'Spiagge': return new BeachModalGenerator(item);
-            default: return { generate: () => `<p>Content not found for ${type}</p>`, getClass: () => 'modal-content' };
+            case 'attrazione': 
+                return new AttractionModalGenerator(item);
+            
+            case 'Spiagge': 
+                return new BeachModalGenerator(item);
+            
+            default: 
+                return { generate: () => `<p>Content not found for type: ${type}</p>`, getClass: () => 'modal-content' };
         }
     }
 }
 
-// --- GENERATORI CONCRETI (HTML Pulito grazie al CSS) ---
+// --- GENERATORI CONCRETI ---
+// NOTA: Ora ricevono l'Oggetto Item reale, non una stringa JSON da parsare.
 
 class ProductModalGenerator {
-    constructor(payload) { this.p = JSON.parse(decodeURIComponent(payload)); }
+    constructor(item) { this.p = item; }
     getClass() { return 'modal-content glass-modal'; }
     generate() {
         const nome = window.dbCol(this.p, 'Prodotti') || window.dbCol(this.p, 'Nome') || 'Prodotto';
@@ -222,7 +269,7 @@ class TransportModalGenerator {
 }
 
 class TrailModalGenerator {
-    constructor(payload) { this.p = JSON.parse(decodeURIComponent(payload)); }
+    constructor(item) { this.p = item; }
     getClass() { return 'modal-content'; }
     generate() {
         const p = this.p;
@@ -278,7 +325,7 @@ class MapModalGenerator {
 }
 
 class RestaurantModalGenerator {
-    constructor(payload) { this.item = JSON.parse(decodeURIComponent(payload)); }
+    constructor(item) { this.item = item; }
     getClass() { return 'modal-content'; }
     generate() {
         const nome = window.dbCol(this.item, 'Nome');
@@ -298,7 +345,7 @@ class RestaurantModalGenerator {
 }
 
 class PharmacyModalGenerator {
-    constructor(payload) { this.item = JSON.parse(decodeURIComponent(payload)); }
+    constructor(item) { this.item = item; }
     getClass() { return 'modal-content'; }
     generate() {
         const nome = window.dbCol(this.item, 'Nome');
