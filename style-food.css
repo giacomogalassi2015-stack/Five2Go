@@ -1,0 +1,284 @@
+/* === SCHEDA RISTORANTE (LUXURY GLASS DESIGN) === */
+.restaurant-glass-card {
+    cursor: default;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 220px; 
+    text-align: center; 
+    position: relative;
+    overflow: hidden;
+
+    /* Margini interni ed esterni */
+    padding: 20px 25px; 
+    margin-bottom: 25px;
+
+    /* --- IL SEGRETO DEL LOOK PREMIUM --- */
+    /* 1. Sfondo non nero piatto, ma gradiente profondo semitrasparente */
+    background: linear-gradient(145deg, rgba(30, 30, 30, 0.85), rgba(10, 10, 10, 0.95)) !important;
+    
+    /* 2. Blur molto alto per confondere lo sfondo dietro */
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    
+    /* 3. Bordo sottile che sembra luce riflessa (più chiaro sopra) */
+    border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+    
+    border-radius: 32px;
+    
+    /* 4. Ombra profonda per staccarla dallo schermo */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(0,0,0,0.5);
+    
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Effetto tocco: si illumina leggermente invece di rimpicciolirsi solo */
+.restaurant-glass-card:active {
+    transform: scale(0.97);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    border-color: rgba(255,255,255,0.3) !important;
+}
+
+.rest-card-title {
+    margin: 0 0 8px 0; 
+    font-size: 1.6rem; 
+    color: #ffffff;
+    font-family: 'Roboto Slab', serif;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    letter-spacing: 0.5px;
+}
+
+.rest-card-subtitle {
+    margin: 0; 
+    color: #cfd8dc; /* Grigio argento chiaro */
+    font-size: 1rem; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    gap: 8px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+}
+
+/* Icona posate dorata */
+.rest-card-subtitle .material-icons {
+    color: #FFD700; /* Oro Puro */
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5)); /* Bagliore dorato */
+}
+
+/* Contenitore Bottoni */
+.rest-card-actions {
+    display: flex; 
+    justify-content: center; 
+    gap: 25px; 
+    width: 100%; 
+    margin-top: 40px; /* Più spazio per respirare */
+}
+
+/* Stile Pulsanti all'interno della card */
+.rest-card-actions .action-btn {
+    width: 55px; 
+    height: 55px;
+    border-radius: 50%;
+    
+    /* Neumorphism Scuro (Effetto pulsante fisico) */
+    background: linear-gradient(145deg, #2b2b2b, #1a1a1a);
+    box-shadow:  5px 5px 10px #0b0b0b, 
+                -5px -5px 10px #3d3d3d;
+    border: 1px solid rgba(255,255,255,0.05);
+    
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.rest-card-actions .action-btn:active {
+    background: #1a1a1a;
+    box-shadow: inset 5px 5px 10px #0b0b0b, 
+                inset -5px -5px 10px #3d3d3d;
+}
+
+/* Icone nei pulsanti */
+.rest-card-actions .action-btn .material-icons {
+    font-size: 1.6rem;
+}
+/* Colori specifici icone pulsanti */
+.btn-call .material-icons { color: #4CAF50; } /* Verde brillante */
+.btn-map .material-icons { color: #29B6F6; } /* Azzurro brillante */
+/* === MODALE RISTORANTE (Luxury Minimal Design) === */
+
+.rest-modal-wrapper {
+    padding: 10px 5px;
+    color: #333;
+    text-align: center;
+}
+
+/* Titolo: Grande ed Elegante */
+.rest-header h2 {
+    font-family: 'Playfair Display', 'Roboto Slab', serif; /* Se hai importato Playfair è top, altrimenti usa Roboto Slab */
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 10px 0;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+}
+
+/* Colori specifici pulsanti */
+.btn-call .material-icons { color: #4CAF50; } /* Verde */
+.btn-map .material-icons  { color: #29B6F6; } /* Azzurro */
+
+/* Colore icona Info */
+.btn-info .material-icons { 
+    color: #ffffff; 
+    font-weight: 300; /* Forza un rendering più leggero se il font lo supporta */
+}
+
+/* Sottotitolo (Indirizzo) */
+.rest-location {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px; /* Spazia le lettere per eleganza */
+    font-weight: 600;
+}
+
+.rest-location .material-icons {
+    font-size: 1rem;
+    color: #d4af37; /* Color Oro opaco */
+}
+
+/* Divisore decorativo piccolo */
+.rest-divider {
+    width: 40px;
+    height: 3px;
+    background-color: #d4af37; /* Oro */
+    margin: 20px auto;
+    border-radius: 2px;
+}
+
+/* Corpo del testo */
+.rest-body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1.1rem;      /* Leggermente più grande per leggibilità */
+    line-height: 1.6;       
+    color: #555;
+    
+    text-align: center;     /* <--- ECCO LA MODIFICA */
+    
+    padding: 0 15px;
+    margin-bottom: 20px;
+}
+
+/* === PRODOTTI (Stile Servizi: Dimensioni Contenute) === */
+
+.culture-card.is-product {
+    border-left-color: #FFB300; /* Giallo Ambra (Colore Identificativo Cibo) */
+    align-items: center;        /* Centra verticalmente contenuto e foto */
+    padding-right: 15px;        /* Spazio a destra per la foto */
+    min-height: 100px;
+}
+
+/* 1. TITOLO (Più evidente) */
+.culture-card.is-product .culture-title {
+    color: #E65100; /* Arancione scuro intenso (oppure usa #2c3e50 per grigio scuro) */
+    margin-bottom: 6px; /* Poco spazio sotto il titolo */
+    font-size: 1.15rem; /* Leggermente più grande */
+}
+
+/* 2. SOTTOTITOLO "IDEALE PER" (Meno vivo, stile "Caption") */
+.product-subtitle {
+    font-size: 0.85rem;
+    color: #90A4AE; /* Grigio-Bluastro spento (molto meno vivo) */
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.3;
+}
+
+/* Icona piccola e grigia accanto a "Ideale per" */
+.product-subtitle .material-icons {
+    font-size: 1rem;
+    color: #CFD8DC; /* Grigio molto chiaro, quasi invisibile */
+}
+
+/* 3. FOTO A DESTRA */
+.culture-product-thumb {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-left: 15px;
+    background-color: #f5f5f5;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.culture-product-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* --- VINI --- */
+
+.culture-card.is-wine {
+    /* Striscia laterale color vino */
+    border-left-color: #9B2335; 
+}
+
+.culture-card.is-wine .culture-title {
+    /* Titolo color vino */
+    color: #801C2C;
+}
+
+/* Colore dell'icona di sfondo per i vini */
+.culture-card.is-wine .culture-bg-icon i {
+    color: #9B2335;
+}
+
+/* === COLORI VINI === */
+
+/* 1. BIANCO (Giallo Oro) */
+.culture-card.is-wine-white {
+    border-left-color: #F4D03F; /* Giallo intenso */
+}
+.culture-card.is-wine-white .culture-title {
+    color: #B7950B; /* Oro scuro testo */
+}
+.culture-card.is-wine-white .culture-bg-icon i {
+    color: #F4D03F; /* Icona Gialla */
+}
+
+/* 2. ROSATO (Che usiamo per lo stile ORANGE) */
+.culture-card.is-wine-orange {
+    border-left-color: #E67E22; /* Arancione Zucca/Ambra */
+}
+.culture-card.is-wine-orange .culture-title {
+    color: #D35400; /* Ruggine scuro */
+}
+.culture-card.is-wine-orange .culture-bg-icon i {
+    color: #E67E22; /* Icona Arancione */
+}
+
+/* 3. ROSSO (Bordeaux Classico) */
+.culture-card.is-wine-red {
+    border-left-color: #9B2335; /* Rosso Vino */
+}
+.culture-card.is-wine-red .culture-title {
+    color: #801C2C; /* Bordeaux testo */
+}
+.culture-card.is-wine-red .culture-bg-icon i {
+    color: #9B2335; /* Icona Rossa */
+}

@@ -1,0 +1,176 @@
+
+/* --- VARIANTE SPIAGGE (Blu Oceano & Onde) --- */
+/* Classe da aggiungere nel JS: .culture-card.is-beach */
+
+.culture-card.is-beach {
+    /* Striscia laterale color oceano */
+    border-left-color: #008B8B; /* Turchese scuro */
+}
+
+.culture-card.is-beach .culture-title {
+    /* Titolo color oceano */
+    color: #00695C;
+}
+
+/* Colore dell'icona di sfondo per le spiagge */
+.culture-card.is-beach .culture-bg-icon i {
+    color: #008B8B;
+}
+
+/* --- FIX GENERALE PER I TAGS --- */
+/* Assicura che i tag (pillole grigie) stiano bene in questo layout */
+.culture-tags {
+    margin-top: 8px; /* Un po' di spazio sopra i tag */
+} 
+
+
+/* =========================================
+   STYLE SCHEDE ATTRAZIONI (CULTURA)
+   ========================================= */
+
+/* 1. STRUTTURA DELLA SCHEDA */
+.culture-card {
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    overflow: hidden; /* Fondamentale per tagliare l'icona che sborda */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    
+    /* Bordo colorato a sinistra (default grigio) */
+    border-left: 5px solid #bdc3c7;
+}
+
+.culture-card:active {
+    transform: scale(0.98);
+}
+
+/* 2. CLASSI TEMATICHE (Colori collegati al JS) */
+
+/* Tema: CHIESA (Viola) -> Classe JS: .is-church */
+.culture-card.is-church {
+    border-left-color: #9B59B6;
+}
+.culture-card.is-church .culture-title {
+    color: #8E44AD;
+}
+
+/* Tema: MONUMENTO/CASTELLO (Terracotta) -> Classe JS: .is-monument */
+.culture-card.is-monument {
+    border-left-color: #D35400;
+}
+.culture-card.is-monument .culture-title {
+    color: #C0392B;
+}
+
+/* Tema: PANORAMA (Verde Acqua) -> Classe JS: .is-view */
+.culture-card.is-view {
+    border-left-color: #00897B;
+}
+.culture-card.is-view .culture-title {
+    color: #00695C;
+}
+
+
+/* 3. CONTENUTO TESTUALE */
+.culture-info {
+    flex: 1; 
+    z-index: 5; /* Assicura che il testo stia sopra l'icona */
+    padding-right: 10px;
+}
+
+.culture-location {
+    font-size: 0.75rem;
+    color: #95a5a6;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.culture-title {
+    font-family: 'Roboto Slab', serif; /* O il tuo font preferito */
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.2;
+}
+
+/* Tags (Tempo e Difficoltà) */
+.culture-tags {
+    display: flex;
+    gap: 8px;
+}
+
+.c-pill {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    background: #f4f6f7; /* Grigio chiarissimo */
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+
+/* 4. ICONE DI SFONDO (Generate dal CSS) */
+/* Questa classe posiziona il contenitore dell'icona */
+.culture-bg-icon {
+    position: absolute;
+    right: -20px;
+    bottom: -20px;
+    width: 120px;
+    height: 120px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.10; /* Molto trasparente per effetto watermark */
+    transform: rotate(-15deg);
+    pointer-events: none; /* Il click passa attraverso */
+    z-index: 1;
+}
+/* =========================================
+   ICONE FONTAWESOME (Professionali)
+   ========================================= */
+
+/* Base per l'icona di sfondo */
+.culture-bg-icon {
+    position: absolute;
+    right: -10px;
+    bottom: -15px;
+    opacity: 0.12;       /* Effetto filigrana delicato */
+    transform: rotate(-15deg);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Impostazioni comuni del Font */
+.culture-bg-icon i {
+    font-size: 7rem;     /* Grandezza Icona (circa 110px) */
+    display: block;
+}
+
+/* 1. RELIGIONE (Viola) -> Usa icona "fa-church" */
+.culture-card.is-church .culture-bg-icon i {
+    color: #9B59B6;
+}
+
+/* 2. MONUMENTI/CASTELLI (Terracotta) -> Usa icona "fa-chess-rook" (Torre) o "fa-landmark" */
+.culture-card.is-monument .culture-bg-icon i {
+    color: #D35400;
+}
+
+/* 3. PANORAMI (Verde Acqua) -> Usa icona "fa-mountain-sun" */
+.culture-card.is-view .culture-bg-icon i {
+    color: #00897B;
+}

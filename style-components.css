@@ -1,0 +1,346 @@
+
+/* ============================================================
+   8. MODALI & MAPPE & FILTRI
+   ============================================================ */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(38, 70, 83, 0.4); backdrop-filter: blur(8px);
+    z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 20px; opacity: 0; animation: fadeIn 0.3s forwards;
+}
+.modal-content {
+    background: var(--surface); padding: 0; border-radius: 25px; width: 100%; max-width: 450px; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+.modal-content img { border-radius: 0; width: 100%; display: block; }
+.modal-content h2 { padding: 25px 25px 5px 25px; font-family: 'Roboto', sans-serif; color: var(--primary-dark); font-size: 1.5rem; }
+.modal-content p { padding: 0 25px 25px 25px; color: var(--text-light); line-height: 1.7; }
+.close-modal {
+    position: absolute; top: 15px; right: 15px; width: 40px; height: 40px; background: white; color: var(--text-main); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 1.5rem; font-weight: 300; box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 10;
+}
+.map-container {
+    width: 100%; height: calc(100vh - 200px); border-radius: var(--card-radius); overflow: hidden; background-color: #E0F2F1; position: relative; box-shadow: var(--shadow-soft); border: 4px solid var(--surface);
+}
+.map-note {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(4px); padding: 8px 20px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; color: var(--primary-dark); box-shadow: 0 4px 15px rgba(0,0,0,0.15); pointer-events: none; letter-spacing: 0.5px;
+}
+.monument-meta { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.meta-badge { font-size: 0.7rem; padding: 6px 12px; border-radius: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-easy { background-color: #E8F5E9; color: #2E7D32; } 
+.badge-hard { background-color: #FFEBEE; color: #a12222; } 
+.badge-time { background-color: #E3F2FD; color: #1565C0; } 
+.card-list-item.monument-mode { border-left: none; border-bottom: 3px solid #9C27B0; }
+.card-full-width { grid-column: 1 / -1 !important; width: 100% !important; aspect-ratio: unset !important; height: 120px !important; background-size: cover !important; background-position: center !important; }
+
+/*Filtro Galleggiante */
+#filter-toggle-btn {
+    position: fixed; bottom: 85px; right: 20px; z-index: 999; background: none !important; border: none !important; box-shadow: none !important; padding: 0; color: #ffffff; cursor: pointer; transition: transform 0.2s ease-out; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+}
+#filter-toggle-btn:active { transform: scale(0.9); opacity: 0.8; }
+#filter-toggle-btn .material-icons { font-size: 3.5rem; }
+.filter-chip {
+    background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; padding: 8px 18px; border-radius: 20px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.3); margin-right: 5px;
+}
+.filter-chip:active { transform: scale(0.95); background: rgba(0, 0, 0, 0.8); }
+.active-filter { background: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%); border: 1px solid transparent; color: #000000; font-weight: 700; box-shadow: 0 4px 12px rgba(66, 230, 149, 0.4); }
+
+/* ============================================================
+   FILTRO BOTTOM SHEET (Cassetto dal Basso)
+   ============================================================ */
+
+/* 1. L'Overlay scuro dietro il pannello */
+.sheet-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);
+    z-index: 2000; 
+    opacity: 0; visibility: hidden;
+    transition: all 0.3s ease;
+}
+.sheet-overlay.active { opacity: 1; visibility: visible; }
+
+/* 2. Il Pannello (Sheet) vero e proprio */
+.bottom-sheet {
+    position: fixed; bottom: 0; left: 0; width: 100%;
+    background: #ffffff;
+    border-radius: 30px 30px 0 0; /* Arrotondato solo sopra */
+    padding: 25px 20px 40px 20px; /* Più padding sotto per i telefoni moderni */
+    z-index: 2001;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+    transform: translateY(110%); /* Nascondi sotto lo schermo */
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.bottom-sheet.active { transform: translateY(0); }
+
+/* 3. Intestazione del pannello */
+.sheet-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+}
+.sheet-title { font-family: 'Roboto Slab', serif; font-size: 1.4rem; font-weight: 700; color: #2c3e50; }
+.sheet-close { font-size: 1.8rem; color: #999; cursor: pointer; padding: 5px; }
+
+/* 4. Griglia dei Pallini (Chips) */
+.filter-grid {
+    display: flex; flex-wrap: wrap; gap: 10px;
+}
+/* ============================================================
+   FILTRI AVANZATI (Doppia Sezione)
+   ============================================================ */
+
+/* Titoli delle sezioni nel filtro (es. "Scegli il Paese") */
+.filter-section-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #90A4AE;
+    font-weight: 700;
+    margin: 20px 0 10px 0;
+    letter-spacing: 1px;
+}
+
+/* Rimuovi margine al primo titolo */
+.filter-section-title:first-of-type {
+    margin-top: 0;
+}
+
+/* Bottone grande "Mostra Risultati" */
+.btn-apply-filters {
+    width: 100%;
+    background: #2A9D8F;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    margin-top: 30px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(42, 157, 143, 0.3);
+    transition: transform 0.2s;
+}
+.btn-apply-filters:active {
+    transform: scale(0.98);
+}
+/* Stile dei Pallini nel cassetto */
+.sheet-chip {
+    padding: 10px 18px;
+    border-radius: 50px;
+    background: #f0f2f5;
+    color: #546e7a;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+/* Pallino Attivo */
+.sheet-chip.active-filter {
+    background: #2A9D8F; /* Colore Primario */
+    color: white;
+    box-shadow: 0 4px 10px rgba(42, 157, 143, 0.3);
+}
+/* Animazioni */
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.9) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; color: #fff; }
+
+
+
+
+/* Colori dinamici difficoltà */
+.diff-easy { background: linear-gradient(135deg, #2ecc71, #27ae60); } /* Verde */
+.diff-medium { background: linear-gradient(135deg, #f1c40f, #f39c12); } /* Giallo/Arancio */
+.diff-hard { background: linear-gradient(135deg, #e74c3c, #c0392b); } /* Rosso */
+
+
+
+.stat-bubble {
+    background: #F8F9FA; border-radius: 16px; padding: 10px 15px; 
+    flex: 1; text-align: center; border: 1px solid #eee;
+}
+.stat-bubble strong { display: block; font-size: 1.1rem; color: #2D3436; }
+.stat-bubble span { font-size: 0.7rem; text-transform: uppercase; color: #B2BEC3; font-weight: 700; }
+
+
+/* === NUOVO DESIGN CULTURA (Art Gallery Style) === */
+.culture-card-modern {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px -5px rgba(100, 100, 100, 0.1);
+    margin-bottom: 18px;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid rgba(0,0,0,0.04);
+}
+
+.culture-card-modern:active {
+    transform: scale(0.98);
+}
+
+/* La fascia colorata verticale a sinistra */
+.culture-accent-strip {
+    width: 6px;
+    background: linear-gradient(to bottom, #8E2DE2, #4A00E0); /* Gradiente Viola */
+}
+
+.culture-content {
+    flex: 1;
+    padding: 20px 15px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.culture-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+/* Titolo elegante */
+.culture-title {
+    font-family: 'Roboto Slab', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1.3;
+}
+
+.culture-location {
+    font-size: 0.8rem;
+    color: #95a5a6;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 4px;
+}
+
+/* Box per le icone (Tempo e Difficoltà) */
+.culture-meta-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.culture-pill {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex; align-items: center; gap: 4px;
+}
+
+.pill-time { background: #F3E5F5; color: #8E2DE2; } /* Lilla */
+.pill-diff { background: #f0f0f0; color: #555; }
+
+/* Icona decorativa sfumata a destra */
+.culture-icon-deco {
+    width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(142, 45, 226, 0.1), rgba(74, 0, 224, 0.05));
+    border-left: 1px solid rgba(0,0,0,0.03);
+}
+
+.culture-icon-deco .material-icons {
+    font-size: 1.8rem;
+    background: -webkit-linear-gradient(#8E2DE2, #4A00E0);
+
+    -webkit-text-fill-color: transparent;
+}
+
+/* ============================================================
+   MENU 3D "PREMIUM" & SPAZIO COMPATTO
+   ============================================================ */
+
+/* 1. BARRA FISSA (Spazio ridotto al minimo) */
+.nav-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    
+    /* Sfondo Vetro */
+    background: rgba(255, 255, 255, 0.98); 
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    
+    /* ELIMINA SPAZI INUTILI */
+    padding: 8px 0 8px 0;    /* Padding verticale minimo */
+    margin: 0 -20px 0 -20px; /* Margine sotto a 0! Attacca il contenuto */
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    
+    /* Ombra che cade SOPRA il contenuto per staccarlo */
+    box-shadow: 0 5px 15px -5px rgba(0,0,0,0.1); 
+}
+
+/* 2. CONTENITORE SCORREVOLE */
+.nav-scroll-container {
+    display: flex;
+    gap: 12px; /* Spazio tra i bottoni */
+    overflow-x: auto;
+    padding: 0 20px; /* Padding laterale */
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; /* Scroll fluido nativo */
+    align-items: center;
+    height: 55px; /* Altezza fissa per contenere i bottoni 3D */
+}
+.nav-scroll-container::-webkit-scrollbar { display: none; }
+
+/* 3. IL BOTTONE 3D (Stato Normale) */
+.btn-3d {
+    flex-shrink: 0; /* Non si schiaccia */
+    
+    /* Forma */
+    padding: 10px 20px;
+    border-radius: 16px; /* Arrotondato moderno */
+    border: none;
+    
+    /* EFFETTO 3D (Luce sopra, ombra sotto) */
+    background: linear-gradient(145deg, #ffffff, #e6e6e6);
+    box-shadow: 3px 3px 6px #d1d9e6, 
+               -3px -3px 6px #ffffff;
+    
+    /* Testo */
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #6c7a89; /* Grigio metallico */
+    
+    cursor: pointer;
+    transition: all 0.1s ease; /* Scatto veloce meccanico */
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+}
+
+/* EFFETTO PRESSIONE (Quando tocchi col dito) */
+.btn-3d:active {
+    background: #e6e6e6;
+    /* L'ombra si inverte -> Sembra premuto dentro */
+    box-shadow: inset 3px 3px 6px #d1d9e6, 
+                inset -3px -3px 6px #ffffff;
+    transform: translateY(1px);
+}
+
+/* 4. STATO ATTIVO (Il bottone selezionato) */
+.btn-3d.active-3d {
+    /* Colore Scuro Premium */
+    background: linear-gradient(145deg, #2c3e50, #000000);
+    color: #ffffff;
+    
+    /* Ombra scura profonda */
+    box-shadow: 4px 4px 10px rgba(0,0,0,0.3), 
+               -2px -2px 5px rgba(255,255,255,0.1);
+               
+    transform: translateY(-1px); /* Resta leggermente sollevato */
+}
+
+/* 5. CONTENITORE DATI (Attaccato sopra) */
+#sub-content {
+    padding-top: 15px !important; /* Solo 15px di aria dal menu */
+    min-height: 300px;
+}
