@@ -129,70 +129,40 @@ main, #app-content {
 /* ============================================================
    4. HOME & BENVENUTO
    ============================================================ */
-/* NUOVO STILE HOME FULLSCREEN */
-.home-hero-fullscreen {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    z-index: -1; overflow: hidden; /* Sta dietro a tutto */
-}
-.home-hero-fullscreen img {
-    width: 100%; height: 100%; object-fit: cover;
-}
-/* Overlay scuro per leggere il testo */
-.home-hero-fullscreen::after {
-    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.3);
+.welcome-card {
+    /* LARGHEZZA: Usiamo 100% per riempire il contenitore. 
+       Se è ancora stretta, è colpa del padding di 'main' */
+    width: 100%;          
+    margin: 10px auto;   /* Margine piccolo sopra/sotto per staccarla dai bordi */
+    
+    /* ALTEZZA: Mantengo la tua formula che ti piace */
+    height: calc(98vh - var(--nav-height)); 
+    min-height: 500px;
+    
+    /* Estetica */
+    background-size: cover; 
+    background-position: center;
+    border-radius: 20px; 
+    overflow: hidden;
+    position: relative;
+    box-shadow: var(--shadow-soft);
+    
+    /* Animazione */
+    opacity: 0; 
+    animation: fadeIn 0.5s forwards;
 }
 
-/* IMPORTANTE: Quando siamo in home, rendiamo il main trasparente */
-.is-home main, .is-home #app-content {
-    background: transparent !important;
-    pointer-events: none; /* Lascia passare i click allo sfondo se serve */
-}
-/* Riabilitiamo i click sui bottoni della lingua */
-.is-home .welcome-content {
-    pointer-events: auto;
-}
-
-/* CONTENITORE PRINCIPALE: Fissato allo schermo per spingere tutto giù */
 .welcome-overlay {
-    position: fixed; /* FONDAMENTALE: Si ancora allo schermo */
-    top: 0; left: 0;
     width: 100%; height: 100%;
-    
     background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);
-    
-    display: flex; 
-    flex-direction: column; 
-    justify-content: flex-end; /* Spinge il contenuto in BASSO */
-    padding: 30px;
-    padding-bottom: 110px; /* Spazio dal fondo (sopra la barra di navigazione) */
-    z-index: 10;
+    display: flex; flex-direction: column; justify-content: flex-end; padding: 30px;
 }
-
-/* TITOLO: Ora fluisce col layout invece di essere inchiodato in alto */
-.welcome-title {
-    font-family: 'Barriecito', cursive; 
-    font-size: 4rem;
-    color: white; 
-    text-shadow: 0 4px 10px rgba(0,0,0,0.5); 
-    line-height: 1.1;
-    text-align: center; 
-    padding: 0 20px;
-    
-    /* CORREZIONE POSIZIONAMENTO */
-    position: relative; /* Non più absolute! */
-    width: 100%; 
-    margin: 0 0 80px 0; /* Spazio SOTTO il titolo (verso i bottoni) */
-}
-
 .welcome-desc {
     font-size: 1rem; color: rgba(255, 255, 255, 0.95);
     margin-bottom: 25px; line-height: 1.5; text-align: center;
     margin-left: auto; margin-right: auto; max-width: 90%;
 }
-
-.lang-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
-
+.lang-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .lang-tile {
     background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 16px;

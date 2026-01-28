@@ -143,7 +143,7 @@ function renderHome() {
     <div class="welcome-overlay">
         <div class="welcome-content">
             
-            <h1 class="welcome-title">${window.t('welcome_app_name')}</h1>
+            <h1></h1>
             
             <div class="welcome-divider"></div>
             
