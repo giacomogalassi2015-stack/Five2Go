@@ -13,30 +13,46 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
-    <script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js"></script> <script src="https://unpkg.com/@raruto/leaflet-elevation/dist/leaflet-elevation.js"></script>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-0L8KBD0G5W"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js"></script> 
+    <script src="https://unpkg.com/@raruto/leaflet-elevation/dist/leaflet-elevation.js"></script>
 
-  gtag('config', 'G-0L8KBD0G5W');
-  
-</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0L8KBD0G5W"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-0L8KBD0G5W');
+    </script>
 </head>
+
 <body>
 
 <header></header>
 
-
 <main id="app-content">
+    
     <div id="data-container">
-        <div class="loading-state"><span class="material-icons spin">sync</span><p>Caricamento...</p></div>
+        <div class="loading-state">
+            <span class="material-icons spin">sync</span>
+            <p>Caricamento...</p>
+        </div>
     </div>    
+
+    <footer id="legal-footer" style="text-align: center; padding: 30px 10px 90px 10px; font-size: 11px; color: #888; background-color: #f9f9f9; border-top: 1px solid #eee; margin-top: 20px;">
+        
+        <p style="margin-bottom: 15px;">© 2024 Five2Go</p>
+        
+        <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+            <a href="https://app.legalblink.it/api/documents/6973df3d9398e90022bdb487/privacy-policy-per-siti-web-o-e-commerce-it" target="_blank" style="color: #666; text-decoration: underline;">Privacy Policy</a>
+            
+            <a href="https://app.legalblink.it/api/documents/6973df3d9398e90022bdb487/cookie-policy-it" target="_blank" style="color: #666; text-decoration: underline;">Cookie Policy</a>
+            
+            <a href="#" class="lb-cs-settings-link" style="color: #444; text-decoration: none; font-weight: bold; border-bottom: 1px dotted #444;">Gestisci Cookie</a>
+        </div>
+    </footer>
+
 </main>
 
 <nav id="bottom-nav">
@@ -49,19 +65,17 @@
     <button class="nav-item" onclick="switchView('outdoor', this)">
         <span class="material-icons">terrain</span><span class="nav-label">Outdoor</span>
     </button>
-    <button class="nav-item" onclick="switchView('servizi', this)"><footer class="app-footer">
-   
-</footer>
+    <button class="nav-item" onclick="switchView('servizi', this)">
         <span class="material-icons">info</span><span class="nav-label">Servizi</span>  
     </button>
 </nav>
 
 <script src="data-logic.js"></script>
-
 <script src="ui-renderers.js?v=2"></script>
-
 <script src="app.js"></script>
 
-</body>
+<script type="text/javascript" src="https://app.legalblink.it/api/scripts/lb_cs.js"></script>
+<script id="lb_cs" type="text/javascript">lb_cs("6973df3d9398e90022bdb48d");</script>
 
+</body> 
 </html>
