@@ -365,98 +365,125 @@ function handlePageSwipe() {
     touchStartX = null;
     touchStartY = null;
 }
-
-// --- RENDER SERVIZI (Modificato) ---
 window.renderServicesGrid = async function() {
-    const content = document.getElementById('app-content');
-    
-    // Recupero dati Trasporti
-    const { data, error } = await window.supabaseClient.from('Trasporti').select('*');
-    if (error) { 
-        console.error(error);
-        content.innerHTML = `<p class="error-msg">${window.t('error')}</p>`; 
+    console.log("🔘 Avvio renderServicesGrid..."); // Debug per capire se parte
+
+    // 1. Cerchiamo l'elemento in modo sicuro
+    const targetEl = document.getElementById('app-content');
+    if (!targetEl) {
+        console.error("❌ Errore: Elemento 'app-content' non trovato nel DOM.");
         return;
     }
-    window.tempTransportData = data;
 
-    function getServiceIcon(name, type) {
-        const n = name.toLowerCase();
+    // 2. Mostriamo il loader subito
+    targetEl.innerHTML = `
+        <div class="loading-state" style="padding-top:50px;">
+            <span class="material-icons spin" style="font-size:40px; color:var(--primary-col);">sync</span>
+            <p style="margin-top:10px; color:#666;">Caricamento Servizi...</p>
+        </div>`;
+
+    // 3. Controllo sicurezza Supabase
+    if (!window.supabaseClient) {
+        targetEl.innerHTML = `<div class="error-msg">Errore Critico: Database non connesso. Ricarica la pagina.</div>`;
+        return;
+    }
+
+    // 4. Scarico Dati
+    console.log("📡 Scarico trasporti...");
+    const { data, error } = await window.supabaseClient.from('Trasporti').select('*');
+    
+    if (error) { 
+        console.error("❌ Errore Supabase:", error);
+        targetEl.innerHTML = `<div class="error-msg">Impossibile caricare i servizi: ${error.message}</div>`; 
+        return;
+    }
+
+    window.tempTransportData = data; // Salva per le modali
+
+    // Funzione interna per icone (così non dipende da fuori)
+    const getIconSafe = (name) => {
+        const n = (name || '').toLowerCase();
         if (n.includes('treno') || n.includes('stazione')) return 'train';
         if (n.includes('battello') || n.includes('traghetto')) return 'directions_boat';
         if (n.includes('bus') || n.includes('autobus')) return 'directions_bus';
         if (n.includes('taxi')) return 'local_taxi';
-        if (type === 'farmacia') return 'local_pharmacy';
-        if (type === 'info') return 'phonelink_ring';
         return 'confirmation_number';
+    };
+
+    // 5. Costruzione HTML
+    let html = '<div class="services-grid-modern animate-fade" style="padding-bottom:100px;">';
+
+    // Widget Trasporti (Dinamici)
+    if (data && data.length > 0) {
+        data.forEach((t, index) => {
+            const nome = t.Mezzo || t.Località || 'Trasporto';
+            const icon = getIconSafe(nome);
+            html += `
+            <div class="service-widget" onclick="openModal('transport', ${index})">
+                <span class="material-icons widget-icon">${icon}</span>
+                <span class="widget-label">${nome}</span>
+            </div>`;
+        });
     }
 
-    let html = '<div class="services-grid-modern animate-fade">';
+    // Widget Fissi (Numeri, Farmacie, Legal)
+    // Nota: window.t(...) potrebbe fallire se le traduzioni non sono pronte, usiamo un fallback
+    const labelNum = (window.t && window.t('menu_num')) || 'Numeri Utili';
+    const labelPharm = (window.t && window.t('menu_pharm')) || 'Farmacie';
 
-    // 1. Widget Trasporti
-    data.forEach((t, index) => {
-        const nome = t.Mezzo || t.Località || 'Trasporto';
-        const icon = getServiceIcon(nome, 'trasporto');
-        html += `
-        <div class="service-widget" onclick="openModal('transport', ${index})">
-            <span class="material-icons widget-icon">${icon}</span>
-            <span class="widget-label">${nome}</span>
-        </div>`;
-    });
-
-    // 2. Widget Numeri Utili
     html += `
     <div class="service-widget" onclick="renderSimpleList('Numeri_utili')">
         <span class="material-icons widget-icon">phonelink_ring</span>
-        <span class="widget-label">${window.t('menu_num')}</span>
-    </div>`;
+        <span class="widget-label">${labelNum}</span>
+    </div>
     
-    // 3. Widget Farmacie
-    html += `
     <div class="service-widget" onclick="renderSimpleList('Farmacie')">
         <span class="material-icons widget-icon">medical_services</span>
-        <span class="widget-label">${window.t('menu_pharm')}</span>
-    </div>`;
+        <span class="widget-label">${labelPharm}</span>
+    </div>
 
-    // 4. NUOVO WIDGET: Legal & Privacy
-    html += `
     <div class="service-widget" onclick="renderLegalPage()">
         <span class="material-icons widget-icon">policy</span>
         <span class="widget-label">Legal & Privacy</span>
-    </div>`;
+    </div>
+    
+    </div>`; // Chiusura grid
 
-    html += '</div>';
-    html += getGlobalFooter(); 
-    content.innerHTML = html;
+    // 6. Iniezione finale (Senza chiamare getGlobalFooter)
+    targetEl.innerHTML = html;
+    console.log("✅ Servizi caricati con successo.");
 };
-// Funzione per renderizzare liste semplici (Farmacie, Numeri Utili) con Header Bello
-function renderSimpleList(tableName) {
-    const cleanTitle = tableName.replace('_', ' '); // Es. "Numeri_utili" -> "Numeri utili"
 
-    // Header con Bottone Custom + Contenitore Contenuto
-    const layout = `
+// Funzione Liste Semplici (Farmacie/Numeri) - Versione Sicura
+window.renderSimpleList = function(tableName) {
+    const targetEl = document.getElementById('app-content');
+    if (!targetEl) return;
+    
+    const cleanTitle = tableName.replace('_', ' ');
+    
+    targetEl.innerHTML = `
     <div class="header-simple-list animate-fade">
         <button onclick="renderServicesGrid()" class="btn-back-custom">
             <span class="material-icons">arrow_back</span>
         </button>
         <h2>${cleanTitle}</h2>
     </div>
-    
     <div id="sub-content">
-        <div class="loader">${window.t('loading')}...</div>
+        <div class="loader">Caricamento...</div>
     </div>`;
 
-    content.innerHTML = layout;
-    
-    // Carica effettivamente i dati
-    window.loadTableData(tableName, null);
-}
+    if(window.loadTableData) {
+        window.loadTableData(tableName, null);
+    } else {
+        console.error("❌ loadTableData non trovata! Controlla app.js");
+    }
+};
 window.toggleTicketInfo = function() {
     const box = document.getElementById('ticket-info-box');
     if (box) { box.style.display = (box.style.display === 'none') ? 'block' : 'none'; }
 };
 
 // --- LOGICA FILTRI (Bottom Sheet / Cassetto) ---
-// --- LOGICA FILTRI (Tradotta e Sistemata) ---
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
     container.innerHTML = `<div class="list-container animate-fade" id="dynamic-list" style="padding-bottom: 80px;"></div>`;
     const listContainer = container.querySelector('#dynamic-list');
