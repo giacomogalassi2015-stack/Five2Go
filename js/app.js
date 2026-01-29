@@ -918,8 +918,8 @@ window.renderLegalPage = function() {
 
         <div class="legal-footer-note">
             <strong>Five2Go</strong><br>
-            Progetto realizzato da [IL TUO NOME O AZIENDA]<br>
-            Email: [LA TUA EMAIL SUPPORTO]<br>
+            Progetto realizzato da Five2Go <br>
+            Email: five2go.info@gmail.com<br>
             © 2026 Tutti i diritti riservati.<br>
             <br>
             <em>Ultimo aggiornamento: Gennaio 2026</em>
