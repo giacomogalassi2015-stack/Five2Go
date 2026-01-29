@@ -159,30 +159,6 @@ window.getModalContent = function(type, payload, item) {
             <p style="text-align:center; font-size:0.8rem; color:#888; margin-top:10px;">${window.t('map_zoom_hint')}</p>
         `;
 
-        // Inizializza mappa
-        setTimeout(() => {
-            const element = document.getElementById(uniqueMapId);
-            if (element) {
-                const map = L.map(uniqueMapId);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                    attribution: '© OpenStreetMap, © CARTO', maxZoom: 20
-                }).addTo(map);
-
-                new L.GPX(gpxUrl, {
-                    async: true,
-                    marker_options: { 
-                        startIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-start.png', 
-                        endIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-end.png', 
-                        shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-shadow.png',
-                        iconSize: [25, 41], iconAnchor: [12, 41], shadowSize: [41, 41]
-                    },
-                    polyline_options: { color: '#E76F51', weight: 5, opacity: 0.8 }
-                }).on('loaded', function(e) { 
-                    map.fitBounds(e.target.getBounds(), { padding: [30, 30] }); 
-                }).addTo(map);
-                setTimeout(() => { map.invalidateSize(); }, 300);
-            }
-        }, 100);
     }
 
   //  SPIAGGE ---
