@@ -871,24 +871,3 @@ window.closeModal = function() {
     }
     if(originalCloseModal) originalCloseModal();
 };
-// --- FUNZIONE PER RIAPRIRE IL BANNER (Versione Robusta) ---
-window.openCookieSettings = function() {
-    console.log("Tentativo apertura banner cookie...");
-
-    // 1. Prova il metodo standard
-    if (typeof window.lbl_open_pref === 'function') {
-        window.lbl_open_pref();
-        return;
-    } 
-    
-    // 2. Prova a vedere se l'oggetto principale esiste ma la funzione ha nome diverso
-    // (A volte capita con versioni diverse dello script)
-    if (window.Lightbox && typeof window.Lightbox.open === 'function') {
-        window.Lightbox.open();
-        return;
-    }
-
-    // 3. Se arriviamo qui, lo script è bloccato dal browser o AdBlock
-    console.warn("LegalBlink bloccato o non inizializzato.");
-    alert("Il pannello cookie non è disponibile.\nPotrebbe essere bloccato dalle impostazioni del tuo browser (Anti-Tracking) o da un AdBlocker.");
-};

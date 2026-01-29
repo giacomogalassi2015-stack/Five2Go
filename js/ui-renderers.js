@@ -479,14 +479,17 @@ window.renderLegalPage = function() {
                 <span class="material-icons" style="color:#ccc;">chevron_right</span>
             </a>
 
-            <div class="legal-row" onclick="window.openCookieSettings()">
+ <a href="javascript:void(0)" 
+               onclick="document.getElementById('ghost-cookie-btn').click()"
+               class="legal-row" 
+               style="text-decoration: none; color: inherit;">
+                
                 <div class="legal-row-left">
                     <span class="material-icons">cookie</span>
                     <span>${t.lbl_consent}</span>
                 </div>
                 <span class="material-icons" style="color:#ccc;">settings</span>
-            </div>
-        </div>
+            </a>
 
         <div class="legal-footer-note">
             <strong>Five2Go</strong><br>
