@@ -3,8 +3,8 @@ console.log("✅ 3. app.js caricato");
 const content = document.getElementById('app-content');
 const viewTitle = document.getElementById('view-title');
 window.pendingMaps = []; // Coda per le mappe da caricare nella lista
-// --- MODIFICA 1: Footer Dinamico (funzione invece di costante) ---
-const getGlobalFooter = () => `<footer class="app-footer"><p>© 2026 Five2Go. ${window.t('footer_rights')}</p></footer>`;
+
+const getGlobalFooter = () => ``;
 // --- 1. SETUP LINGUA & HEADER (Logic Condizionale) ---
 function setupHeaderElements() {
     const header = document.querySelector('header');
@@ -366,10 +366,11 @@ function handlePageSwipe() {
     touchStartY = null;
 }
 
-// --- RENDER SERVIZI (Modificato per usare getGlobalFooter) ---
+// --- RENDER SERVIZI (Modificato) ---
 window.renderServicesGrid = async function() {
     const content = document.getElementById('app-content');
     
+    // Recupero dati Trasporti
     const { data, error } = await window.supabaseClient.from('Trasporti').select('*');
     if (error) { 
         console.error(error);
@@ -379,7 +380,6 @@ window.renderServicesGrid = async function() {
     window.tempTransportData = data;
 
     function getServiceIcon(name, type) {
-        // ... (logica icone invariata) ...
         const n = name.toLowerCase();
         if (n.includes('treno') || n.includes('stazione')) return 'train';
         if (n.includes('battello') || n.includes('traghetto')) return 'directions_boat';
@@ -392,6 +392,7 @@ window.renderServicesGrid = async function() {
 
     let html = '<div class="services-grid-modern animate-fade">';
 
+    // 1. Widget Trasporti
     data.forEach((t, index) => {
         const nome = t.Mezzo || t.Località || 'Trasporto';
         const icon = getServiceIcon(nome, 'trasporto');
@@ -402,20 +403,29 @@ window.renderServicesGrid = async function() {
         </div>`;
     });
 
+    // 2. Widget Numeri Utili
     html += `
     <div class="service-widget" onclick="renderSimpleList('Numeri_utili')">
         <span class="material-icons widget-icon">phonelink_ring</span>
         <span class="widget-label">${window.t('menu_num')}</span>
     </div>`;
     
+    // 3. Widget Farmacie
     html += `
     <div class="service-widget" onclick="renderSimpleList('Farmacie')">
         <span class="material-icons widget-icon">medical_services</span>
         <span class="widget-label">${window.t('menu_pharm')}</span>
     </div>`;
 
+    // 4. NUOVO WIDGET: Legal & Privacy
+    html += `
+    <div class="service-widget" onclick="renderLegalPage()">
+        <span class="material-icons widget-icon">policy</span>
+        <span class="widget-label">Legal & Privacy</span>
+    </div>`;
+
     html += '</div>';
-    html += getGlobalFooter(); // MODIFICA: Chiamata a funzione
+    html += getGlobalFooter(); 
     content.innerHTML = html;
 };
 // Funzione per renderizzare liste semplici (Farmacie, Numeri Utili) con Header Bello
@@ -833,4 +843,96 @@ window.closeModal = function() {
         window.userMarker = null;
     }
     if(originalCloseModal) originalCloseModal();
+};
+
+// --- RENDER PAGINA LEGALE (Scheda Interna) ---
+window.renderLegalPage = function() {
+    const content = document.getElementById('app-content');
+
+    // ============================================================
+    // ⚠️ SPAZIO PER I LINK ARUBA / IUBENDA
+    // Quando avrai i link, incollali tra le virgolette qui sotto.
+    // ============================================================
+    const linkPrivacyIT = "#";  // Incolla qui link Privacy ITALIANO
+    const linkCookieIT  = "#";  // Incolla qui link Cookie ITALIANO
+    // Se hai link specifici per altre lingue, aggiungili qui, 
+    // altrimenti useremo quelli sopra per tutti.
+    // ============================================================
+
+    content.innerHTML = `
+    <div class="header-simple-list animate-fade">
+        <button class="btn-back-custom" onclick="switchView('servizi')">
+            <span class="material-icons">arrow_back</span>
+        </button>
+        <h2>Note Legali</h2>
+    </div>
+
+    <div class="legal-container animate-fade">
+        
+        <div class="legal-card" style="text-align:left; font-size:0.9rem; line-height:1.6;">
+            <div style="text-align:center; margin-bottom:20px;">
+                <h3 class="legal-logo">Five2Go</h3>
+                <p style="color:#666; font-size:0.8rem;">Termini di Utilizzo e Limitazione di Responsabilità</p>
+            </div>
+
+            <p><strong>1. NATURA NON UFFICIALE DEL SERVIZIO</strong><br>
+            L'applicazione "Five2Go" è un progetto editoriale privato e indipendente. L'app <strong>NON</strong> rappresenta, né è affiliata, finanziata o autorizzata dall'Ente Parco Nazionale delle Cinque Terre, dai Comuni locali, da Trenitalia o da qualsiasi ente pubblico.</p>
+            
+            <p><strong>2. ESCLUSIONE DI RESPONSABILITÀ (OUTDOOR)</strong><br>
+            L'escursionismo comporta rischi. L'autore declina ogni responsabilità per infortuni, smarrimenti o danni derivanti dall'uso delle mappe. La segnaletica in loco prevale SEMPRE sulle indicazioni dell'app. L'utente è l'unico responsabile della valutazione delle proprie capacità e dell'equipaggiamento.</p>
+
+            <p><strong>3. LIMITI TECNOLOGICI E ORARI</strong><br>
+            Il segnale GPS in zona è spesso impreciso. Gli orari dei trasporti sono indicativi e soggetti a variazioni senza preavviso da parte dei gestori.</p>
+
+            <p><strong>4. PROPRIETÀ INTELLETTUALE</strong><br>
+            Tutti i contenuti (codice, design, testi originali) sono proprietà esclusiva dell'autore. È vietata la riproduzione.</p>
+        </div>
+
+        <h3 class="legal-section-title">Privacy & Cookie</h3>
+        <div class="legal-group">
+            
+            <a href="${linkPrivacyIT}" target="_blank" class="legal-row">
+                <div class="legal-row-left">
+                    <span class="material-icons">lock</span>
+                    <span>Privacy Policy</span>
+                </div>
+                <span class="material-icons" style="color:#ccc;">chevron_right</span>
+            </a>
+
+            <a href="${linkCookieIT}" target="_blank" class="legal-row">
+                <div class="legal-row-left">
+                    <span class="material-icons">description</span>
+                    <span>Cookie Policy</span>
+                </div>
+                <span class="material-icons" style="color:#ccc;">chevron_right</span>
+            </a>
+
+            <div class="legal-row" onclick="window.openCookieSettings()">
+                <div class="legal-row-left">
+                    <span class="material-icons">cookie</span>
+                    <span>Gestisci Consenso / Revoca</span>
+                </div>
+                <span class="material-icons" style="color:#ccc;">settings</span>
+            </div>
+        </div>
+
+        <div class="legal-footer-note">
+            <strong>Five2Go</strong><br>
+            Progetto realizzato da [IL TUO NOME O AZIENDA]<br>
+            Email: [LA TUA EMAIL SUPPORTO]<br>
+            © 2026 Tutti i diritti riservati.<br>
+            <br>
+            <em>Ultimo aggiornamento: Gennaio 2026</em>
+        </div>
+
+    </div>`;
+};
+
+// Funzione helper per aprire le impostazioni cookie (Generica)
+window.openCookieSettings = function() {
+    if (typeof window.lbl_open_pref === 'function') {
+        window.lbl_open_pref(); // Per LegalBlink
+    } else {
+        alert("Pannello preferenze cookie non disponibile o caricato.");
+    }
 };
