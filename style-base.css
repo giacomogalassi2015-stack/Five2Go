@@ -198,3 +198,23 @@ main, #app-content {
     border-radius: 10px; cursor: pointer; 
 }
 .lang-opt.active { background-color: #E0F2F1; color: var(--primary-col); font-weight: 800; }
+/* REGOLA DI SICUREZZA PER LE ICONE */
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;  /* Dimensione standard */
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    
+    /* Supporto per browser moderni */
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'liga';
+}
