@@ -1,10 +1,9 @@
 // 2. FUNZIONE PRINCIPALE (Il Generatore)
 window.getModalContent = function(type, payload, item) {
     
-    // Variabili che verranno riempite dai tuoi IF
     let contentHtml = '';
     let modalClass = 'modal-content';
-    let onRender = null; // Funzione opzionale da eseguire dopo (es. per traghetti o bus)   
+    let onRender = null; 
 
     // --- RISTORANTE ---
     if (type === 'ristorante' || type === 'restaurant') {
@@ -24,8 +23,8 @@ window.getModalContent = function(type, payload, item) {
             </div>`;
     }
 
-// ---  PRODOTTI ---
-   else if (type === 'product') {
+    // --- PRODOTTI ---
+    else if (type === 'product') {
         const p = JSON.parse(decodeURIComponent(payload));
         const nome = window.dbCol(p, 'Prodotti') || window.dbCol(p, 'Nome') || 'Prodotto';
         const desc = window.dbCol(p, 'Descrizione');   
@@ -100,7 +99,7 @@ window.getModalContent = function(type, payload, item) {
             </div>`;
     }
 
-        // --- SENTIERI ---
+    // --- SENTIERI ---
     else if (type === 'trail') {
         const p = JSON.parse(decodeURIComponent(payload));
         const titolo = window.dbCol(p, 'Paesi') || p.Nome;
@@ -158,10 +157,9 @@ window.getModalContent = function(type, payload, item) {
             <div id="${uniqueMapId}" style="height: 450px; width: 100%; border-radius: 12px; border: 1px solid #ddd;"></div>
             <p style="text-align:center; font-size:0.8rem; color:#888; margin-top:10px;">${window.t('map_zoom_hint')}</p>
         `;
-
     }
 
-  //  SPIAGGE ---
+    // --- SPIAGGE ---
     else if (type === 'Spiagge') {
         if (!item) { modal.remove(); return; }
         const nome = item.Nome || 'Spiaggia';
@@ -177,7 +175,7 @@ window.getModalContent = function(type, payload, item) {
         `;
     }
 
-    // --- ATTRAZIONI  ---
+    // --- ATTRAZIONI ---
     else if (type === 'Attrazioni' || type === 'attrazione') {
         if (!item) { modal.remove(); return; }
 
@@ -204,105 +202,38 @@ window.getModalContent = function(type, payload, item) {
             </div>`;
     }
     
-  //  SPIAGGE ---
-    else if (type === 'Spiagge') {
-        if (!item) { modal.remove(); return; }
-        const nome = item.Nome || 'Spiaggia';
-        const desc = window.dbCol(item, 'Descrizione') || '';
-        const tipo = item.Tipo || '';
-        
-        contentHtml = `
-             <div style="padding: 25px;">
-                <h2 style="font-family:'Roboto Slab'; color:#00695C;">${nome}</h2>
-                <span class="c-pill" style="margin-bottom:15px; display:inline-block;">${tipo}</span>
-                <p style="line-height:1.6; color:#444;">${desc}</p>
-             </div>
-        `;
-    }
-
-    // --- ATTRAZIONI  ---
-    else if (type === 'Attrazioni' || type === 'attrazione') {
-        if (!item) { modal.remove(); return; }
-
-        const titolo = window.dbCol(item, 'Attrazioni') || window.dbCol(item, 'Titolo');
-        const curiosita = window.dbCol(item, 'Curiosita');
-        const desc = window.dbCol(item, 'Descrizione');
-        const img = window.dbCol(item, 'Immagine') || window.dbCol(item, 'Foto'); 
-
-        contentHtml = `
-            ${img ? `<img src="${img}" class="monument-header-img">` : 
-            `<div class="monument-header-icon"><i class="fa-solid fa-landmark" style="font-size:4rem; color:#546e7a;"></i></div>`}
-
-            <div style="padding: 0 25px 30px;">
-                <h2 style="font-family:'Roboto Slab'; font-size:2rem; margin: ${img ? '0' : '20px'} 0 10px 0; color:#2c3e50; line-height:1.1;">${titolo}</h2>
-                <div style="width:50px; height:4px; background:#e74c3c; margin-bottom:20px; border-radius:2px;"></div>
-
-                ${curiosita ? `
-                <div class="curiosity-box animate-fade">
-                    <div class="curiosity-title"><span class="material-icons" style="font-size:1rem;">lightbulb</span> ${window.t('label_curiosity')}</div>
-                    <div style="font-style:italic; line-height:1.5;">${curiosita}</div>
-                </div>` : ''}
-                
-                <p style="color:#374151; font-size:1.05rem; line-height:1.7; text-align:justify;">${desc || window.t('desc_missing')}</p>
-            </div>`;
-    }
-    
-    
-    // ---  TRASPORTI ---
+    // --- TRASPORTI (LOGICA STATICA) ---
     else if (type === 'transport') {
-        const item = window.tempTransportData[payload];
-        if (!item) { console.error("Trasporto non trovato"); modal.remove(); return; }
-        
-        // Titolo da mostrare
-        const nome = window.dbCol(item, 'Nome') || window.dbCol(item, 'Località') || window.dbCol(item, 'Mezzo') || 'Trasporto';
-        const desc = window.dbCol(item, 'Descrizione') || '';
-        
-        // FIX RILEVAMENTO: Creiamo una stringa unica con tutti i campi per cercare le parole chiave
-        const searchStr = (
-            (window.dbCol(item, 'Nome') || '') + ' ' + 
-            (window.dbCol(item, 'Località') || '') + ' ' + 
-            (window.dbCol(item, 'Mezzo') || '')
-        ).toLowerCase();
-
-        // Rilevamento basato sulla stringa completa
-        const isBus = searchStr.includes('bus') || searchStr.includes('autobus') || searchStr.includes('atc');
-        const isFerry = searchStr.includes('battello') || searchStr.includes('traghetto') || searchStr.includes('navigazione');
-        const isTrain = searchStr.includes('tren') || searchStr.includes('ferrovi') || searchStr.includes('stazione');
-
+        const transportId = payload; 
+        let title = '';
         let customContent = '';
-    
-    // --- INTERFACCIA BUS ---
-        if (isBus) {
-            const infoSms = window.dbCol(item, 'Info_SMS');
-            const infoApp = window.dbCol(item, 'Info_App');
-            const infoAvvisi = window.dbCol(item, 'Info_Avvisi');
-            const hasTicketInfo = infoSms || infoApp || infoAvvisi;
 
-            let ticketSection = '';
-            if (hasTicketInfo) {
-                ticketSection = `
+        // BUS
+        if (transportId === 'bus') {
+            title = window.t('label_bus');
+            const now = new Date();
+            const todayISO = now.toISOString().split('T')[0];
+            const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            const ticketSection = `
                 <button onclick="toggleTicketInfo()" style="width:100%; margin-bottom:15px; background:#e0f7fa; color:#006064; border:1px solid #b2ebf2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
                     🎟️ ${window.t('how_to_ticket')} ▾
                 </button>
                 <div id="ticket-info-box" style="display:none; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px; font-size:0.9rem; color:#333; line-height:1.5;">
-                    ${infoSms ? `<p style="margin-bottom:10px;"><strong>📱 SMS</strong><br>${infoSms}</p>` : ''}
-                    ${infoApp ? `<p style="margin-bottom:10px;"><strong>📲 APP</strong><br>${infoApp}</p>` : ''}
-                    ${infoAvvisi ? `<div style="background:#fff3cd; color:#856404; padding:10px; border-radius:6px; font-size:0.85rem; border:1px solid #ffeeba; margin-top:10px;"><strong>⚠️ ${window.t('label_warning')}:</strong> ${infoAvvisi}</div>` : ''}
+                    <p style="margin-bottom:10px;"><strong>📱 SMS/APP:</strong> Scarica l'app ATC La Spezia.</p>
+                    <div style="background:#fff3cd; color:#856404; padding:10px; border-radius:6px; font-size:0.85rem; border:1px solid #ffeeba; margin-top:10px;">
+                        <strong>⚠️ ${window.t('label_warning')}:</strong> Biglietti a bordo con sovrapprezzo.
+                    </div>
                 </div>`;
-            }
 
             const mapToggleSection = `
-                <button id="btn-bus-map-toggle" onclick="toggleBusMap()" style="width:100%; margin-bottom:15px; background:#EDE7F6; color:#4527A0; border:1px solid #D1C4E9; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition: background 0.3s;">
+                <button id="btn-bus-map-toggle" onclick="toggleBusMap()" style="width:100%; margin-bottom:15px; background:#EDE7F6; color:#4527A0; border:1px solid #D1C4E9; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
                     🗺️ ${window.t('show_map')} ▾
                 </button>
                 <div id="bus-map-wrapper" style="display:none; margin-bottom: 20px;">
                     <div id="bus-map" style="height: 280px; width: 100%; border-radius: 12px; z-index: 1; border: 2px solid #EDE7F6;"></div>
                     <p style="font-size:0.75rem; text-align:center; color:#999; margin-top:5px;">${window.t('map_hint')}</p>
                 </div>`;
-
-            const now = new Date();
-            const todayISO = now.toISOString().split('T')[0];
-            const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
 
             customContent = `
             <div class="bus-search-box animate-fade">
@@ -338,10 +269,11 @@ window.getModalContent = function(type, payload, item) {
             </div>`;
             
             setTimeout(() => { if(window.loadAllStops) window.loadAllStops(); }, 100);
-        } 
-        
-        // --- INTERFACCIA BATTELLO / TRAGHETTO ---
-        else if (isFerry) {
+        }
+
+        // BATTELLO
+        else if (transportId === 'ferry') {
+            title = window.t('label_ferry');
             const now = new Date();
             const todayISO = now.toISOString().split('T')[0];
             const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
@@ -357,9 +289,9 @@ window.getModalContent = function(type, payload, item) {
                     🎟️ ${window.t('how_to_ticket')} ▾
                 </button>
                 <div id="ticket-info-box" style="display:none; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px; font-size:0.9rem; color:#333; line-height:1.5;">
-                    <p>I biglietti sono acquistabili presso le biglietterie al molo di ogni borgo prima dell'imbarco.</p>
+                    <p>I biglietti sono acquistabili presso le biglietterie al molo.</p>
                     <div style="background:#fff3cd; color:#856404; padding:10px; border-radius:6px; font-size:0.85rem; border:1px solid #ffeeba; margin-top:10px;">
-                        <strong>⚠️ INFO METEO:</strong> In caso di mare mosso il servizio è sospeso.
+                        <strong>⚠️ INFO METEO:</strong> Sospeso con mare mosso.
                     </div>
                 </div>
 
@@ -396,24 +328,20 @@ window.getModalContent = function(type, payload, item) {
 
             setTimeout(() => window.initFerrySearch(), 50);
         }
-        
-        // --- INTERFACCIA TRENO ---
-        else if (isTrain) {
+
+        // TRENO
+        else if (transportId === 'train') {
+            title = window.t('label_train');
             const now = new Date();
             const nowTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
             if (window.trainSearchRenderer) { customContent = window.trainSearchRenderer(null, nowTime); } 
             else { customContent = "<p>Errore interfaccia Treni.</p>"; }
-        } 
-        
-        // --- FALLBACK (Se non è nessuno dei precedenti) ---
-        else {
-            customContent = `<p style="color:#666;">${desc}</p>`;
         }
-        
-        if (isBus || isTrain || isFerry) { contentHtml = customContent; } 
-        else { contentHtml = `<h2>${nome}</h2><p style="color:#666;">${desc}</p>${customContent}`; }
+
+        contentHtml = `<h2>${title}</h2>${customContent}`;
     }
-       // --- FARMACIA ---
+
+    // --- FARMACIA ---
     else if (type === 'farmacia') {
         const item = JSON.parse(decodeURIComponent(payload)); 
         const nome = window.dbCol(item, 'Nome');
@@ -421,9 +349,10 @@ window.getModalContent = function(type, payload, item) {
         contentHtml = `<h2>${nome}</h2><p>📍 ${item.Indirizzo}, ${paesi}</p><p>📞 <a href="tel:${item.Numero}">${item.Numero}</a></p>`;
     }
 
-return { html: contentHtml, class: modalClass, onRender: onRender };
+    return { html: contentHtml, class: modalClass, onRender: onRender };
+};
 
-}
+// RENDERER TRENI (Helper)
 window.trainSearchRenderer = (data, nowTime) => {
     return `
     <div class="bus-search-box train-box animate-fade">
@@ -457,7 +386,7 @@ window.trainSearchRenderer = (data, nowTime) => {
     </div>`;
 };
 
-// Assicuriamoci che FERRY_STOPS sia disponibile qui per evitare errori di riferimento
+// LISTA FERMATE TRAGHETTI
 const FERRY_STOPS_UI = [
     { id: 'levanto', label: 'Levanto' },
     { id: 'monterosso', label: 'Monterosso' },
@@ -470,20 +399,19 @@ const FERRY_STOPS_UI = [
     { id: 'lerici', label: 'Lerici' }
 ];
 
-
+// INIT TRAGHETTI
 window.initFerrySearch = function() {
     const selPart = document.getElementById('selPartenzaFerry');
     const selArr = document.getElementById('selArrivoFerry');
     if (!selPart || !selArr) return;
 
-    // Popola Partenza (Tutte le fermate)
+    // Popola Partenza
     selPart.innerHTML = `<option value="" disabled selected>${window.t('select_placeholder')}</option>` + 
         FERRY_STOPS_UI.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
 
-    // Listener: Quando cambio partenza, abilito arrivo
+    // Listener
     selPart.addEventListener('change', function() {
         const startVal = this.value;
-        // Filtra destinazioni (tutte tranne la partenza)
         const destOpts = FERRY_STOPS_UI.filter(s => s.id !== startVal);
         
         selArr.innerHTML = `<option value="" disabled selected>${window.t('select_placeholder')}</option>` + 

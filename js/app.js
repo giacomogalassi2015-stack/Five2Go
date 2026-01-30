@@ -2,26 +2,25 @@ console.log("✅ 3. app.js caricato");
 
 const content = document.getElementById('app-content');
 const viewTitle = document.getElementById('view-title');
-window.pendingMaps = []; // Coda per le mappe da caricare nella lista
+window.pendingMaps = []; 
 
 const getGlobalFooter = () => ``;
-// --- 1. SETUP LINGUA & HEADER (Logic Condizionale) ---
+
+// --- 1. SETUP LINGUA & HEADER ---
 function setupHeaderElements() {
     const header = document.querySelector('header');
     
-    // 1. PULIZIA: Rimuoviamo sempre tutto prima di decidere cosa mostrare
+    // 1. PULIZIA
     const oldActions = header.querySelector('.header-actions');
     if (oldActions) oldActions.remove();
     const oldShare = document.getElementById('header-btn-share');
     if (oldShare) oldShare.remove();
     header.querySelectorAll('.material-icons').forEach(i => i.remove());
 
-    // 2. LOGICA: Se NON siamo in home, ci fermiamo qui (Header pulito, solo titolo)
+    // 2. LOGICA
     if (window.currentViewName !== 'home') return; 
 
-    // 3. COSTRUZIONE (Solo per Home): Aggiungiamo Selettore e Share
-    
-    // --- Selettore Lingua (Sinistra) ---
+    // 3. COSTRUZIONE
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'header-actions animate-fade'; 
     actionsContainer.id = 'header-btn-lang'; 
@@ -44,8 +43,6 @@ function setupHeaderElements() {
             `).join('')}
         </div>`;
     actionsContainer.appendChild(langSelector);
-
-  
 }
 
 function updateNavBar() {
@@ -63,10 +60,9 @@ window.changeLanguage = function(langCode) {
     window.currentLang = langCode;
     localStorage.setItem('app_lang', langCode);
     
-    setupHeaderElements(); // Rigenera header (bandierina aggiornata)
+    setupHeaderElements(); 
     updateNavBar(); 
     
-    // Ricarica la vista corrente
     const activeNav = document.querySelector('.nav-item.active');
     if(activeNav) {
         const onclickAttr = activeNav.getAttribute('onclick');
@@ -93,6 +89,7 @@ window.addEventListener('click', () => {
 window.switchView = async function(view, el) {
     if (!content) return;
     window.currentViewName = view; 
+    document.body.classList.remove('is-home');
 
     const globalFilterBtn = document.querySelector('body > #filter-toggle-btn');
     if (globalFilterBtn) { globalFilterBtn.remove(); }
@@ -120,7 +117,6 @@ window.switchView = async function(view, el) {
             ], 'Sentieri');
         }
         else if (view === 'servizi') await renderServicesGrid();
-        // Mappe tradotto
         else if (view === 'mappe_monumenti') renderSubMenu([{ label: window.t('menu_map'), table: "Mappe" }], 'Mappe');
     } catch (err) {
         console.error(err);
@@ -128,11 +124,10 @@ window.switchView = async function(view, el) {
     }
 };
 
-// --- NUOVA RENDER HOME (Fullscreen - Pulita) ---
+// --- RENDER HOME ---
 function renderHome() {
     const bgImage = "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
 
-    // 1. Aggiungiamo la classe al body (FONDAMENTALE per far scattare il CSS della home)
     document.body.classList.add('is-home');
 
     content.innerHTML = `
@@ -158,16 +153,9 @@ function renderHome() {
         </div>
     </div>`;
 }
-// IMPORTANTE: Quando cambi vista (es. vai a Cibo), devi rimuovere la classe 'is-home'
-// Aggiungi questa riga all'inizio della funzione switchView:
-/*
-   window.switchView = async function(view, el) {
-       document.body.classList.remove('is-home'); // <--- AGGIUNGI QUESTO
-       // ... resto del codice
-*/
 
 // ============================================================
-// 1. RENDER MENU (Stile 3D)
+// 1. RENDER MENU
 // ============================================================
 function renderSubMenu(options, defaultTable) {
     let menuHtml = `
@@ -185,7 +173,6 @@ function renderSubMenu(options, defaultTable) {
     
     content.innerHTML = menuHtml;
     
-    // Attiva il primo bottone
     const firstBtn = content.querySelector('.btn-3d');
     if (firstBtn) {
         loadTableData(defaultTable, firstBtn);
@@ -196,39 +183,33 @@ window.loadTableData = async function(tableName, btnEl) {
     const subContent = document.getElementById('sub-content');
     if (!subContent) return;
 
-    // 1. Gestione Visiva Bottoni (Spegni tutti, accendi cliccato)
     document.querySelectorAll('.nav-chip, .btn-3d').forEach(btn => btn.classList.remove('active-chip', 'active-3d'));
     if (btnEl) {
         if(btnEl.classList.contains('nav-chip')) btnEl.classList.add('active-chip');
         if(btnEl.classList.contains('btn-3d')) btnEl.classList.add('active-3d');
     }
 
-    // 2. Reset Filtri e UI
     const existingFilters = document.getElementById('dynamic-filters');
     if(existingFilters) existingFilters.remove();
     const filterBtn = document.getElementById('filter-toggle-btn');
     if(filterBtn) filterBtn.style.display = 'none';
 
-    // 3. Loader (Solo se non abbiamo la cache, altrimenti è istantaneo!)
     if (!window.appCache[tableName]) {
         subContent.innerHTML = `<div class="loader" style="margin-top:20px;">${window.t('loading')}...</div>`;
     }
     
-    // 4. Gestione Mappe (Caso speciale iframe)
     if (tableName === 'Mappe') {
         subContent.innerHTML = `<div class="map-container animate-fade"><iframe src="https://www.google.com/maps/d/embed?mid=13bSWXjKhIe7qpsrxdLS8Cs3WgMfO8NU&ehbc=2E312F&noprof=1" width="640" height="480"></iframe></div>`;
         return; 
     }
 
-    // --- MODIFICA: LOGICA CACHE INTELLIGENTE ---
+    // --- LOGICA CACHE INTELLIGENTE ---
     let data;
     
-    // CASO A: Abbiamo già i dati in memoria? Usiamoli!
     if (window.appCache[tableName]) {
         console.log(`⚡ Cache hit: recupero dati per ${tableName} dalla memoria.`);
         data = window.appCache[tableName];
     } 
-    // CASO B: Non li abbiamo? Scarichiamoli da Supabase.
     else {
         console.log(`🌐 Cache miss: scarico dati per ${tableName} dal server...`);
         const response = await window.supabaseClient.from(tableName).select('*');
@@ -239,15 +220,12 @@ window.loadTableData = async function(tableName, btnEl) {
         }
         
         data = response.data;
-        // SALVA IN CACHE PER LA PROSSIMA VOLTA
         window.appCache[tableName] = data; 
     }
-    // ---------------------------------------------
 
-    // Salva i dati correnti per il modale
     window.currentTableData = data; 
 
-    // 6. Routing Renderers (Logica invariata)
+    // 6. Routing Renderers
     if (tableName === 'Vini') {
         renderGenericFilterableView(data, 'Tipo', subContent, window.vinoRenderer);
     }
@@ -277,30 +255,29 @@ window.loadTableData = async function(tableName, btnEl) {
         renderDoubleFilterView(data, culturaConfig, subContent, window.attrazioniRenderer); 
     }
     else if (tableName === 'Ristoranti') { renderGenericFilterableView(data, 'Paesi', subContent, window.ristoranteRenderer); }
-   else if (tableName === 'Sentieri') { renderGenericFilterableView(data, 'difficolta_cai', subContent, window.sentieroRenderer); }
+    else if (tableName === 'Sentieri') { renderGenericFilterableView(data, 'difficolta_cai', subContent, window.sentieroRenderer); }
     else if (tableName === 'Farmacie') { renderGenericFilterableView(data, 'Paesi', subContent, window.farmacieRenderer); } 
     else if (tableName === 'Numeri_utili') { renderGenericFilterableView(data, 'Comune', subContent, window.numeriUtiliRenderer); }
 };
+
 /* ============================================================
-   SWIPE TRA LE PAGINE (Aggiornato per Nuovi Pulsanti)
+   SWIPE TRA LE PAGINE
    ============================================================ */
 
 const minSwipeDistance = 50; 
-const maxVerticalDistance = 100; // Tolleranza per non confondere scroll e swipe
+const maxVerticalDistance = 100; 
 let touchStartX = 0;
 let touchStartY = 0;
 let touchEndX = 0;
 let touchEndY = 0;
 
 document.addEventListener('touchstart', e => {
-    // 1. BLOCCO SWIPE SU ELEMENTI SPECIFICI
-    // Se tocchi mappe, slider o la barra del menu stesso, lo swipe di pagina NON parte
     if (e.target.closest('.leaflet-container') || 
         e.target.closest('.map-container') || 
-        e.target.closest('.swiper-container') ||      // Blocca se tocchi lo slider Swiper
-        e.target.closest('.nav-scroll-container') ||  // Blocca se tocchi i bottoni 3D
-        e.target.closest('.nav-sticky-header') ||     // Blocca tutta la testata
-        e.target.closest('.modal-content')) {         // Blocca se c'è una modale aperta
+        e.target.closest('.swiper-container') ||      
+        e.target.closest('.nav-scroll-container') ||  
+        e.target.closest('.nav-sticky-header') ||     
+        e.target.closest('.modal-content')) {         
         
         touchStartX = null; 
         return;
@@ -323,115 +300,69 @@ function handlePageSwipe() {
     const xDiff = touchEndX - touchStartX;
     const yDiff = touchEndY - touchStartY;
     
-    // 2. CONTROLLI DI VALIDITÀ
-    // Deve essere uno swipe abbastanza lungo orizzontalmente
     if (Math.abs(xDiff) < minSwipeDistance) return;
     
-    // Non deve essere uno scroll verticale (se muovi più in Y che in X, è scroll)
     if (Math.abs(yDiff) > maxVerticalDistance) return;
     if (Math.abs(yDiff) > Math.abs(xDiff)) return;
 
-    // 3. SELEZIONE DEI NUOVI BOTTONI
-    // Cerchiamo sia i bottoni 'chip' che quelli '3d'
     const tabs = document.querySelectorAll('.nav-chip, .btn-3d');
     
     if (tabs.length === 0) return;
 
-    // 4. TROVA IL TAB ATTIVO CORRENTE
     let activeIndex = -1;
     tabs.forEach((tab, index) => {
-        // Controlla le nuove classi attive (.active-chip o .active-3d)
         if (tab.classList.contains('active-chip') || tab.classList.contains('active-3d')) {
             activeIndex = index;
         }
     });
 
-    if (activeIndex === -1) return; // Nessun tab attivo trovato
+    if (activeIndex === -1) return; 
 
-    // 5. ESEGUI IL CLICK VIRTUALE SUL PROSSIMO/PRECEDENTE
     if (xDiff < 0) {
-        // Swipe Sinistra -> Vado avanti (Tab successivo)
         if (activeIndex < tabs.length - 1) {
             tabs[activeIndex + 1].click();
         }
     } else {
-        // Swipe Destra -> Torno indietro (Tab precedente)
         if (activeIndex > 0) {
             tabs[activeIndex - 1].click();
         }
     }
     
-    // Reset
     touchStartX = null;
     touchStartY = null;
 }
+
+/* ============================================================
+   FUNZIONE RENDER SERVIZI (Statica - No Supabase)
+   ============================================================ */
 window.renderServicesGrid = async function() {
-    console.log("🔘 Avvio renderServicesGrid..."); // Debug per capire se parte
-
-    // 1. Cerchiamo l'elemento in modo sicuro
+    console.log("🔘 Avvio renderServicesGrid (Modalità Statica)...");
     const targetEl = document.getElementById('app-content');
-    if (!targetEl) {
-        console.error("❌ Errore: Elemento 'app-content' non trovato nel DOM.");
-        return;
-    }
+    if (!targetEl) return;
 
-    // 2. Mostriamo il loader subito
-    targetEl.innerHTML = `
-        <div class="loading-state" style="padding-top:50px;">
-            <span class="material-icons spin" style="font-size:40px; color:var(--primary-col);">sync</span>
-            <p style="margin-top:10px; color:#666;">Caricamento Servizi...</p>
-        </div>`;
+    // 1. Definiamo i mezzi manualmente con le chiavi di traduzione
+    const staticTransports = [
+        { id: 'train', labelKey: 'label_train', icon: 'train', type: 'transport' },
+        { id: 'ferry', labelKey: 'label_ferry', icon: 'directions_boat', type: 'transport' },
+        { id: 'bus',   labelKey: 'label_bus',   icon: 'directions_bus', type: 'transport' }
+    ];
 
-    // 3. Controllo sicurezza Supabase
-    if (!window.supabaseClient) {
-        targetEl.innerHTML = `<div class="error-msg">Errore Critico: Database non connesso. Ricarica la pagina.</div>`;
-        return;
-    }
-
-    // 4. Scarico Dati
-    console.log("📡 Scarico trasporti...");
-    const { data, error } = await window.supabaseClient.from('Trasporti').select('*');
-    
-    if (error) { 
-        console.error("❌ Errore Supabase:", error);
-        targetEl.innerHTML = `<div class="error-msg">Impossibile caricare i servizi: ${error.message}</div>`; 
-        return;
-    }
-
-    window.tempTransportData = data; // Salva per le modali
-
-    // Funzione interna per icone (così non dipende da fuori)
-    const getIconSafe = (name) => {
-        const n = (name || '').toLowerCase();
-        if (n.includes('treno') || n.includes('stazione')) return 'train';
-        if (n.includes('battello') || n.includes('traghetto')) return 'directions_boat';
-        if (n.includes('bus') || n.includes('autobus')) return 'directions_bus';
-        if (n.includes('taxi')) return 'local_taxi';
-        return 'confirmation_number';
-    };
-
-    // 5. Costruzione HTML
     let html = '<div class="services-grid-modern animate-fade" style="padding-bottom:100px;">';
 
-    // Widget Trasporti (Dinamici)
-    if (data && data.length > 0) {
-        data.forEach((t, index) => {
-            const nome = t.Mezzo || t.Località || 'Trasporto';
-            const icon = getIconSafe(nome);
-            html += `
-            <div class="service-widget" onclick="openModal('transport', ${index})">
-                <span class="material-icons widget-icon">${icon}</span>
-                <span class="widget-label">${nome}</span>
-            </div>`;
-        });
-    }
+    // 2. Loop Mezzi di Trasporto
+    staticTransports.forEach(t => {
+        const translatedLabel = window.t(t.labelKey); 
+        html += `
+        <div class="service-widget" onclick="openModal('${t.type}', '${t.id}')">
+            <span class="material-icons widget-icon">${t.icon}</span>
+            <span class="widget-label">${translatedLabel}</span>
+        </div>`;
+    });
 
-    // Widget Fissi (Numeri, Farmacie, Legal)
-    // Nota: window.t(...) potrebbe fallire se le traduzioni non sono pronte, usiamo un fallback
-    const labelNum = (window.t && window.t('menu_num')) || 'Numeri Utili';
-    const labelPharm = (window.t && window.t('menu_pharm')) || 'Farmacie';
-    // MODIFICA QUI: Aggiunta variabile per Legal
-    const labelLegal = (window.t && window.t('menu_legal')) || 'Note Legali';
+    // 3. Widget Fissi
+    const labelNum = window.t('menu_num');
+    const labelPharm = window.t('menu_pharm');
+    const labelLegal = window.t('menu_legal');
 
     html += `
     <div class="service-widget" onclick="renderSimpleList('Numeri_utili')">
@@ -449,14 +380,13 @@ window.renderServicesGrid = async function() {
         <span class="widget-label">${labelLegal}</span>
     </div>
     
-    </div>`; // Chiusura grid
+    </div>`; 
 
-    // 6. Iniezione finale (Senza chiamare getGlobalFooter)
     targetEl.innerHTML = html;
-    console.log("✅ Servizi caricati con successo.");
+    console.log("✅ Servizi caricati.");
 };
 
-// Funzione Liste Semplici (Farmacie/Numeri) - Versione Sicura
+// Funzione Liste Semplici (Farmacie/Numeri)
 window.renderSimpleList = function(tableName) {
     const targetEl = document.getElementById('app-content');
     if (!targetEl) return;
@@ -480,17 +410,17 @@ window.renderSimpleList = function(tableName) {
         console.error("❌ loadTableData non trovata! Controlla app.js");
     }
 };
+
 window.toggleTicketInfo = function() {
     const box = document.getElementById('ticket-info-box');
     if (box) { box.style.display = (box.style.display === 'none') ? 'block' : 'none'; }
 };
 
-// --- LOGICA FILTRI (Bottom Sheet / Cassetto) ---
+// --- LOGICA FILTRI (Bottom Sheet) ---
 function renderGenericFilterableView(allData, filterKey, container, cardRenderer) {
     container.innerHTML = `<div class="list-container animate-fade" id="dynamic-list" style="padding-bottom: 80px;"></div>`;
     const listContainer = container.querySelector('#dynamic-list');
 
-    // Pulizia vecchi elementi
     const oldSheet = document.getElementById('filter-sheet');
     if (oldSheet) oldSheet.remove();
     const oldOverlay = document.getElementById('filter-overlay');
@@ -498,11 +428,9 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
     const oldBtn = document.getElementById('filter-toggle-btn');
     if (oldBtn) oldBtn.remove();
 
-    // Valori unici
     let rawValues = allData.map(item => item[filterKey] ? item[filterKey].trim() : null).filter(x => x);
     let tagsRaw = [...new Set(rawValues)];
     
-    // Ordine: "Tutti" va sempre per primo
     const customOrder = ["Tutti", "Riomaggiore", "Manarola", "Corniglia", "Vernazza", "Monterosso", "Facile", "Media", "Difficile"];
     
     if (!tagsRaw.includes('Tutti')) tagsRaw.unshift('Tutti');
@@ -515,7 +443,6 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
         return a.localeCompare(b);
     });
 
-    // CREAZIONE BOTTOM SHEET
     const overlay = document.createElement('div');
     overlay.id = 'filter-overlay';
     overlay.className = 'sheet-overlay';
@@ -542,7 +469,6 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
         chip.className = 'sheet-chip';
         if (tag === 'Tutti') chip.classList.add('active-filter');
         
-        // --- MODIFICA CHIAVE: Traduci "Tutti" ma mantieni i nomi dei paesi ---
         chip.innerText = (tag === 'Tutti') ? window.t('filter_all') : tag; 
 
         chip.onclick = () => {
@@ -573,25 +499,22 @@ function renderGenericFilterableView(allData, filterKey, container, cardRenderer
     filterBtn.onclick = window.openFilterSheet;
     overlay.onclick = window.closeFilterSheet;
 
- function updateList(items) {
+    function updateList(items) {
         if (!items || items.length === 0) { 
             listContainer.innerHTML = `<p style="...">${window.t('no_results')}</p>`; 
         } else {
-            // Renderizza l'HTML delle card
             listContainer.innerHTML = items.map(item => cardRenderer(item)).join('');
             
-            // --- AGGIUNTA FONDAMENTALE ---
-            // Aspetta 100ms che il browser disegni i div, poi carica le mappe
             setTimeout(() => {
                 if(window.initPendingMaps) window.initPendingMaps();
             }, 100);
-            // -----------------------------
         }
     }
     
     updateList(allData);
 }
-// --- LOGICA FILTRO DOPPIO GENERICO (Agnostica) ---
+
+// --- LOGICA FILTRO DOPPIO ---
 function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer) {
     container.innerHTML = `<div class="list-container animate-fade" id="dynamic-list" style="padding-bottom: 80px;"></div>`;
     const listContainer = container.querySelector('#dynamic-list');
@@ -632,7 +555,6 @@ function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer)
     const sheet = document.createElement('div');
     sheet.className = 'bottom-sheet';
     
-    // Titoli tradotti (gestiti nel dizionario)
     const title1 = filtersConfig.primary.title || window.t('filter_village');
     const title2 = filtersConfig.secondary.title || window.t('filter_cat');
 
@@ -659,7 +581,6 @@ function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer)
     function renderChips() {
         const c1 = sheet.querySelector('#section-1-options');
         c1.innerHTML = '';
-        // Traduzione "Tutti"
         c1.appendChild(createChip(window.t('filter_all'), activeVal1 === 'Tutti', () => { activeVal1 = 'Tutti'; applyFilters(); renderChips(); }));
         
         values1.forEach(v => {
@@ -668,7 +589,6 @@ function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer)
 
         const c2 = sheet.querySelector('#section-2-options');
         c2.innerHTML = '';
-        // Traduzione "Tutti"
         c2.appendChild(createChip(window.t('filter_all'), activeVal2 === 'Tutti', () => { activeVal2 = 'Tutti'; applyFilters(); renderChips(); }));
 
         values2.forEach(v => {
@@ -718,20 +638,21 @@ function renderDoubleFilterView(allData, filtersConfig, container, cardRenderer)
     overlay.onclick = window.closeFilterSheet;
 
     renderChips();
-    updateList(allData);initLeafletMap
+    updateList(allData);
 }
+
 document.addEventListener('DOMContentLoaded', () => {
     window.currentViewName = 'home'; 
-    setupHeaderElements(); // Avvia header con configurazione Home
+    setupHeaderElements(); 
     updateNavBar(); 
     switchView('home');
 });
+
 // --- FUNZIONE SITO TRENITALIA ---
 window.apriTrenitalia = function() {
-    // Apre il sito ufficiale Trenitalia.
-    // Perfetto per: Acquistare biglietti, vedere prezzi e orari futuri.
     window.open('https://www.trenitalia.com', '_blank');
 };
+
 // ============================================================
 // FUNZIONE PER ACCENDERE LE MAPPE NELLA LISTA
 // ============================================================
@@ -739,51 +660,46 @@ window.initPendingMaps = function() {
     console.log("Avvio rendering di " + window.pendingMaps.length + " mappe...");
     
     window.pendingMaps.forEach(item => {
-        // Verifica se la mappa esiste già (per evitare doppi caricamenti)
         const container = document.getElementById(item.id);
-        if (container && !container._leaflet_id) { // Se il div esiste ed è vuoto
+        if (container && !container._leaflet_id) { 
             
-            // 1. Crea Mappa (Senza controlli zoom per pulizia)
             const map = L.map(item.id, {
-                zoomControl: false,      // Niente pulsanti zoom
-                scrollWheelZoom: false,  // Disabilita zoom con rotella (per poter scrollare la pagina)
-                dragging: false,         // Mappa fissa (clicca per espandere)
-                attributionControl: false // Nascondi attribuzione per pulizia
+                zoomControl: false,      
+                scrollWheelZoom: false,  
+                dragging: false,         
+                attributionControl: false 
             });
 
-            // 2. Tile Layer (OpenTopoMap)
             L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
                 maxZoom: 16
             }).addTo(map);
 
-            // 3. Carica GPX (Linea Rossa)
             new L.GPX(item.gpx, {
                 async: true,
                 marker_options: {
-                    startIconUrl: null, // Nascondi pin partenza
-                    endIconUrl: null,   // Nascondi pin arrivo
+                    startIconUrl: null, 
+                    endIconUrl: null,   
                     shadowUrl: null
                 },
                 polyline_options: {
-                    color: '#D32F2F', // Rosso CAI
+                    color: '#D32F2F', 
                     opacity: 1,
                     weight: 4
                 }
             }).on('loaded', function(e) {
-                map.fitBounds(e.target.getBounds()); // Centra la mappa sul sentiero
+                map.fitBounds(e.target.getBounds()); 
             }).addTo(map);
         }
     });
 
-    // Svuota la coda
     window.pendingMaps = [];
 };
 
 // ============================================================
-// FUNZIONE GPS (GEOLOCALIZZAZIONE)
+// FUNZIONE GPS
 // ============================================================
-window.watchId = null;     // ID per fermare il GPS
-window.userMarker = null;  // Il pallino blu sulla mappa
+window.watchId = null;    
+window.userMarker = null; 
 
 window.toggleGPS = function() {
     const map = window.currentMap;
@@ -791,7 +707,6 @@ window.toggleGPS = function() {
     
     if (!map) return;
 
-    // SE È ATTIVO -> SPEGNI
     if (window.watchId !== null) {
         navigator.geolocation.clearWatch(window.watchId);
         window.watchId = null;
@@ -801,21 +716,18 @@ window.toggleGPS = function() {
             window.userMarker = null;
         }
 
-        // Reset Stile Bottone
-        btn.style.backgroundColor = '#29B6F6'; // Blu originale
+        btn.style.backgroundColor = '#29B6F6'; 
         btn.innerHTML = '<span class="material-icons">my_location</span> GPS';
         return;
     }
 
-    // SE È SPENTO -> ACCENDI
     if (!navigator.geolocation) {
         alert("GPS non supportato dal tuo browser.");
         return;
     }
 
-    // Cambia stile bottone (Feedback caricamento/attivo)
     btn.innerHTML = '<span class="material-icons spin">refresh</span> Cerco...';
-    btn.style.backgroundColor = '#f39c12'; // Arancio mentre cerca
+    btn.style.backgroundColor = '#f39c12'; 
 
     const options = {
         enableHighAccuracy: true,
@@ -829,7 +741,6 @@ window.toggleGPS = function() {
             const lng = pos.coords.longitude;
             const accuracy = pos.coords.accuracy;
 
-            // Se il marker non esiste, crealo (Pallino Blu)
             if (!window.userMarker) {
                 window.userMarker = L.circleMarker([lat, lng], {
                     radius: 8,
@@ -840,21 +751,17 @@ window.toggleGPS = function() {
                     fillOpacity: 1
                 }).addTo(map);
                 
-                // Prima volta: centra la mappa sull'utente
                 map.setView([lat, lng], 15);
                 
-                // Conferma visiva sul bottone
                 btn.innerHTML = '<span class="material-icons">stop_circle</span> Stop';
-                btn.style.backgroundColor = '#c0392b'; // Rosso per fermare
+                btn.style.backgroundColor = '#c0392b'; 
             } else {
-                // Aggiorna posizione
                 window.userMarker.setLatLng([lat, lng]);
             }
         },
         (err) => {
             console.error("Errore GPS:", err);
             alert("Impossibile trovare la posizione. Verifica i permessi GPS.");
-            // Resetta bottone
             btn.innerHTML = '<span class="material-icons">error</span> Err';
             btn.style.backgroundColor = '#7f8c8d';
             window.watchId = null;
@@ -863,7 +770,6 @@ window.toggleGPS = function() {
     );
 };
 
-// Quando chiudi il modale, spegni il GPS per risparmiare batteria
 const originalCloseModal = window.closeModal;
 window.closeModal = function() {
     if (window.watchId !== null) {

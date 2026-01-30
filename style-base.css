@@ -31,7 +31,7 @@
 
 body {
     font-family: 'Roboto', sans-serif; 
-    background-color: var(--bg-body); /* CORRETTO: rimosso il blocco body annidato errato */
+    background-color: var(--bg-body); 
     color: var(--text-main);
     line-height: 1.6;
     touch-action: pan-x pan-y;
@@ -39,47 +39,47 @@ body {
     height: 100%; width: 100%;
     padding-bottom: calc(var(--nav-height) + 30px); 
 }
-/* Container per l'immagine Home a tutto schermo */
+
+/* Home Fullscreen */
 .home-hero-fullscreen {
-    position: fixed;    /* Resta bloccata mentre scorri */
+    position: fixed;    
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -1;        /* Finisce sotto tutto */
+    z-index: -1;        
     overflow: hidden;
 }
 
 .home-hero-fullscreen img {
     width: 100%;
     height: 100%;
-    object-fit: cover;  /* Copre tutto lo schermo senza deformarsi */
+    object-fit: cover;  
 }
 
-/* Overlay per non far sparire le scritte bianche sullo sfondo */
 .home-hero-fullscreen::after {
     content: '';
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.3); /* Scurisce leggermente lo sfondo */
+    background: rgba(0, 0, 0, 0.3); 
 }
 
-/* Rende il contenuto trasparente sopra lo sfondo per vedere l'immagine */
+/* Rende trasparente il contenuto sopra la home */
 #sub-content:empty + .home-hero-fullscreen,
 .is-home #sub-content {
     background: transparent;
 }
+
 /* ============================================================
    2. HEADER & NAVIGAZIONE
    ============================================================ */
-/* Nota: Se vuoi vedere l'header, rimuovi il "display: none" qui sotto */
 header, #app-header {
     background-color: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     height: 65px;
-    display: none !important; /* MANTENUTO DAL TUO CODICE: Nasconde header */
+    display: none !important; 
     justify-content: space-between; 
     align-items: center;
     position: sticky; top: 0; z-index: 1000;
@@ -130,24 +130,16 @@ main, #app-content {
    4. HOME & BENVENUTO
    ============================================================ */
 .welcome-card {
-    /* LARGHEZZA: Usiamo 100% per riempire il contenitore. 
-       Se è ancora stretta, è colpa del padding di 'main' */
     width: 100%;          
-    margin: 10px auto;   /* Margine piccolo sopra/sotto per staccarla dai bordi */
-    
-    /* ALTEZZA: Mantengo la tua formula che ti piace */
+    margin: 10px auto;   
     height: calc(98vh - var(--nav-height)); 
     min-height: 500px;
-    
-    /* Estetica */
     background-size: cover; 
     background-position: center;
     border-radius: 20px; 
     overflow: hidden;
     position: relative;
     box-shadow: var(--shadow-soft);
-    
-    /* Animazione */
     opacity: 0; 
     animation: fadeIn 0.5s forwards;
 }
@@ -175,7 +167,7 @@ main, #app-content {
 .lang-flag-large { font-size: 1.8rem; margin-bottom: 4px; }
 .lang-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
 
-/* Lingua Header (Se attivata) */
+/* Lingua Header */
 .header-actions { display: flex; align-items: center; gap: 15px; }
 .current-lang-btn {
     background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.5);
@@ -198,12 +190,13 @@ main, #app-content {
     border-radius: 10px; cursor: pointer; 
 }
 .lang-opt.active { background-color: #E0F2F1; color: var(--primary-col); font-weight: 800; }
-/* REGOLA DI SICUREZZA PER LE ICONE */
+
+/* Icone Material */
 .material-icons {
     font-family: 'Material Icons';
     font-weight: normal;
     font-style: normal;
-    font-size: 24px;  /* Dimensione standard */
+    font-size: 24px;  
     display: inline-block;
     line-height: 1;
     text-transform: none;
@@ -211,8 +204,6 @@ main, #app-content {
     word-wrap: normal;
     white-space: nowrap;
     direction: ltr;
-    
-    /* Supporto per browser moderni */
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     -moz-osx-font-smoothing: grayscale;

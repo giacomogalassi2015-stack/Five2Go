@@ -7,7 +7,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // RENDIAMO SUPABASE GLOBALE
 window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- MODIFICA: INIZIALIZZAZIONE CACHE ---
+// INIZIALIZZAZIONE CACHE
 window.appCache = {};
 
 const CLOUDINARY_CLOUD_NAME = 'dkg0jfady'; 
@@ -29,6 +29,7 @@ window.AVAILABLE_LANGS = [
     { code: 'es', label: 'Español', flag: '🇪🇸' },
     { code: 'zh', label: '中文', flag: '🇨🇳' }
 ];
+
 // 4. DIZIONARIO TESTI (Full Version - Aggiornato con Mezzi)
 const UI_TEXT = {
     it: {
@@ -242,6 +243,7 @@ const UI_TEXT = {
         welcome_app_name: "5 Terre Guide", welcome_desc: "探索五渔村的必备指南。"
     }
 };
+
 const FERRY_STOPS = [
     { id: 'levanto', label: 'Levanto' },
     { id: 'monterosso', label: 'Monterosso' },
@@ -288,37 +290,30 @@ window.changeLanguage = function(langCode) {
     // 1. Aggiorna la variabile globale
     window.currentLang = langCode;
     
-    // (Opzionale) Salva la scelta nel browser per la prossima volta
+    // Salva la scelta nel browser
     localStorage.setItem('user_lang', langCode);
 
-    // 2. Aggiorna i testi statici dell'interfaccia (Titoli, Bottoni)
+    // 2. Aggiorna i testi statici dell'interfaccia
     updateStaticInterface();
 
-    // 3. Ricarica la vista corrente (Forza il re-render delle card)
-    // Assumo che tu abbia una funzione che renderizza la pagina, es: renderApp() o loadData()
-    // Se usi una logica basata su router, ricarica la pagina corrente:
+    // 3. Ricarica la vista corrente
     if (typeof renderCategory === 'function') {
-        // Esempio: se sei nella vista attrazioni, ricaricala
-        const currentCategory = window.currentCategory || 'attrazioni'; // O la tua variabile di stato
+        const currentCategory = window.currentCategory || 'attrazioni'; 
         renderCategory(currentCategory); 
     } else {
-        // Fallback brutale se non hai una funzione di render centralizzata
         location.reload(); 
     }
 };
 
-// Funzione helper per aggiornare i testi fissi (Menu, Home Title, ecc.)
+// Funzione helper per aggiornare i testi fissi
 function updateStaticInterface() {
-    // Esempio: Aggiorna il titolo della Home
     const homeTitleEl = document.getElementById('home-title'); 
     if(homeTitleEl) homeTitleEl.textContent = window.t('home_title');
 
-    // Esempio: Aggiorna i bottoni della navbar
-    // Suggerimento: Aggiungi id="nav-food" ai tuoi elementi HTML per trovarli facilmente
     const navFood = document.getElementById('nav-food');
     if(navFood) navFood.textContent = window.t('nav_food');
     
-    // Aggiorna tutti gli elementi che usano window.t() al volo se necessario
+    // Aggiungi qui altri elementi fissi da aggiornare
 }
 
 
@@ -367,15 +362,12 @@ function isItalianHoliday(dateObj) {
     ];
     if (fixedHolidays.includes(`${d}-${m}`)) return true;
 
-    // 3. Pasquetta (Lunedì dell'Angelo) = Pasqua + 1 giorno
+    // 3. Pasquetta
     const easter = getEasterDate(y);
     const pasquetta = new Date(easter);
     pasquetta.setDate(easter.getDate() + 1);
 
     if (d === pasquetta.getDate() && (m - 1) === pasquetta.getMonth()) return true;
-    
-    // (Opzionale) Patrono della Spezia 19 Marzo? 
-    // Per ora teniamo le nazionali standard.
     
     return false;
 }

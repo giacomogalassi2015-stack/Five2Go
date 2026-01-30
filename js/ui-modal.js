@@ -1,19 +1,15 @@
 window.openModal = async function(type, payload) {
-    // 1. Crea il contenitore base
     const modal = document.createElement('div');
     modal.className = 'modal-overlay animate-fade';
     document.body.appendChild(modal);
     modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
 
-    // 2. Recupera l'oggetto dati se necessario (per passarlo al generatore contenuti)
     let item = null; 
     if (window.currentTableData && (['Vini', 'Attrazioni', 'Spiagge', 'attrazione', 'wine'].includes(type))) {
         item = window.currentTableData.find(i => i.id == payload || i.ID == payload || i.POI_ID == payload);
         if (!item && typeof payload === 'number') item = window.currentTableData[payload];
     }
 
-    // 3. RECUPERA IL CONTENUTO (Chiama la funzione nel file ui-modal-contents.js)
-    // Se la funzione non esiste o non restituisce nulla, chiude tutto per sicurezza.
     if (!window.getModalContent) { console.error("Manca ui-modal-contents.js"); modal.remove(); return; }
     
     const content = window.getModalContent(type, payload, item);
@@ -24,11 +20,9 @@ window.openModal = async function(type, payload) {
         return;
     }
 
-    // 4. Inietta l'HTML
     const modalClass = content.class || 'modal-content';
     modal.innerHTML = `<div class="${modalClass}"><span class="close-modal" onclick="this.parentElement.parentElement.remove()">×</span>${content.html}</div>`;
 
-    // 5. Esegue script post-render (es. init listener traghetti o mappe)
     if (content.onRender && typeof content.onRender === 'function') {
         setTimeout(() => content.onRender(), 50);
     }
@@ -115,51 +109,39 @@ window.toggleElevationChart = function() {
     const elDiv = document.getElementById('elevation-div');
     const btn = document.getElementById('btn-toggle-ele');
     
-    // Controllo di sicurezza se gli elementi non esistono
     if (!elDiv || !btn) return;
 
-    // LOGICA ROBUSTA:
-    // Verifica se è nascosto.
-    // Controlla sia 'none' (inline) sia '' (se nascosto dal CSS)
     const isHidden = elDiv.style.display === 'none' || elDiv.style.display === '';
 
     if (isHidden) {
-        // --- AZIONE: APRI ---
         elDiv.style.display = 'block';
         
-        // Cambia tasto in "Chiudi" (Rosso)
         btn.innerHTML = '<span class="material-icons">close</span> Chiudi';
         btn.style.backgroundColor = '#FFEBEE'; 
         btn.style.color = '#c62828';
         
-        // Forza l'aggiornamento della mappa principale per adattarsi
         if (window.currentMap) {
             setTimeout(() => { window.currentMap.invalidateSize(); }, 100);
         }
 
-        // Scroll automatico verso il basso per mostrare il grafico
         const container = document.querySelector('.tech-container');
         if (container) {
             container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
         }
 
     } else {
-        // --- AZIONE: CHIUDI ---
         elDiv.style.display = 'none';
         
-        // Ripristina tasto "Grafico" (Verde)
         btn.innerHTML = '<span class="material-icons">show_chart</span> Grafico';
         btn.style.backgroundColor = '#2A9D8F'; 
         btn.style.color = 'white';
         
-        // Aggiorna mappa
         if (window.currentMap) {
             setTimeout(() => { window.currentMap.invalidateSize(); }, 50);
         }
     }
 };
 
-// Download GPX
 window.downloadGPX = function(url) {
     if(!url) return;
     const link = document.createElement('a');
@@ -170,9 +152,7 @@ window.downloadGPX = function(url) {
     document.body.removeChild(link);
 };
 
-// Funzione GPS REALE
 window.toggleGPS = function() {
-    // 1. Controlla se la mappa esiste
     if (!window.currentMap) {
         console.error("Mappa non trovata");
         return;
@@ -180,42 +160,34 @@ window.toggleGPS = function() {
 
     const btn = document.getElementById('btn-gps');
     
-    // Cambia icona per far capire che sta caricando
     if(btn) btn.innerHTML = '<span class="material-icons check-icon">hourglass_empty</span> Cerco...';
 
-    // 2. Usa il sistema di localizzazione di Leaflet
     window.currentMap.locate({
-        setView: true,       // Sposta la mappa su di te
-        maxZoom: 16,         // Zoom a livello stradale
-        enableHighAccuracy: true // Usa il GPS preciso
+        setView: true,       
+        maxZoom: 16,         
+        enableHighAccuracy: true 
     });
 
-    // 3. Quando ti trova:
     window.currentMap.once('locationfound', function(e) {
-        const radius = e.accuracy / 2; // Raggio di precisione
+        const radius = e.accuracy / 2; 
 
-        // Rimuovi vecchio marker se esiste
         if (window.userMarker) {
             window.currentMap.removeLayer(window.userMarker);
             window.currentMap.removeLayer(window.userCircle);
         }
 
-        // Aggiungi un pallino blu
         window.userMarker = L.marker(e.latlng).addTo(window.currentMap)
             .bindPopup("Sei qui (precisione " + Math.round(radius) + "m)").openPopup();
 
         window.userCircle = L.circle(e.latlng, radius).addTo(window.currentMap);
 
-        // Ripristina il bottone
         if(btn) btn.innerHTML = '<span class="material-icons">my_location</span> Trovato';
         
-        // Dopo 2 secondi rimetti la scritta GPS normale
         setTimeout(() => {
              if(btn) btn.innerHTML = '<span class="material-icons">my_location</span> GPS';
         }, 2000);
     });
 
-    // 4. Se c'è un errore (es. GPS spento o permesso negato)
     window.currentMap.once('locationerror', function(e) {
         alert("Impossibile trovare la tua posizione: " + e.message);
         if(btn) btn.innerHTML = '<span class="material-icons">error_outline</span> Errore';
@@ -232,7 +204,6 @@ window.closeModal = function() {
     }
 };
 
-// 4. MOTORE MAPPA (Configurazione Stabile)
 function initLeafletMap(divId, gpxUrl) {
     if (!document.getElementById(divId)) return;
     if (window.currentMap) { 
@@ -270,14 +241,11 @@ function initLeafletMap(divId, gpxUrl) {
     setTimeout(() => { map.invalidateSize(); }, 300);
 }
 
-// 1. CARICAMENTO INIZIALE (Fermate e Mappa)
 window.loadAllStops = async function() {
     const selPart = document.getElementById('selPartenza');
     if(!selPart) return;
 
-    // Se non abbiamo la cache, scarichiamo dal DB
     if (!window.cachedStops) {
-        // Nota: Scarichiamo LAT e LONG per la mappa
         const { data, error } = await window.supabaseClient
             .from('Fermate_bus')
             .select('ID, NOME_FERMATA, LAT, LONG') 
@@ -287,32 +255,26 @@ window.loadAllStops = async function() {
         window.cachedStops = data;
     }
 
-    // Popola il menu a tendina
     const options = window.cachedStops.map(f => `<option value="${f.ID}">${f.NOME_FERMATA}</option>`).join('');
     selPart.innerHTML = `<option value="" disabled selected>${window.t('select_placeholder')}</option>` + options;
 
-    // *** PUNTO CRUCIALE: INIZIALIZZA LA MAPPA ***
-    // Ora che abbiamo i dati (LAT/LONG), creiamo i pin sulla mappa
     if (window.cachedStops && window.initBusMap) {
         window.initBusMap(window.cachedStops);
     }
 };
 
-// 2. FILTRO DESTINAZIONI (Quando selezioni la partenza)
 window.filterDestinations = async function(startId) {
     const selArr = document.getElementById('selArrivo');
     const btnSearch = document.getElementById('btnSearchBus');
     
     if(!startId || !selArr) return;
 
-    // Feedback UI
     selArr.innerHTML = `<option>${window.t('bus_searching')}</option>`;
     selArr.disabled = true;
     btnSearch.style.opacity = '0.5';
     btnSearch.style.pointerEvents = 'none';
 
     try {
-        // Trova le corse che passano per la fermata di partenza
         const { data: corsePassanti } = await window.supabaseClient
             .from('Orari_bus')
             .select('ID_CORSA')
@@ -325,22 +287,18 @@ window.filterDestinations = async function(startId) {
             return;
         }
 
-        // Trova le altre fermate di quelle corse
         const { data: fermateCollegate } = await window.supabaseClient
             .from('Orari_bus')
             .select('ID_FERMATA')
             .in('ID_CORSA', runIds);
 
-        // Filtra ID unici escludendo la partenza
         const destIds = [...new Set(fermateCollegate.map(x => x.ID_FERMATA))].filter(id => id != startId);
 
-        // Recupera i nomi dalla cache locale
         let validDestinations = [];
         if (window.cachedStops) {
             validDestinations = window.cachedStops.filter(s => destIds.includes(s.ID));
         }
 
-        // Popola Select Arrivo
         if (validDestinations.length > 0) {
             validDestinations.sort((a, b) => a.NOME_FERMATA.localeCompare(b.NOME_FERMATA));
             
@@ -348,7 +306,6 @@ window.filterDestinations = async function(startId) {
                                validDestinations.map(f => `<option value="${f.ID}">${f.NOME_FERMATA}</option>`).join('');
             selArr.disabled = false;
             
-            // Riattiva bottone cerca
             btnSearch.style.opacity = '1';
             btnSearch.style.pointerEvents = 'auto';
         } else {
@@ -361,7 +318,6 @@ window.filterDestinations = async function(startId) {
     }
 };
 
-// 3. ESECUZIONE RICERCA ORARI BUS
 window.eseguiRicercaBus = async function() {
     const selPartenza = document.getElementById('selPartenza');
     const selArrivo = document.getElementById('selArrivo');
@@ -380,22 +336,18 @@ window.eseguiRicercaBus = async function() {
 
     if (!partenzaId || !arrivoId) return;
 
-    // UI Loading
     resultsContainer.style.display = 'block';
     nextCard.innerHTML = `<div style="text-align:center; padding:20px;">${window.t('loading')} <span class="material-icons spin">sync</span></div>`;
     list.innerHTML = '';
 
-    // Calcolo Festivo
     const parts = dataScelta.split('-');
     const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    // Usa la funzione helper definita in data-logic.js (assicurati che esista o copiala qui se serve)
     const isFestivo = (typeof isItalianHoliday === 'function') ? isItalianHoliday(dateObj) : (dateObj.getDay() === 0);
 
     const dayTypeLabel = isFestivo 
         ? `<span class="badge-holiday">${window.t('badge_holiday')}</span>` 
         : `<span class="badge-weekday">${window.t('badge_weekday')}</span>`;
 
-    // Chiamata RPC
     const { data, error } = await window.supabaseClient.rpc('trova_bus', { 
         p_partenza_id: partenzaId, 
         p_arrivo_id: arrivoId, 
@@ -414,7 +366,6 @@ window.eseguiRicercaBus = async function() {
         return; 
     }
 
-    // Risultati
     const primo = data[0];
     nextCard.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -434,7 +385,6 @@ window.eseguiRicercaBus = async function() {
         </div>
     `).join('');
     
-    // Autoscroll
     setTimeout(() => { resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
 };
 
@@ -507,17 +457,14 @@ window.eseguiRicercaTraghetto = async function() {
 
     if (!selPart.value || !selArr.value || !selOra.value) return;
 
-    // UI Loading
     resultsContainer.style.display = 'block';
     nextCard.innerHTML = `<div style="text-align:center; padding:20px;">${window.t('loading')} <span class="material-icons spin">sync</span></div>`;
     list.innerHTML = '';
 
-    const startCol = selPart.value; // es. 'monterosso'
-    const endCol = selArr.value;    // es. 'vernazza'
-    const timeFilter = selOra.value; // es. '14:30'
+    const startCol = selPart.value; 
+    const endCol = selArr.value;    
+    const timeFilter = selOra.value; 
 
-    // 1. Fetch Dati (Prendiamo tutto e filtriamo in JS per semplicità)
-    // Selezioniamo solo le colonne che ci interessano + id
     const { data, error } = await window.supabaseClient
         .from('Orari_traghetti')
         .select(`id, direzione, validita, "${startCol}", "${endCol}"`); 
@@ -527,28 +474,21 @@ window.eseguiRicercaTraghetto = async function() {
         return;
     }
 
-    // 2. Filtro Logico JS
     let validRuns = data.filter(row => {
-        const tStart = row[startCol]; // Orario partenza
-        const tEnd = row[endCol];     // Orario arrivo
+        const tStart = row[startCol]; 
+        const tEnd = row[endCol];     
 
-        // A. Devono esistere entrambi gli orari (il battello ferma in entrambi)
         if (!tStart || !tEnd) return false;
 
-        // B. Controllo orario: L'orario di partenza deve essere minore dell'arrivo
-        // (Questo gestisce implicitamente la Direzione Andata/Ritorno senza guardare la colonna 'direzione')
         if (tStart >= tEnd) return false;
 
-        // C. Filtro orario utente: La partenza deve essere futura rispetto alla selezione
         if (tStart < timeFilter) return false;
 
         return true;
     });
 
-    // 3. Ordinamento (Per orario di partenza)
     validRuns.sort((a, b) => a[startCol].localeCompare(b[startCol]));
 
-    // 4. Render Risultati
     if (validRuns.length === 0) {
         nextCard.innerHTML = `
             <div style="text-align:center; padding:15px; color:#c62828;">
@@ -559,7 +499,6 @@ window.eseguiRicercaTraghetto = async function() {
         return;
     }
 
-    // Primo Risultato (Highlight)
     const primo = validRuns[0];
     nextCard.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -571,7 +510,6 @@ window.eseguiRicercaTraghetto = async function() {
         <div style="font-size:0.75rem; color:#b3e5fc; margin-top:5px;">Direzione: ${primo.direzione || '--'}</div>
     `;
 
-    // Lista successivi
     const successivi = validRuns.slice(1);
     list.innerHTML = successivi.map(run => `
         <div class="bus-list-item">
@@ -579,11 +517,8 @@ window.eseguiRicercaTraghetto = async function() {
             <span style="color:#666;">➜ ${run[endCol].slice(0,5)}</span>
         </div>
     `).join('');
-
-    // Autoscroll
+    
     setTimeout(() => { 
         resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
     }, 150);
 };
-
-

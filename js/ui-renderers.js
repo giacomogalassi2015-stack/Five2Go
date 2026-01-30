@@ -6,7 +6,6 @@ window.ristoranteRenderer = (r) => {
     const paesi = window.dbCol(r, 'Paesi') || '';
     const numero = r.Numero || r.Telefono || '';
     const safeObj = encodeURIComponent(JSON.stringify(r)).replace(/'/g, "%27");
-    // FIX: Corretto il link mappe che aveva un errore di sintassi
     const mapLink = r.Mappa || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nome + ' ' + paesi)}`;
 
     return `
@@ -121,7 +120,6 @@ window.sentieroRenderer = (s) => {
     </div>`;
 };
 
-
 // === RENDERER SPIAGGE ===
 window.spiaggiaRenderer = function(item) {
     const nome = item.Nome || 'Spiaggia';
@@ -144,7 +142,7 @@ window.spiaggiaRenderer = function(item) {
     </div>`;
 };
 
-// Funzione di utilità per formattare i numeri (evita che lo '0' diventi '--')
+// Funzione di utilità per formattare i numeri
 const formatInt = (val) => (val !== null && val !== undefined) ? val : '--';
 
 // === RENDERER ATTRAZIONI ===
@@ -203,10 +201,10 @@ window.farmacieRenderer = (f) => {
     </div>`;
 };
 
-// === RENDERER NUMERI UTILI (FIX: Correzione Variabile) ===
+// === RENDERER NUMERI UTILI ===
 window.numeriUtiliRenderer = (n) => {
     
-    // 1. Helper interno per traduzioni
+    // Helper interno per traduzioni
     const getTranslatedVal = (val) => {
         if (!val) return '';
         if (typeof val === 'object') {
@@ -223,20 +221,18 @@ window.numeriUtiliRenderer = (n) => {
         return val;
     };
 
-    // 2. Dati
+    // Dati
     const rawName = n.Nome || 'Numero Utile';
     const nome = getTranslatedVal(rawName);
 
-    const rawDesc = n.Utili_per || ''; 
+    const rawDesc = n.Utile_per || n.Utili_per || ''; 
     const descrizione = getTranslatedVal(rawDesc);
-    
-    // --- QUI C'ERA L'ERRORE: Ora uso 'descrizione' corretto ---
     const hasInfo = descrizione && descrizione.length > 2; 
 
-    const paesi = getTranslatedVal(window.dbCol(n, 'Paesi')) || 'Info'; 
+    const paesi = getTranslatedVal(window.dbCol(n, 'Paesi')) || 'Cinque Terre'; 
     const numero = n.Numero || n.Telefono || '';
 
-    // 3. Icone
+    // Icone
     let icon = 'help_outline'; 
     const nLower = String(nome).toLowerCase();
     if (nLower.includes('carabinieri') || nLower.includes('polizia')) icon = 'security';
@@ -245,7 +241,7 @@ window.numeriUtiliRenderer = (n) => {
     else if (nLower.includes('farmacia')) icon = 'local_pharmacy';
     else if (nLower.includes('info')) icon = 'info';
 
-    // 4. Codifica sicura per il passaggio dati
+    // Encoding dati
     const safeName = encodeURIComponent(nome);
     const safeDesc = encodeURIComponent(descrizione);
     const safeNum = encodeURIComponent(numero);
@@ -256,7 +252,7 @@ window.numeriUtiliRenderer = (n) => {
             <span class="material-icons">${icon}</span>
         </div>
         
-        <div class="info-text-col" onclick="${hasInfo ? `openInfoModal('${safeName}', '${safeDesc}', '${safeNum}')` : ''}">
+        <div class="info-text-col" onclick="${hasInfo ? `openInfoModal('${safeName}', '${safeDesc}', '${safeNum}')` : ''}" style="cursor: pointer;">
             <h3>${nome}</h3>
             <p><span class="material-icons" style="font-size: 0.9rem;">place</span> ${paesi}</p>
         </div>
@@ -273,41 +269,13 @@ window.numeriUtiliRenderer = (n) => {
     </div>`;
 };
 
-window.openInfoModal = function(encName, encDesc, encNum) {
-    const modal = document.getElementById('item-modal');
-    const content = document.getElementById('modal-body-content');
-    
-    if (!modal || !content) return;
-
-    // Decodifica i dati
-    const nome = decodeURIComponent(encName);
-    const descrizione = decodeURIComponent(encDesc);
-    const numero = decodeURIComponent(encNum);
-
-    // Mostra contenuto
-    content.innerHTML = `
-        <h3 style="color:var(--primary-dark); margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">${nome}</h3>
-        <div style="background:#f9f9f9; padding:15px; border-radius:8px; font-size:0.95rem; line-height:1.6; color:#444; margin-bottom:20px;">
-            ${descrizione}
-        </div>
-        <button onclick="window.location.href='tel:${numero}'" class="btn-primary" style="width:100%; display:flex; justify-content:center; align-items:center; gap:10px;">
-            <span class="material-icons">call</span> Chiama Ora
-        </button>
-    `;
-    modal.classList.add('active');
-};
-
-/* ============================================================
-   RENDER PAGINA LEGALE (Aggiornata con Data)
-   ============================================================ */
+// === RENDER PAGINA LEGALE ===
 window.renderLegalPage = function() {
     const targetEl = document.getElementById('app-content');
     if (!targetEl) return;
 
-    // 1. Rilevamento Lingua Corrente (Fallback su 'en' se non trovata)
     const curLang = window.currentLang || 'it';
 
-    // 2. DATABASE LINK (I tuoi link specifici)
     const privacyLinks = {
         it: "https://app.legalblink.it/api/documents/6973df3d9398e90022bdb487/privacy-policy-per-siti-web-o-e-commerce-it",
         en: "https://app.legalblink.it/api/documents/6973df3d9398e90022bdb487/privacy-policy-per-siti-web-o-e-commerce-en",
@@ -324,12 +292,9 @@ window.renderLegalPage = function() {
         de: "https://app.legalblink.it/api/documents/6973df3d9398e90022bdb487/cookie-policy-de"
     };
 
-    // Seleziona i link giusti (o default inglese se lingua strana)
     const activePrivacy = privacyLinks[curLang] || privacyLinks['en'];
     const activeCookie = cookieLinks[curLang] || cookieLinks['en'];
 
-
-    // 3. DATABASE TESTI (Traduzioni Complete + DATA)
     const contentText = {
         it: {
             title: "Note Legali",
@@ -471,10 +436,8 @@ window.renderLegalPage = function() {
         }
     };
 
-    // Seleziona testi (Fallback su Italiano o Inglese)
     const t = contentText[curLang] || contentText['en'];
 
-    // 4. GENERAZIONE HTML
     targetEl.innerHTML = `
     <div class="header-simple-list animate-fade">
         <button class="btn-back-custom" onclick="switchView('servizi')">
@@ -543,7 +506,7 @@ window.renderLegalPage = function() {
                 <span class="material-icons" style="color:#ccc;">chevron_right</span>
             </a>
 
- <a href="javascript:void(0)" 
+            <a href="javascript:void(0)" 
                onclick="document.getElementById('ghost-cookie-btn').click()"
                class="legal-row" 
                style="text-decoration: none; color: inherit;">
