@@ -263,7 +263,7 @@ window.loadTableData = async function(tableName, btnEl) {
         window.tempTransportData = data;
         let html = '<div class="list-container animate-fade">';
         data.forEach((t, index) => {
-            const nomeDisplay = window.dbCol(t, 'Località') || window.dbCol(t, 'Mezzo');
+            const nomeDisplay = window.dbCol(t, 'Mezzo');
             const imgUrl = window.getSmartUrl(t.Mezzo, '', 400);
             html += `<div class="card-product" onclick="openModal('transport', '${index}')"><div class="prod-info"><div class="prod-title">${nomeDisplay}</div></div><img src="${imgUrl}" class="prod-thumb" loading="lazy"></div>`;
         });
@@ -430,6 +430,8 @@ window.renderServicesGrid = async function() {
     // Nota: window.t(...) potrebbe fallire se le traduzioni non sono pronte, usiamo un fallback
     const labelNum = (window.t && window.t('menu_num')) || 'Numeri Utili';
     const labelPharm = (window.t && window.t('menu_pharm')) || 'Farmacie';
+    // MODIFICA QUI: Aggiunta variabile per Legal
+    const labelLegal = (window.t && window.t('menu_legal')) || 'Note Legali';
 
     html += `
     <div class="service-widget" onclick="renderSimpleList('Numeri_utili')">
@@ -444,7 +446,7 @@ window.renderServicesGrid = async function() {
 
     <div class="service-widget" onclick="renderLegalPage()">
         <span class="material-icons widget-icon">policy</span>
-        <span class="widget-label">Legal & Privacy</span>
+        <span class="widget-label">${labelLegal}</span>
     </div>
     
     </div>`; // Chiusura grid

@@ -29,16 +29,17 @@ window.AVAILABLE_LANGS = [
     { code: 'es', label: 'Español', flag: '🇪🇸' },
     { code: 'zh', label: '中文', flag: '🇨🇳' }
 ];
-
-// 4. DIZIONARIO TESTI (Full Version - Aggiornato)
+// 4. DIZIONARIO TESTI (Full Version - Aggiornato con Mezzi)
 const UI_TEXT = {
     it: {
         loading: "Caricamento...", error: "Errore", no_results: "Nessun risultato.",
         // Menu & Nav
-        home_title: "Benvenuto", nav_villages: "Paesi", nav_food: "Cibo", nav_outdoor: "Outdoor", nav_services: "Servizi",
+        home_title: "Benvenuto", nav_villages: "Home", nav_food: "Cibo", nav_outdoor: "Outdoor", nav_services: "Servizi",
         menu_prod: "Prodotti", menu_rest: "Ristoranti", menu_trail: "Sentieri", menu_beach: "Spiagge", 
         menu_trans: "Trasporti", menu_num: "Numeri Utili", menu_pharm: "Farmacie", menu_map: "Mappe", menu_monu: "Attrazioni",
-        menu_wine: "Vini",
+        menu_wine: "Vini", menu_legal: "Note Legali",
+        // NOMI MEZZI (Nuovi)
+        label_bus: "Bus Navetta", label_ferry: "Battello", label_train: "Treno",
         // Footer
         footer_rights: "Tutti i diritti riservati.",
         // Filtri
@@ -51,7 +52,7 @@ const UI_TEXT = {
         btn_details: "Vedi Dettagli", btn_download_gpx: "Scarica file GPX", 
         gpx_missing: "Traccia GPS non presente",
         map_route_title: "Mappa Percorso", map_zoom_hint: "Usa due dita per zoomare",
-        // Trasporti (Bus/Treno) Avanzati
+        // Trasporti
         plan_trip: "Pianifica Viaggio", departure: "PARTENZA", arrival: "ARRIVO", 
         date_trip: "DATA VIAGGIO", time_trip: "ORARIO", find_times: "TROVA ORARI",
         next_runs: "CORSE SUCCESSIVE", next_departure: "PROSSIMA PARTENZA",
@@ -72,9 +73,12 @@ const UI_TEXT = {
     },
     en: {
         loading: "Loading...", error: "Error", no_results: "No results found.",
-        home_title: "Welcome", nav_villages: "Villages", nav_food: "Food", nav_outdoor: "Outdoor", nav_services: "Services",
+        home_title: "Welcome", nav_villages: "Home", nav_food: "Food", nav_outdoor: "Outdoor", nav_services: "Services",
         menu_prod: "Products", menu_rest: "Restaurants", menu_trail: "Trails", menu_beach: "Beaches", 
-        menu_trans: "Transport", menu_num: "Useful Numbers", menu_pharm: "Pharmacies", menu_map: "Maps", menu_monu: "Attractions",menu_wine: "Wines",
+        menu_trans: "Transport", menu_num: "Useful Numbers", menu_pharm: "Pharmacies", menu_map: "Maps", menu_monu: "Attractions",
+        menu_wine: "Wines", menu_legal: "Legal & Privacy",
+        // NAMES (New)
+        label_bus: "Shuttle Bus", label_ferry: "Ferry", label_train: "Train",
         footer_rights: "All rights reserved.",
         filter_title: "Filter by", filter_all: "All", show_results: "Show Results", 
         filter_cat: "Category", filter_village: "Village",
@@ -103,9 +107,12 @@ const UI_TEXT = {
     },
     fr: {
         loading: "Chargement...", error: "Erreur", no_results: "Aucun résultat.",
-        home_title: "Bienvenue", nav_villages: "Villages", nav_food: "Nourriture", nav_outdoor: "Plein Air", nav_services: "Services",
+        home_title: "Bienvenue", nav_villages: "Accueil", nav_food: "Nourriture", nav_outdoor: "Plein Air", nav_services: "Services",
         menu_prod: "Produits", menu_rest: "Restaurants", menu_trail: "Sentiers", menu_beach: "Plages", menu_wine: "Vins",
         menu_trans: "Transport", menu_num: "Numéros", menu_pharm: "Pharmacies", menu_map: "Cartes", menu_monu: "Attractions",
+        menu_legal: "Mentions Légales",
+        // NOMS (New)
+        label_bus: "Navette", label_ferry: "Bateau", label_train: "Train",
         footer_rights: "Tous droits réservés.",
         filter_title: "Filtrer par", filter_all: "Tous", show_results: "Voir Résultats", 
         filter_cat: "Catégorie", filter_village: "Village",
@@ -134,9 +141,12 @@ const UI_TEXT = {
     },
     de: {
         loading: "Laden...", error: "Fehler", no_results: "Keine Ergebnisse.",
-        home_title: "Willkommen", nav_villages: "Dörfer", nav_food: "Essen", nav_outdoor: "Outdoor", nav_services: "Dienste",
+        home_title: "Willkommen", nav_villages: "Start", nav_food: "Essen", nav_outdoor: "Outdoor", nav_services: "Dienste",
         menu_prod: "Produkte", menu_rest: "Restaurants", menu_trail: "Wanderwege", menu_beach: "Strände", menu_wine: "Weine",
         menu_trans: "Transport", menu_num: "Nummern", menu_pharm: "Apotheken", menu_map: "Karten", menu_monu: "Attraktionen",
+        menu_legal: "Recht & Datenschutz",
+        // NAMEN (New)
+        label_bus: "Shuttlebus", label_ferry: "Fähre", label_train: "Zug",
         footer_rights: "Alle Rechte vorbehalten.",
         filter_title: "Filtern nach", filter_all: "Alle", show_results: "Ergebnisse anzeigen", 
         filter_cat: "Kategorie", filter_village: "Dorf",
@@ -165,9 +175,12 @@ const UI_TEXT = {
     },
     es: {
         loading: "Cargando...", error: "Error", no_results: "Sin resultados.",
-        home_title: "Bienvenido", nav_villages: "Pueblos", nav_food: "Comida", nav_outdoor: "Aire Libre", nav_services: "Servicios",
+        home_title: "Bienvenido", nav_villages: "Inicio", nav_food: "Comida", nav_outdoor: "Aire Libre", nav_services: "Servicios",
         menu_prod: "Productos", menu_rest: "Restaurantes", menu_trail: "Senderos", menu_beach: "Playas", menu_wine: "Vinos",
         menu_trans: "Transporte", menu_num: "Números", menu_pharm: "Farmacias", menu_map: "Mapas", menu_monu: "Atracciones",
+        menu_legal: "Legal y Privacidad",
+        // NOMBRES (New)
+        label_bus: "Microbús", label_ferry: "Barco", label_train: "Tren",
         footer_rights: "Todos los derechos reservados.",
         filter_title: "Filtrar por", filter_all: "Todos", show_results: "Mostrar Resultados", 
         filter_cat: "Categoría", filter_village: "Pueblo",
@@ -196,9 +209,12 @@ const UI_TEXT = {
     },
     zh: {
         loading: "加载中...", error: "错误", no_results: "无结果",
-        home_title: "欢迎", nav_villages: "村庄", nav_food: "美食", nav_outdoor: "户外", nav_services: "服务",
+        home_title: "欢迎", nav_villages: "首页", nav_food: "美食", nav_outdoor: "户外", nav_services: "服务",
         menu_prod: "产品", menu_rest: "餐厅", menu_trail: "步道", menu_beach: "海滩", 
         menu_trans: "交通", menu_num: "常用号码", menu_pharm: "药房", menu_map: "地图", menu_monu: "景点",
+        menu_legal: "法律与隐私",
+        // 名称 (New)
+        label_bus: "穿梭巴士", label_ferry: "渡轮", label_train: "火车",
         footer_rights: "版权所有。",
         filter_title: "筛选", filter_all: "全部", show_results: "显示结果", 
         filter_cat: "类别", filter_village: "村庄",
