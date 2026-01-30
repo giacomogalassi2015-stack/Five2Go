@@ -203,35 +203,99 @@ window.farmacieRenderer = (f) => {
     </div>`;
 };
 
-// === RENDERER NUMERI UTILI ===
+// === RENDERER NUMERI UTILI (FIX: Correzione Variabile) ===
 window.numeriUtiliRenderer = (n) => {
-    const nome = window.dbCol(n, 'Nome') || 'Numero Utile';
-    const paesi = window.dbCol(n, 'Paesi') || 'Info'; 
+    
+    // 1. Helper interno per traduzioni
+    const getTranslatedVal = (val) => {
+        if (!val) return '';
+        if (typeof val === 'object') {
+            const lang = window.currentLang || 'it';
+            return val[lang] || val['it'] || '';
+        }
+        if (typeof val === 'string' && val.trim().startsWith('{')) {
+            try {
+                const parsed = JSON.parse(val);
+                const lang = window.currentLang || 'it';
+                return parsed[lang] || parsed['it'] || val;
+            } catch (e) { return val; }
+        }
+        return val;
+    };
+
+    // 2. Dati
+    const rawName = n.Nome || 'Numero Utile';
+    const nome = getTranslatedVal(rawName);
+
+    const rawDesc = n.Utili_per || ''; 
+    const descrizione = getTranslatedVal(rawDesc);
+    
+    // --- QUI C'ERA L'ERRORE: Ora uso 'descrizione' corretto ---
+    const hasInfo = descrizione && descrizione.length > 2; 
+
+    const paesi = getTranslatedVal(window.dbCol(n, 'Paesi')) || 'Info'; 
     const numero = n.Numero || n.Telefono || '';
 
+    // 3. Icone
     let icon = 'help_outline'; 
-    const nLower = nome.toLowerCase();
+    const nLower = String(nome).toLowerCase();
     if (nLower.includes('carabinieri') || nLower.includes('polizia')) icon = 'security';
     else if (nLower.includes('medica') || nLower.includes('croce')) icon = 'medical_services';
     else if (nLower.includes('taxi')) icon = 'local_taxi';
     else if (nLower.includes('farmacia')) icon = 'local_pharmacy';
     else if (nLower.includes('info')) icon = 'info';
 
+    // 4. Codifica sicura per il passaggio dati
+    const safeName = encodeURIComponent(nome);
+    const safeDesc = encodeURIComponent(descrizione);
+    const safeNum = encodeURIComponent(numero);
+
     return `
     <div class="info-card animate-fade">
         <div class="info-icon-box">
             <span class="material-icons">${icon}</span>
         </div>
-        <div class="info-text-col">
+        
+        <div class="info-text-col" onclick="${hasInfo ? `openInfoModal('${safeName}', '${safeDesc}', '${safeNum}')` : ''}">
             <h3>${nome}</h3>
             <p><span class="material-icons" style="font-size: 0.9rem;">place</span> ${paesi}</p>
         </div>
+        
+        <div class="action-btn btn-info" 
+             style="${hasInfo ? 'display:flex;' : 'display:none;'} background:#e3f2fd; color:#1565c0; margin-right:8px;" 
+             onclick="openInfoModal('${safeName}', '${safeDesc}', '${safeNum}')">
+            <span class="material-icons">info</span>
+        </div>
+
         <div class="action-btn btn-call" onclick="window.location.href='tel:${numero}'">
             <span class="material-icons">call</span>
         </div>
     </div>`;
 };
 
+window.openInfoModal = function(encName, encDesc, encNum) {
+    const modal = document.getElementById('item-modal');
+    const content = document.getElementById('modal-body-content');
+    
+    if (!modal || !content) return;
+
+    // Decodifica i dati
+    const nome = decodeURIComponent(encName);
+    const descrizione = decodeURIComponent(encDesc);
+    const numero = decodeURIComponent(encNum);
+
+    // Mostra contenuto
+    content.innerHTML = `
+        <h3 style="color:var(--primary-dark); margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">${nome}</h3>
+        <div style="background:#f9f9f9; padding:15px; border-radius:8px; font-size:0.95rem; line-height:1.6; color:#444; margin-bottom:20px;">
+            ${descrizione}
+        </div>
+        <button onclick="window.location.href='tel:${numero}'" class="btn-primary" style="width:100%; display:flex; justify-content:center; align-items:center; gap:10px;">
+            <span class="material-icons">call</span> Chiama Ora
+        </button>
+    `;
+    modal.classList.add('active');
+};
 
 /* ============================================================
    RENDER PAGINA LEGALE (Aggiornata con Data)
