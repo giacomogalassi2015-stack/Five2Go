@@ -1,5 +1,5 @@
 /* ============================================================
-   SCHEDA RISTORANTE (LUXURY GLASS DESIGN)
+   SCHEDA RISTORANTE (LUXURY GLASS DESIGN - RED EDITION)
    ============================================================ */
 .restaurant-glass-card {
     cursor: default;
@@ -9,8 +9,8 @@
     position: relative; overflow: hidden;
     padding: 20px 25px; margin-bottom: 25px;
 
-    /* Effetto Glass Scuro */
-    background: linear-gradient(145deg, rgba(30, 30, 30, 0.85), rgba(10, 10, 10, 0.95)) !important;
+    /* Effetto Glass Scuro - Mantenuto il tuo gradiente rosso */
+    background: linear-gradient(145deg, #7b2c35, rgba(10, 10, 10, 0.95)) !important;
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     
     /* Bordi Sottili */
@@ -20,7 +20,9 @@
     border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
     
     border-radius: 32px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(0,0,0,0.5);
+    
+    /* Ombra esterna armonizzata con il rosso */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), inset 0 0 30px rgba(50, 0, 0, 0.2);
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
@@ -52,18 +54,30 @@
     width: 100%; margin-top: 40px; 
 }
 
+/* --- BOTTONI AGGIORNATI --- */
 .rest-card-actions .action-btn {
     width: 55px; height: 55px; border-radius: 50%;
-    background: linear-gradient(145deg, #2b2b2b, #1a1a1a);
-    box-shadow:  5px 5px 10px #0b0b0b, -5px -5px 10px #3d3d3d;
-    border: 1px solid rgba(255,255,255,0.05);
+    
+    /* Gradiente rosso profondo/vellutato invece di marrone scuro */
+    background: linear-gradient(145deg, #5e1b23, #2a080b);
+    
+    /* Ombre aggiornate: 
+       - L'ombra scura è quasi nera ma con tinta rossa (#1a0304)
+       - Il riflesso (highlight) è un rosso più chiaro (#7a2a32), NON grigio 
+    */
+    box-shadow:  6px 6px 12px #1a0304, 
+                -6px -6px 12px #7a2a32;
+                
+    border: 1px solid rgba(255,255,255,0.08);
     display: flex; align-items: center; justify-content: center;
     transition: all 0.2s ease;
 }
 
 .rest-card-actions .action-btn:active {
-    background: #1a1a1a;
-    box-shadow: inset 5px 5px 10px #0b0b0b, inset -5px -5px 10px #3d3d3d;
+    background: #2a080b;
+    /* Ombre incassate (inset) aggiornate ai toni del rosso */
+    box-shadow: inset 6px 6px 12px #1a0304, 
+                inset -6px -6px 12px #7a2a32;
 }
 
 .rest-card-actions .action-btn .material-icons { font-size: 1.6rem; }
