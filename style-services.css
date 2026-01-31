@@ -104,7 +104,7 @@ input[type="date"].bus-select, input[type="time"].bus-select { background-image:
     background-color: #9D2A38; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
-.service-widget:active { transform: scale(0.96); background-color: rgba(0, 0, 0, 0.85); }
+.service-widget:active { transform: scale(0.96); background-color: #7b2c35; }
 .service-widget .widget-icon { font-size: 3rem; color: #ffffff; opacity: 0.95; margin-bottom: 10px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
 .service-widget .widget-label { font-size: 1.1rem; font-weight: 600; color: #ffffff; line-height: 1.2; letter-spacing: 0.5px; }
 

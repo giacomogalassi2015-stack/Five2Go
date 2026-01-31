@@ -252,16 +252,12 @@ window.numeriUtiliRenderer = (n) => {
             <span class="material-icons">${icon}</span>
         </div>
         
-        <div class="info-text-col" onclick="${hasInfo ? `openInfoModal('${safeName}', '${safeDesc}', '${safeNum}')` : ''}" style="cursor: pointer;">
+        <div class="info-text-col">
             <h3>${nome}</h3>
             <p><span class="material-icons" style="font-size: 0.9rem;">place</span> ${paesi}</p>
         </div>
         
-        <div class="action-btn btn-info" 
-             style="${hasInfo ? 'display:flex;' : 'display:none;'} background:#e3f2fd; color:#1565c0; margin-right:8px;" 
-             onclick="openInfoModal('${safeName}', '${safeDesc}', '${safeNum}')">
-            <span class="material-icons">info</span>
-        </div>
+      
 
         <div class="action-btn btn-call" onclick="window.location.href='tel:${numero}'">
             <span class="material-icons">call</span>
